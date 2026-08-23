@@ -53,7 +53,7 @@ description: "one-line summary"   # optional
 
 - Body is markdown.
 - **Wikilinks:** `[[other-post-slug]]` (and `[[slug|Display text]]`) resolve at build time to links to that post via a small remark plugin. A wikilink to a non-existent slug fails the build with a clear error (catches typos early).
-- **Interactive components:** imported and embedded directly, e.g. `<EnergyChart client:load />`. Components live in `src/components/` and are plain Astro/vanilla-JS (or a framework island later if needed). Pages without components ship no JavaScript.
+- **Interactive components:** imported and embedded directly, e.g. `<EnergyChart labels={[...]} values={[...]} />`. Components live in `src/components/` and are plain `.astro` + vanilla JS, carrying their own bundled `<script>` (a framework island can be added later if one is ever needed). Note: `client:*` directives apply only to framework components and must not be used on `.astro` ones. Pages without components ship no JavaScript.
 
 ## Backlinks
 
