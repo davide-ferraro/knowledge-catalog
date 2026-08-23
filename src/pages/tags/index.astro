@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
+import TaxonomyGrid from '../../components/TaxonomyGrid.astro';
 import { tagHref } from '../../lib/paths.mjs';
 
 const posts = await getCollection('posts');
@@ -10,19 +11,16 @@ for (const post of posts) {
     counts.set(tag, (counts.get(tag) ?? 0) + 1);
   }
 }
-const tags = [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0]));
 const base = import.meta.env.BASE_URL;
+const entries: Array<[string, number, string]> = [...counts.entries()]
+  .sort((a, b) => a[0].localeCompare(b[0]))
+  .map(([tag, count]) => [tag, count, tagHref(tag, base)]);
 ---
 
 <Base title="Tags">
-  <h1>Tags</h1>
-  <ul>
-    {
-      tags.map(([tag, count]) => (
-        <li>
-          <a href={tagHref(tag, base)}>{tag}</a> ({count})
-        </li>
-      ))
-    }
-  </ul>
+  <h1 class="text-[2rem] leading-tight font-bold tracking-[-0.02em]">Tags</h1>
+  <p class="text-muted-foreground mt-2 text-sm">
+    {entries.length} {entries.length === 1 ? 'tag' : 'tags'} across the catalog.
+  </p>
+  <TaxonomyGrid entries={entries} />
 </Base>

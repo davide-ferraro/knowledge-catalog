@@ -3,15 +3,63 @@ title: "Interactive charts in posts"
 date: 2026-08-21
 category: "meta"
 tags: ["setup", "charts"]
-description: "How to embed an interactive component in a post."
+description: "How to embed an interactive chart and other rich blocks in a post."
 ---
 
-import BarChart from '../../components/BarChart.astro';
+import Chart from '../../components/Chart.tsx';
+import Callout from '../../components/Callout.astro';
+import Toggle from '../../components/Toggle.astro';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-Posts are MDX, so a post can import a component and render it inline. Drag the
-slider to scale the bars:
+Posts are MDX, so a post can import a component and render it inline. Charts use
+[Recharts](https://recharts.org/) via shadcn's chart wrapper, so tooltips, axes
+and theming come for free:
 
-<BarChart labels={["Mon", "Tue", "Wed", "Thu"]} values={[40, 80, 55, 120]} />
+<Chart
+  client:only="react"
+  kind="bar"
+  series={["visits"]}
+  data={[
+    { label: "Mon", visits: 40 },
+    { label: "Tue", visits: 80 },
+    { label: "Wed", visits: 55 },
+    { label: "Thu", visits: 120 },
+    { label: "Fri", visits: 95 },
+  ]}
+/>
 
-The component ships its own small script, and pages without a component ship no
-JavaScript at all. See [[hello-knowledge-hub]] for the wider setup.
+Hover a bar to see the tooltip. Pass `kind="line"` for a line chart, and list
+more keys in `series` to plot several at once.
+
+<Callout icon="📊">
+  Charts are hydrated with `client:visible`, so the JavaScript only loads when
+  the chart scrolls into view. Posts with no chart ship no JavaScript at all.
+</Callout>
+
+## Other blocks
+
+Callouts take any emoji and an optional title:
+
+<Callout icon="⚠️" title="Watch out">
+  Wikilinks pointing at a slug that does not exist will fail the build. That is
+  deliberate — it catches typos before they become dead links.
+</Callout>
+
+For semantic warnings there is a shadcn `Alert`:
+
+<Alert>
+  <AlertTitle>Heads up</AlertTitle>
+  <AlertDescription>
+    This renders server-side with no JavaScript.
+  </AlertDescription>
+</Alert>
+
+And toggles, for collapsing detail you do not want to read every time:
+
+<Toggle title="Why not shadcn's Accordion here?">
+  A native `details` element does the same job with no JavaScript, and it can
+  hold arbitrary MDX content. Radix-based accordions only render open panels, so
+  their content would be missing from the static HTML.
+</Toggle>
+
+See [[hello-knowledge-hub]] for the wider setup.

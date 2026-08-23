@@ -1,0 +1,22 @@
+---
+interface Props {
+  /** Emoji shown in the left gutter, Notion-style. */
+  icon?: string;
+  /** Optional bold lead-in above the body. */
+  title?: string;
+}
+
+const { icon = '💡', title } = Astro.props;
+---
+
+<aside
+  class="not-prose bg-muted/60 border-border my-6 flex gap-3 rounded-lg border p-4"
+>
+  <span class="shrink-0 text-base leading-6 select-none" aria-hidden="true">
+    {icon}
+  </span>
+  <div class="min-w-0 text-[0.9375rem] leading-relaxed">
+    {title && <p class="mb-1 font-semibold">{title}</p>}
+    <slot />
+  </div>
+</aside>

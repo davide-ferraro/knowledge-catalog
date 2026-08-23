@@ -1,14 +1,251 @@
-body {
-  max-width: 40rem;
-  margin: 2rem auto;
-  padding: 0 1rem;
-  line-height: 1.6;
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/jetbrains-mono";
+
+@plugin "@tailwindcss/typography";
+
+/* Tailwind's `:where` form, not shadcn's generated `:is(.dark *)`, so that
+   `dark:` utilities also apply to the <html> element carrying the class. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+    --font-heading: var(--font-sans);
+    --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+
+    /* Notion's default page text width. */
+    --container-reading: 45rem;
+
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar: var(--sidebar);
+    --color-chart-5: var(--chart-5);
+    --color-chart-4: var(--chart-4);
+    --color-chart-3: var(--chart-3);
+    --color-chart-2: var(--chart-2);
+    --color-chart-1: var(--chart-1);
+    --color-ring: var(--ring);
+    --color-input: var(--input);
+    --color-border: var(--border);
+    --color-destructive: var(--destructive);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-accent: var(--accent);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-muted: var(--muted);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-secondary: var(--secondary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-primary: var(--primary);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-popover: var(--popover);
+    --color-card-foreground: var(--card-foreground);
+    --color-card: var(--card);
+    --color-foreground: var(--foreground);
+    --color-background: var(--background);
+    --color-code: var(--code);
+    --color-code-foreground: var(--code-foreground);
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-nav a {
-  margin-right: 1rem;
+/* Notion's palette. Light text is a warm near-black (rgb 55,53,47) rather than
+   pure black; dark mode uses Notion's #191919 rather than pure black. */
+:root {
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.287 0.006 71);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.287 0.006 71);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.287 0.006 71);
+    --primary: oklch(0.287 0.006 71);
+    --primary-foreground: oklch(0.99 0 0);
+    --secondary: oklch(0.972 0.002 71);
+    --secondary-foreground: oklch(0.287 0.006 71);
+    --muted: oklch(0.972 0.002 71);
+    --muted-foreground: oklch(0.54 0.006 71);
+    --accent: oklch(0.962 0.003 71);
+    --accent-foreground: oklch(0.287 0.006 71);
+    --destructive: oklch(0.593 0.196 25.6);
+    --border: oklch(0.287 0.006 71 / 11%);
+    --input: oklch(0.287 0.006 71 / 14%);
+    --ring: oklch(0.287 0.006 71 / 30%);
+    --code: oklch(0.7 0.017 75 / 15%);
+    --code-foreground: oklch(0.593 0.196 25.6);
+    --chart-1: oklch(0.55 0.13 245);
+    --chart-2: oklch(0.62 0.13 165);
+    --chart-3: oklch(0.68 0.14 75);
+    --chart-4: oklch(0.58 0.16 320);
+    --chart-5: oklch(0.6 0.16 25);
+    --radius: 0.375rem;
+    --sidebar: oklch(0.985 0.002 71);
+    --sidebar-foreground: oklch(0.287 0.006 71);
+    --sidebar-primary: oklch(0.287 0.006 71);
+    --sidebar-primary-foreground: oklch(0.99 0 0);
+    --sidebar-accent: oklch(0.962 0.003 71);
+    --sidebar-accent-foreground: oklch(0.287 0.006 71);
+    --sidebar-border: oklch(0.287 0.006 71 / 11%);
+    --sidebar-ring: oklch(0.287 0.006 71 / 30%);
 }
 
-article img {
-  max-width: 100%;
+.dark {
+    --background: oklch(0.196 0 0);
+    --foreground: oklch(0.869 0 0);
+    --card: oklch(0.225 0 0);
+    --card-foreground: oklch(0.869 0 0);
+    --popover: oklch(0.225 0 0);
+    --popover-foreground: oklch(0.869 0 0);
+    --primary: oklch(0.869 0 0);
+    --primary-foreground: oklch(0.196 0 0);
+    --secondary: oklch(0.271 0 0);
+    --secondary-foreground: oklch(0.869 0 0);
+    --muted: oklch(0.271 0 0);
+    --muted-foreground: oklch(0.62 0 0);
+    --accent: oklch(0.288 0 0);
+    --accent-foreground: oklch(0.869 0 0);
+    --destructive: oklch(0.68 0.17 24);
+    --border: oklch(1 0 0 / 11%);
+    --input: oklch(1 0 0 / 14%);
+    --ring: oklch(1 0 0 / 26%);
+    --code: oklch(1 0 0 / 10%);
+    --code-foreground: oklch(0.76 0.14 25);
+    --chart-1: oklch(0.68 0.13 245);
+    --chart-2: oklch(0.72 0.13 165);
+    --chart-3: oklch(0.78 0.14 75);
+    --chart-4: oklch(0.7 0.15 320);
+    --chart-5: oklch(0.7 0.16 25);
+    --sidebar: oklch(0.225 0 0);
+    --sidebar-foreground: oklch(0.869 0 0);
+    --sidebar-primary: oklch(0.869 0 0);
+    --sidebar-primary-foreground: oklch(0.196 0 0);
+    --sidebar-accent: oklch(0.288 0 0);
+    --sidebar-accent-foreground: oklch(0.869 0 0);
+    --sidebar-border: oklch(1 0 0 / 11%);
+    --sidebar-ring: oklch(1 0 0 / 26%);
 }
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+  }
+  html {
+    @apply font-sans;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Bind @tailwindcss/typography to the theme tokens, otherwise prose text
+   ignores dark mode entirely.
+   Deliberately unlayered: the typography plugin's own rules sit in a layer, and
+   layered rules always lose to unlayered ones regardless of selector order. */
+.prose {
+    --tw-prose-body: var(--foreground);
+    --tw-prose-headings: var(--foreground);
+    --tw-prose-lead: var(--muted-foreground);
+    --tw-prose-links: var(--foreground);
+    --tw-prose-bold: var(--foreground);
+    --tw-prose-counters: var(--muted-foreground);
+    --tw-prose-bullets: var(--border);
+    --tw-prose-hr: var(--border);
+    --tw-prose-quotes: var(--foreground);
+    --tw-prose-quote-borders: var(--border);
+    --tw-prose-captions: var(--muted-foreground);
+    --tw-prose-code: var(--code-foreground);
+    --tw-prose-pre-code: var(--foreground);
+    --tw-prose-pre-bg: var(--muted);
+    --tw-prose-th-borders: var(--border);
+    --tw-prose-td-borders: var(--border);
+  }
+
+  /* Notion's reading rhythm: 16px/1.6 body, tight bold headings. */
+  .prose {
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  .prose :where(h1, h2, h3, h4):not(:where([class~="not-prose"] *)) {
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    scroll-margin-top: 5rem;
+  }
+
+  .prose :where(h1):not(:where([class~="not-prose"] *)) {
+    font-size: 2.25rem;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+
+  .prose :where(h2):not(:where([class~="not-prose"] *)) {
+    font-size: 1.5rem;
+    line-height: 1.3;
+    margin-top: 2em;
+  }
+
+  .prose :where(h3):not(:where([class~="not-prose"] *)) {
+    font-size: 1.25rem;
+    line-height: 1.4;
+  }
+
+  /* Notion-style inline code: tinted background, warm red text, no backticks. */
+  .prose :where(code):not(:where(pre *, [class~="not-prose"] *)) {
+    background-color: var(--code);
+    color: var(--code-foreground);
+    font-size: 0.85em;
+    font-weight: 400;
+    padding: 0.15em 0.35em;
+    border-radius: 0.25rem;
+  }
+
+  .prose :where(code):not(:where(pre *, [class~="not-prose"] *))::before,
+  .prose :where(code):not(:where(pre *, [class~="not-prose"] *))::after {
+    content: none;
+  }
+
+  .prose :where(pre):not(:where([class~="not-prose"] *)) {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    font-size: 0.875em;
+  }
+
+  .prose :where(blockquote):not(:where([class~="not-prose"] *)) {
+    border-left-width: 3px;
+    font-style: normal;
+    font-weight: 400;
+    padding-left: 1em;
+  }
+
+  .prose :where(blockquote p:first-of-type):not(:where([class~="not-prose"] *))::before,
+  .prose :where(blockquote p:last-of-type):not(:where([class~="not-prose"] *))::after {
+    content: none;
+  }
+
+  .prose :where(a):not(:where([class~="not-prose"] *)) {
+    text-decoration-color: var(--border);
+    text-underline-offset: 3px;
+    font-weight: 400;
+    transition: text-decoration-color 120ms ease;
+  }
+
+  .prose :where(a):not(:where([class~="not-prose"] *)):hover {
+    text-decoration-color: var(--muted-foreground);
+  }
+
+  .prose :where(hr):not(:where([class~="not-prose"] *)) {
+    margin-block: 2.5em;
+  }

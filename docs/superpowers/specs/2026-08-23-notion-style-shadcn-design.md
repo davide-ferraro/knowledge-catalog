@@ -105,6 +105,30 @@ logic is unchanged.
   type="module">` islands; the chart post ships exactly one.
 - Browser check of both themes, the toggle, and chart interactivity.
 
+## Deviations found during implementation
+
+Four things differed from the plan; all are load-bearing.
+
+1. **Toggle lists use native `<details>`, not shadcn's Accordion.** A `details`
+   element does the same job with zero JavaScript and can hold arbitrary MDX
+   children, whereas Radix accordions only render open panels — their content
+   would be missing from the static HTML and from search engines. The generated
+   `ui/accordion.tsx` was deleted as dead code; `npx shadcn@latest add accordion`
+   brings it back if a real need appears.
+2. **The chart uses `client:only="react"`, not `client:visible`.** Islands inside
+   MDX are emitted with `await-children`, and the runtime never resolved that
+   wait, so hydration never started and no JS was ever requested. `client:only`
+   skips SSR entirely, which removes the children wait — and suits a chart that
+   must measure its container anyway. Consequence: the chart is client-rendered,
+   so it is absent from the static HTML.
+3. **Chart animation is disabled** (`isAnimationActive={false}`). With animation
+   on, bars mounted frozen a few pixels tall — the entrance tween started and
+   never completed under client-only rendering.
+4. **`react({ experimentalDisableStreaming: true })`** is set, and the prose
+   overrides in `global.css` are deliberately **unlayered** — layered rules lose
+   to the typography plugin's own layer regardless of order, which left literal
+   backticks rendering around inline code.
+
 ## Out of scope
 
 Search / command palette, a visual graph view, per-post table of contents.
