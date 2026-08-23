@@ -1,0 +1,196 @@
+---
+title: "Why did we start with electricity markets in Europe?"
+date: 2026-08-23
+category: "energy-markets"
+tags: ["book-notes", "eu-policy", "market-design", "regulation"]
+description: "Notes on chapter 1 of Meeus, The Evolution of Electricity Markets in Europe — the political, technical and economic case for a single European power market."
+---
+
+import Callout from '../../components/Callout.astro';
+import Toggle from '../../components/Toggle.astro';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+
+Notes on chapter 1 of Leonardo Meeus, *The Evolution of Electricity Markets in
+Europe* (Edward Elgar, 2020), written with Valerie Reif.
+
+The chapter is organised around three questions, and they map onto three
+different kinds of answer — political, technical, and economic. Keeping them
+separate is most of the value: the reasons Europe *built* a single market are
+not the same as the reasons it *works*.
+
+{/* TODO: one paragraph on why I'm reading this and what I want out of it. */}
+
+## 1. The political process
+
+Integration happened in three layers, each more detailed than the last: the
+treaties set the goal, the legislative packages restructured the industry, and
+the network codes wrote the actual market rules.
+
+**The treaties.** The ambition of a common market with no internal trade
+barriers goes back to the Treaty of Rome (1957). The Single European Act (1986)
+made it concrete by requiring an internal market by 31 December 1992, and the
+Single Market became reality on 1 January 1993 for the then-12 Member States.
+Energy took much longer than expected, because the sector was still dominated by
+state-owned, vertically integrated utilities holding regional or national
+monopolies, with little interconnection and no rules for cross-border trade.
+
+**The packages.** Four of them, roughly one per decade-and-a-half of ambition:
+
+<Table>
+  <TableCaption>The four EU legislative energy packages.</TableCaption>
+  <TableHeader>
+    <TableRow>
+      <TableHead>Package</TableHead>
+      <TableHead>Directive</TableHead>
+      <TableHead>Key regulations</TableHead>
+      <TableHead>Unbundling step</TableHead>
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    <TableRow>
+      <TableCell>First (1996)</TableCell>
+      <TableCell>96/92/EC</TableCell>
+      <TableCell>—</TableCell>
+      <TableCell>Management &amp; accounting</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>Second (2003)</TableCell>
+      <TableCell>2003/54/EC</TableCell>
+      <TableCell>1228/2003</TableCell>
+      <TableCell>Legal (TSO 2004, DSO 2007)</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>Third (2009)</TableCell>
+      <TableCell>2009/72/EC</TableCell>
+      <TableCell>714/2009; 713/2009 (ACER)</TableCell>
+      <TableCell>Certified: OU / ISO / ITO</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>Clean Energy (2019)</TableCell>
+      <TableCell>2019/944</TableCell>
+      <TableCell>2019/943; 2019/942; 2019/941</TableCell>
+      <TableCell>—</TableCell>
+    </TableRow>
+  </TableBody>
+</Table>
+
+Two institutions came out of this: **ENTSO-E** (Third Package) and **ACER**
+(Third Package), with an **EU DSO entity** added by the Clean Energy Package.
+Ownership unbundling became the dominant model in practice, and national
+regulators were pushed step by step towards genuine independence — the Second
+Package required them to exist, the Third made them independent of government.
+
+**The network codes.** Eight legislative acts entered into force between 2015 and
+the end of 2017, in three families.
+
+<Toggle title="The first generation of network codes and guidelines">
+  **Market codes** — CACM GL (capacity allocation and congestion management),
+  FCA GL (forward capacity allocation), EB GL (electricity balancing).
+
+  **Connection codes** — RfG NC (requirements for generators), DC NC (demand
+  connection), HVDC NC.
+
+  **Operation codes** — SO GL (system operation), ER NC (emergency and
+  restoration).
+
+  Four are guidelines and four are network codes. Both are Commission
+  regulations and directly applicable, but guidelines push more of the detail
+  into the implementation phase, via Terms and Conditions or Methodologies
+  (TCMs) developed by TSOs or NEMOs and approved by regulators.
+</Toggle>
+
+<Callout icon="🔑" title="The insight I want to remember">
+  The rules do not prescribe one market design. Meeus's framing is that they
+  "reduce the degree of freedom that countries have" — the design is left
+  *implicit*, and making it explicit is the stated purpose of the book. That
+  reframes the whole thing: there is no single European market design document
+  to go read.
+</Callout>
+
+{/* TODO: does this match what I see in practice at work? Where does the
+    remaining national freedom actually bite? */}
+
+## 2. The technical drivers
+
+The chapter's argument is that there are technical **advantages of scale**, and
+that cross-border cooperation on these grounds *pre-dated* markets entirely.
+
+Meeus explains it with a tandem-bicycle analogy: generators and loads are
+cyclists on one long bike, the chain is the transmission network, chain speed is
+frequency and chain tension is voltage. Different generator types couple to the
+chain differently — directly (large thermal and nuclear), through gears (hydro),
+or through a belt allowing variable speed (wind with a frequency inverter).
+
+Two mechanisms matter:
+
+- **Inertia.** More synchronously connected rotating machines means more stored
+  kinetic energy, which slows frequency deviations after a sudden mismatch.
+- **Reserves.** Inertia only buys time; it cannot restore balance. Reserves do
+  that, and a bigger synchronous area needs proportionally fewer of them,
+  because the largest single credible incident shrinks relative to system size.
+  Hence reserve-sharing "solidarity" schemes between TSOs, long before markets.
+
+<Callout icon="⚡" title="Worth being precise about">
+  Inertia helps with *near-instantaneous* imbalances — a generator tripping, a
+  sudden load change. It does **not** help with ordinary imbalances caused by
+  forecast error, where production and consumption plans simply diverge. Those
+  need reserves. Easy to blur these two together.
+</Callout>
+
+{/* TODO: this is directly relevant to forecasting work — the forecast-error
+    imbalance is exactly the part inertia does not cover. Expand. */}
+
+## 3. What we know about the benefits
+
+The qualitative case has been understood for decades and rests on
+**differences** between countries:
+
+- **Generation mix** — France nuclear-dominated, Germany still coal-heavy,
+  Norway hydro-rich, UK/Spain/Italy relatively gas-heavy.
+- **Load patterns** — countries with lots of electric heating (France, Norway)
+  swing much harder between summer and winter.
+- **Timing** — demand peaks do not coincide across time zones and cultures.
+- **Weather** — and more recently the big one: uneven wind and solar across
+  Member States.
+
+The quantitative case arrived surprisingly late. The Commission's early-2000s
+benchmarking reports tracked indicators — concentration, the share of the three
+largest generators and suppliers, switching rates, price convergence,
+cross-border exchange — but none of them actually quantified the benefit of
+integration. Only around 2012 did the Commission commission that assessment,
+which put it at **several billions of euros a year**, an order of magnitude ACER
+later confirmed. ACER's annual market monitoring report is the standing
+reference.
+
+The Brexit counterfactual is the mirror image: a hard electricity Brexit with
+little interconnector expansion and decoupled markets was estimated to cost
+Great Britain **several hundred million euros a year by 2030**.
+
+{/* TODO: chart here once I pull the actual ACER benefit figures by year —
+    <Chart client:only="react" kind="line" series={["benefitBnEur"]} data={[...]} />
+    Don't invent the numbers; get them from the ACER MMR. */}
+
+## Open questions
+
+{/* These are mine, not the book's — the point of keeping them here. */}
+
+- If the design is implicit, where is it most contested today?
+- How much of the measured benefit is interconnection capacity versus market
+  coupling *rules*?
+- The reserve-sharing argument assumes synchronous area. How does it change with
+  HVDC links and non-synchronous interconnection?
+
+## Source
+
+Meeus, L. (2020). *The Evolution of Electricity Markets in Europe*, ch. 1,
+"Why did we start with electricity markets in Europe?" (with Valerie Reif).
+Edward Elgar, Loyola de Palacio Series on European Energy Policy.
+ISBN 978-1-78990-546-5. [doi:10.4337/9781789905472](https://doi.org/10.4337/9781789905472)
