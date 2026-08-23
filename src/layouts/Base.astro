@@ -1,0 +1,32 @@
+---
+import '../styles/global.css';
+import { joinBase } from '../lib/paths.mjs';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+const base = import.meta.env.BASE_URL;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    {description && <meta name="description" content={description} />}
+  </head>
+  <body>
+    <nav>
+      <a href={joinBase(base, '')}>Home</a>
+      <a href={joinBase(base, 'tags/')}>Tags</a>
+      <a href={joinBase(base, 'categories/')}>Categories</a>
+    </nav>
+    <main>
+      <slot />
+    </main>
+  </body>
+</html>

@@ -1,0 +1,51 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import Base from './Base.astro';
+import { postHref, tagHref, categoryHref } from '../lib/paths.mjs';
+
+interface Props {
+  post: CollectionEntry<'posts'>;
+  backlinks: Array<{ id: string; title: string }>;
+}
+
+const { post, backlinks } = Astro.props;
+const base = import.meta.env.BASE_URL;
+const { title, date, category, tags, description } = post.data;
+---
+
+<Base title={title} description={description}>
+  <article>
+    <h1>{title}</h1>
+    <p>
+      <time datetime={date.toISOString()}>{date.toISOString().slice(0, 10)}</time>
+      {' '}in{' '}
+      <a href={categoryHref(category, base)}>{category}</a>
+    </p>
+    {
+      tags.length > 0 && (
+        <p>
+          Tags:{' '}
+          {tags.map((tag, i) => (
+            <>
+              {i > 0 && ', '}
+              <a href={tagHref(tag, base)}>{tag}</a>
+            </>
+          ))}
+        </p>
+      )
+    }
+    <slot />
+  </article>
+  {
+    backlinks.length > 0 && (
+      <section>
+        <h2>Linked from</h2>
+        <ul>
+          {backlinks.map((link) => (
+            <li><a href={postHref(link.id, base)}>{link.title}</a></li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+</Base>
