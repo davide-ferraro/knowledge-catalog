@@ -1,43 +1,49 @@
-# Astro Starter Kit: Minimal
+# my-knowldege
 
-```sh
-npm create astro@latest -- --template minimal
-```
+A personal knowledge hub: everything I learn, written as cross-linked posts.
+Live at <https://davide-ferraro.github.io/my-knowldege/>.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Adding a post
 
-## 🚀 Project Structure
+Create `src/content/posts/<slug>.mdx`. The filename becomes the URL slug.
 
-Inside of your Astro project, you'll see the following folders and files:
+````mdx
+---
+title: "Post title"
+date: 2026-08-23
+category: "one-category"
+tags: ["tag-a", "tag-b"]
+description: "Optional one-line summary."
+---
 
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
-```
+Body text. Link to another post with [[its-slug]] or [[its-slug|custom label]].
+````
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+- `category` — exactly one, broad bucket. `tags` — any number.
+- Wikilinks are turned into real links at build time, and the target post grows
+  a "Linked from" section. A wikilink to a slug that does not exist **fails the
+  build** on purpose, so typos surface immediately.
+- For interactivity, import a component from `src/components/` and render it
+  inline. See `src/content/posts/interactive-charts.mdx`.
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+## Commands
 
-Any static assets, like images, can be placed in the `public/` directory.
+| Command | Does |
+| --- | --- |
+| `npm run dev` | local dev server with hot reload |
+| `npm run build` | production build into `dist/` |
+| `npm run preview` | serve the built site locally |
+| `npm test` | unit tests for the helper modules |
 
-## 🧞 Commands
+## Deployment
 
-All commands are run from the root of the project, from a terminal:
+Pushing to `main` triggers `.github/workflows/deploy.yml`, which builds and
+publishes to GitHub Pages. A failed build leaves the previous site live.
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+**One-time setup:** in the repo on GitHub, go to Settings → Pages → Build and
+deployment and set Source to **GitHub Actions**.
 
-## 👀 Want to learn more?
+## Styling
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+Deliberately minimal for now — `src/styles/global.css` sets only a content
+width and line height. Real design comes later.
