@@ -11,8 +11,8 @@
 ## Global Constraints
 
 - Node **25.7.0** is the only installed runtime and it **works** — verified by scaffolding and building a probe project. Astro's docs say odd-numbered Node majors are unsupported; if any command fails on a Node version check, that is the cause. CI pins Node via `withastro/action` (defaults to 24).
-- Repo root: `/Users/davide/Documents/my-knowldege`. Branch `main`. Remote `origin` = `https://github.com/davide-ferraro/my-knowldege`.
-- Deploy target: `https://davide-ferraro.github.io/my-knowldege/` → `site: 'https://davide-ferraro.github.io'`, `base: '/my-knowldege'`.
+- Repo root: `/Users/davide/Documents/knowledge-catalog`. Branch `main`. Remote `origin` = `https://github.com/davide-ferraro/knowledge-catalog`.
+- Deploy target: `https://davide-ferraro.github.io/knowledge-catalog/` → `site: 'https://davide-ferraro.github.io'`, `base: '/knowledge-catalog'`.
 - **Astro 7 replaced remark/rehype as the default Markdown processor.** A custom remark plugin ONLY runs if registered via `markdown.processor: unified({ remarkPlugins: [...] })` imported from `@astrojs/markdown-remark`. Do not use the deprecated top-level `markdown.remarkPlugins`.
 - Astro 7 API facts (differ from older tutorials): config file is `src/content.config.ts`; `z` comes from `astro/zod`, **not** `astro:content`; the slug property is `entry.id` (there is no `entry.slug`); render with `const { Content } = await render(entry)` imported from `astro:content` (there is no `entry.render()`).
 - **Never write `client:load` on a plain `.astro` component** — client directives are only for framework (React/Vue/etc.) components and error on `.astro` ones. A `<script>` inside an `.astro` component is bundled and runs automatically; that is how interactivity works here.
@@ -60,14 +60,14 @@
 The `create astro` command refuses a non-empty directory, and the repo already has `docs/` and `.git/`. Scaffold beside it, then move the files in.
 
 ```bash
-cd /Users/davide/Documents/my-knowldege
+cd /Users/davide/Documents/knowledge-catalog
 npm create astro@latest .astro-scaffold -- --template minimal --install --no-git --no-ai --skip-houston
 ```
 
 - [ ] **Step 2: Move scaffold contents to the repo root and delete the temp dir**
 
 ```bash
-cd /Users/davide/Documents/my-knowldege
+cd /Users/davide/Documents/knowledge-catalog
 mv .astro-scaffold/.gitignore .astro-scaffold/* .
 rmdir .astro-scaffold
 ls
@@ -78,7 +78,7 @@ Expected: `astro.config.mjs`, `package.json`, `tsconfig.json`, `src/`, `public/`
 - [ ] **Step 3: Install the MDX integration and the unified markdown processor**
 
 ```bash
-cd /Users/davide/Documents/my-knowldege
+cd /Users/davide/Documents/knowledge-catalog
 npm install @astrojs/mdx @astrojs/markdown-remark
 ```
 
@@ -92,7 +92,7 @@ import mdx from '@astrojs/mdx';
 
 export default defineConfig({
   site: 'https://davide-ferraro.github.io',
-  base: '/my-knowldege',
+  base: '/knowledge-catalog',
   integrations: [mdx()],
 });
 ```
@@ -112,7 +112,7 @@ export default defineConfig({
 Read `.gitignore`. It must contain `dist/` and `node_modules/` (the scaffold provides these). If either is missing, append it:
 
 ```bash
-cd /Users/davide/Documents/my-knowldege
+cd /Users/davide/Documents/knowledge-catalog
 grep -qx 'dist/' .gitignore || echo 'dist/' >> .gitignore
 grep -qx 'node_modules/' .gitignore || echo 'node_modules/' >> .gitignore
 ```
@@ -120,7 +120,7 @@ grep -qx 'node_modules/' .gitignore || echo 'node_modules/' >> .gitignore
 - [ ] **Step 7: Verify the build passes**
 
 ```bash
-cd /Users/davide/Documents/my-knowldege && npx astro build
+cd /Users/davide/Documents/knowledge-catalog && npx astro build
 ```
 
 Expected: `[build] Complete!` and a `dist/index.html`. If the build fails on a Node version check, that is the Node 25 caveat from Global Constraints.
@@ -128,7 +128,7 @@ Expected: `[build] Complete!` and a `dist/index.html`. If the build fails on a N
 - [ ] **Step 8: Commit**
 
 ```bash
-cd /Users/davide/Documents/my-knowldege
+cd /Users/davide/Documents/knowledge-catalog
 git add -A
 git commit -m "feat: scaffold Astro project configured for GitHub Pages"
 ```
@@ -211,7 +211,7 @@ category page and from every one of its tag pages.
 - [ ] **Step 4: Verify the schema validates and content syncs**
 
 ```bash
-cd /Users/davide/Documents/my-knowldege && npx astro build
+cd /Users/davide/Documents/knowledge-catalog && npx astro build
 ```
 
 Expected: log lines `[content] Syncing content` then `[content] Synced content`, and `[build] Complete!`. A frontmatter typo would fail here with a Zod error naming the field.
@@ -219,7 +219,7 @@ Expected: log lines `[content] Syncing content` then `[content] Synced content`,
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /Users/davide/Documents/my-knowldege
+cd /Users/davide/Documents/knowledge-catalog
 git add -A
 git commit -m "feat: add posts content collection schema and seed posts"
 ```
@@ -238,7 +238,7 @@ git commit -m "feat: add posts content collection schema and seed posts"
 **Interfaces:**
 - Consumes: nothing at runtime; pure functions.
 - Produces, from `src/lib/paths.mjs`:
-  - `joinBase(base: string, path: string) => string` — joins a base like `/my-knowldege` or `/my-knowldege/` with `posts/foo/` into `/my-knowldege/posts/foo/`, never doubling or dropping slashes. Returns a leading-slash, trailing-slash path.
+  - `joinBase(base: string, path: string) => string` — joins a base like `/knowledge-catalog` or `/knowledge-catalog/` with `posts/foo/` into `/knowledge-catalog/posts/foo/`, never doubling or dropping slashes. Returns a leading-slash, trailing-slash path.
   - `postHref(slug: string, base: string) => string`
   - `tagHref(tag: string, base: string) => string`
   - `categoryHref(category: string, base: string) => string`
@@ -266,15 +266,15 @@ import assert from 'node:assert/strict';
 import { joinBase, postHref, tagHref, categoryHref } from '../src/lib/paths.mjs';
 
 test('joinBase joins a base without a trailing slash', () => {
-  assert.equal(joinBase('/my-knowldege', 'posts/foo/'), '/my-knowldege/posts/foo/');
+  assert.equal(joinBase('/knowledge-catalog', 'posts/foo/'), '/knowledge-catalog/posts/foo/');
 });
 
 test('joinBase does not double the slash when base has a trailing slash', () => {
-  assert.equal(joinBase('/my-knowldege/', 'posts/foo/'), '/my-knowldege/posts/foo/');
+  assert.equal(joinBase('/knowledge-catalog/', 'posts/foo/'), '/knowledge-catalog/posts/foo/');
 });
 
 test('joinBase tolerates a leading slash on the path', () => {
-  assert.equal(joinBase('/my-knowldege', '/posts/foo/'), '/my-knowldege/posts/foo/');
+  assert.equal(joinBase('/knowledge-catalog', '/posts/foo/'), '/knowledge-catalog/posts/foo/');
 });
 
 test('joinBase handles a root base', () => {
@@ -282,11 +282,11 @@ test('joinBase handles a root base', () => {
 });
 
 test('joinBase returns the base itself for an empty path', () => {
-  assert.equal(joinBase('/my-knowldege', ''), '/my-knowldege/');
+  assert.equal(joinBase('/knowledge-catalog', ''), '/knowledge-catalog/');
 });
 
 test('postHref builds a post url', () => {
-  assert.equal(postHref('hello-world', '/my-knowldege/'), '/my-knowldege/posts/hello-world/');
+  assert.equal(postHref('hello-world', '/knowledge-catalog/'), '/knowledge-catalog/posts/hello-world/');
 });
 
 test('tagHref encodes tags that need escaping', () => {
@@ -301,7 +301,7 @@ test('categoryHref builds a category url', () => {
 - [ ] **Step 3: Run the tests to verify they fail**
 
 ```bash
-cd /Users/davide/Documents/my-knowldege && npm test
+cd /Users/davide/Documents/knowledge-catalog && npm test
 ```
 
 Expected: FAIL — `Cannot find module '.../src/lib/paths.mjs'`.
@@ -337,7 +337,7 @@ export function categoryHref(category, base) {
 - [ ] **Step 5: Run the tests to verify they pass**
 
 ```bash
-cd /Users/davide/Documents/my-knowldege && npm test
+cd /Users/davide/Documents/knowledge-catalog && npm test
 ```
 
 Expected: all 8 tests pass.
@@ -424,7 +424,7 @@ test('findBrokenWikilinks returns empty when all targets exist', () => {
 - [ ] **Step 7: Run the tests to verify they fail**
 
 ```bash
-cd /Users/davide/Documents/my-knowldege && npm test
+cd /Users/davide/Documents/knowledge-catalog && npm test
 ```
 
 Expected: FAIL — `Cannot find module '.../src/lib/wikilinks.mjs'`.
@@ -479,7 +479,7 @@ export function findBrokenWikilinks(posts) {
 - [ ] **Step 9: Run the tests to verify they pass**
 
 ```bash
-cd /Users/davide/Documents/my-knowldege && npm test
+cd /Users/davide/Documents/knowledge-catalog && npm test
 ```
 
 Expected: all tests pass (8 from paths + 10 from wikilinks).
@@ -487,7 +487,7 @@ Expected: all tests pass (8 from paths + 10 from wikilinks).
 - [ ] **Step 10: Commit**
 
 ```bash
-cd /Users/davide/Documents/my-knowldege
+cd /Users/davide/Documents/knowledge-catalog
 git add -A
 git commit -m "feat: add tested path and wikilink helper modules"
 ```
@@ -574,7 +574,7 @@ import { unified } from '@astrojs/markdown-remark';
 import mdx from '@astrojs/mdx';
 import remarkWikilink from './src/plugins/remark-wikilink.mjs';
 
-const BASE = '/my-knowldege';
+const BASE = '/knowledge-catalog';
 
 export default defineConfig({
   site: 'https://davide-ferraro.github.io',
@@ -593,10 +593,10 @@ export default defineConfig({
 - [ ] **Step 3: Build and verify the wikilink became a real anchor**
 
 ```bash
-cd /Users/davide/Documents/my-knowldege && npx astro build && grep -o '<a href="[^"]*">how-tagging-works</a>' dist/posts/hello-knowledge-hub/index.html
+cd /Users/davide/Documents/knowledge-catalog && npx astro build && grep -o '<a href="[^"]*">how-tagging-works</a>' dist/posts/hello-knowledge-hub/index.html
 ```
 
-Expected: `<a href="/my-knowldege/posts/how-tagging-works/">how-tagging-works</a>`
+Expected: `<a href="/knowledge-catalog/posts/how-tagging-works/">how-tagging-works</a>`
 
 If the grep finds nothing, first check the raw text is not still `[[how-tagging-works]]` in the HTML — that means the plugin is not registered on the processor.
 
@@ -605,7 +605,7 @@ Note: `dist/posts/...` only exists once Task 5 creates the post route. If this b
 - [ ] **Step 4: Commit**
 
 ```bash
-cd /Users/davide/Documents/my-knowldege
+cd /Users/davide/Documents/knowledge-catalog
 git add -A
 git commit -m "feat: render wikilinks as internal links via remark plugin"
 ```
@@ -790,15 +790,15 @@ const { Content } = await render(post);
 - [ ] **Step 5: Build and verify post pages plus the backlink section**
 
 ```bash
-cd /Users/davide/Documents/my-knowldege && npx astro build && grep -c 'Linked from' dist/posts/how-tagging-works/index.html && grep -o '<a href="[^"]*">Hello, knowledge hub</a>' dist/posts/how-tagging-works/index.html
+cd /Users/davide/Documents/knowledge-catalog && npx astro build && grep -c 'Linked from' dist/posts/how-tagging-works/index.html && grep -o '<a href="[^"]*">Hello, knowledge hub</a>' dist/posts/how-tagging-works/index.html
 ```
 
-Expected: `1`, then `<a href="/my-knowldege/posts/hello-knowledge-hub/">Hello, knowledge hub</a>` — the backlink from the first post.
+Expected: `1`, then `<a href="/knowledge-catalog/posts/hello-knowledge-hub/">Hello, knowledge hub</a>` — the backlink from the first post.
 
 - [ ] **Step 6: Verify the broken-wikilink guard actually fails the build**
 
 ```bash
-cd /Users/davide/Documents/my-knowldege
+cd /Users/davide/Documents/knowledge-catalog
 printf '\nA link to [[this-does-not-exist]].\n' >> src/content/posts/how-tagging-works.mdx
 npx astro build 2>&1 | grep -c 'Broken wikilinks found'
 ```
@@ -808,7 +808,7 @@ Expected: `1` (build fails with the error).
 Then undo the probe:
 
 ```bash
-cd /Users/davide/Documents/my-knowldege
+cd /Users/davide/Documents/knowledge-catalog
 git checkout src/content/posts/how-tagging-works.mdx
 npx astro build
 ```
@@ -818,7 +818,7 @@ Expected: `[build] Complete!`
 - [ ] **Step 7: Commit**
 
 ```bash
-cd /Users/davide/Documents/my-knowldege
+cd /Users/davide/Documents/knowledge-catalog
 git add -A
 git commit -m "feat: add layouts, post pages, and backlinks"
 ```
@@ -1049,7 +1049,7 @@ const base = import.meta.env.BASE_URL;
 - [ ] **Step 6: Build and verify every route exists**
 
 ```bash
-cd /Users/davide/Documents/my-knowldege && npx astro build && find dist -name '*.html' | sort
+cd /Users/davide/Documents/knowledge-catalog && npx astro build && find dist -name '*.html' | sort
 ```
 
 Expected exactly these files:
@@ -1068,15 +1068,15 @@ dist/tags/setup/index.html
 - [ ] **Step 7: Verify no link is missing the base prefix**
 
 ```bash
-cd /Users/davide/Documents/my-knowldege && grep -oh 'href="/[^"]*"' dist/**/*.html dist/*.html | sort -u
+cd /Users/davide/Documents/knowledge-catalog && grep -oh 'href="/[^"]*"' dist/**/*.html dist/*.html | sort -u
 ```
 
-Expected: every entry starts with `/my-knowldege/`. Any bare `/posts/...` or `/tags/...` is a bug — that link is bypassing the path helpers.
+Expected: every entry starts with `/knowledge-catalog/`. Any bare `/posts/...` or `/tags/...` is a bug — that link is bypassing the path helpers.
 
 - [ ] **Step 8: Commit**
 
 ```bash
-cd /Users/davide/Documents/my-knowldege
+cd /Users/davide/Documents/knowledge-catalog
 git add -A
 git commit -m "feat: add home, tag, and category index pages"
 ```
@@ -1184,7 +1184,7 @@ JavaScript at all. See [[hello-knowledge-hub]] for the wider setup.
 - [ ] **Step 3: Build and verify the chart rendered with its script**
 
 ```bash
-cd /Users/davide/Documents/my-knowldege && npx astro build && grep -c '<rect' dist/posts/interactive-charts/index.html && grep -c '<script' dist/posts/interactive-charts/index.html
+cd /Users/davide/Documents/knowledge-catalog && npx astro build && grep -c '<rect' dist/posts/interactive-charts/index.html && grep -c '<script' dist/posts/interactive-charts/index.html
 ```
 
 Expected: `4` rects, and at least `1` script tag.
@@ -1192,15 +1192,15 @@ Expected: `4` rects, and at least `1` script tag.
 - [ ] **Step 4: Check it in the browser**
 
 ```bash
-cd /Users/davide/Documents/my-knowldege && npx astro preview
+cd /Users/davide/Documents/knowledge-catalog && npx astro preview
 ```
 
-Open `http://localhost:4321/my-knowldege/posts/interactive-charts/`, drag the slider, confirm the bars resize and the percentage updates. Stop the server with Ctrl-C.
+Open `http://localhost:4321/knowledge-catalog/posts/interactive-charts/`, drag the slider, confirm the bars resize and the percentage updates. Stop the server with Ctrl-C.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /Users/davide/Documents/my-knowldege
+cd /Users/davide/Documents/knowledge-catalog
 git add -A
 git commit -m "feat: add interactive chart component and example post"
 ```
@@ -1215,7 +1215,7 @@ git commit -m "feat: add interactive chart component and example post"
 
 **Interfaces:**
 - Consumes: the passing build from Task 7.
-- Produces: the live site at `https://davide-ferraro.github.io/my-knowldege/`.
+- Produces: the live site at `https://davide-ferraro.github.io/knowledge-catalog/`.
 
 - [ ] **Step 1: Write the workflow**
 
@@ -1256,10 +1256,10 @@ jobs:
 - [ ] **Step 2: Write the README**
 
 ```markdown
-# my-knowldege
+# knowledge-catalog
 
 A personal knowledge hub: everything I learn, written as cross-linked posts.
-Live at <https://davide-ferraro.github.io/my-knowldege/>.
+Live at <https://davide-ferraro.github.io/knowledge-catalog/>.
 
 ## Adding a post
 
@@ -1310,7 +1310,7 @@ width and line height. Real design comes later.
 - [ ] **Step 3: Run the full local verification before pushing**
 
 ```bash
-cd /Users/davide/Documents/my-knowldege && npm test && npx astro build
+cd /Users/davide/Documents/knowledge-catalog && npm test && npx astro build
 ```
 
 Expected: all tests pass, then `[build] Complete!`.
@@ -1318,19 +1318,19 @@ Expected: all tests pass, then `[build] Complete!`.
 - [ ] **Step 4: Commit**
 
 ```bash
-cd /Users/davide/Documents/my-knowldege
+cd /Users/davide/Documents/knowledge-catalog
 git add -A
 git commit -m "ci: add GitHub Pages deploy workflow and README"
 ```
 
 - [ ] **Step 5: Set the Pages source on GitHub (manual, required before the first deploy works)**
 
-Open <https://github.com/davide-ferraro/my-knowldege/settings/pages> and set **Source** to **GitHub Actions**. Without this the workflow's deploy step fails.
+Open <https://github.com/davide-ferraro/knowledge-catalog/settings/pages> and set **Source** to **GitHub Actions**. Without this the workflow's deploy step fails.
 
 - [ ] **Step 6: Push and verify the deploy**
 
 ```bash
-cd /Users/davide/Documents/my-knowldege
+cd /Users/davide/Documents/knowledge-catalog
 git push -u origin main
 gh run watch
 ```
@@ -1338,7 +1338,7 @@ gh run watch
 Expected: the workflow succeeds. Then confirm the live site:
 
 ```bash
-curl -sI https://davide-ferraro.github.io/my-knowldege/ | head -1
+curl -sI https://davide-ferraro.github.io/knowledge-catalog/ | head -1
 ```
 
 Expected: `HTTP/2 200`.

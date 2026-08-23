@@ -1,7 +1,7 @@
-# my-knowldege
+# knowledge-catalog
 
 A personal knowledge hub: everything I learn, written as cross-linked posts.
-Live at <https://davide-ferraro.github.io/my-knowldege/>.
+Live at <https://davide-ferraro.github.io/knowledge-catalog/>.
 
 ## Adding a post
 

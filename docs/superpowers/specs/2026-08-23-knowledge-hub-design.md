@@ -11,12 +11,12 @@ A personal knowledge hub published on GitHub Pages. Everything Davide learns is 
 
 - **Astro** with **MDX** for posts (markdown text + embeddable interactive components rendered as islands).
 - **GitHub Pages** deployment via the official Astro GitHub Action, triggered on push to `main`.
-- Site URL: `https://davide-ferraro.github.io/my-knowldege/` (Astro `base` configured accordingly).
+- Site URL: `https://davide-ferraro.github.io/knowledge-catalog/` (Astro `base` configured accordingly).
 
 ## Repository structure
 
 ```
-my-knowldege/
+knowledge-catalog/
 ├── src/
 │   ├── content/
 │   │   └── posts/            # one .mdx file per post
