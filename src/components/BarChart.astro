@@ -1,0 +1,57 @@
+---
+interface Props {
+  values: number[];
+  labels: string[];
+}
+
+const { values, labels } = Astro.props;
+const data = labels.map((label, i) => ({ label, value: values[i] ?? 0 }));
+---
+
+<figure data-bar-chart>
+  <label>
+    Scale: <input type="range" min="1" max="200" value="100" data-scale />
+    <output data-scale-out>100%</output>
+  </label>
+  <svg viewBox="0 0 300 150" role="img" aria-label="Bar chart">
+    {
+      data.map((d, i) => (
+        <rect
+          data-bar
+          data-value={d.value}
+          x={i * (300 / data.length) + 5}
+          width={300 / data.length - 10}
+          y={150 - d.value}
+          height={d.value}
+          fill="currentColor"
+        />
+      ))
+    }
+  </svg>
+  <figcaption>
+    {data.map((d) => `${d.label}: ${d.value}`).join(' | ')}
+  </figcaption>
+</figure>
+
+<script>
+  document.querySelectorAll('[data-bar-chart]').forEach((chart) => {
+    const slider = chart.querySelector('[data-scale]');
+    const out = chart.querySelector('[data-scale-out]');
+    const bars = chart.querySelectorAll('[data-bar]');
+    if (!(slider instanceof HTMLInputElement) || !out) return;
+
+    const render = () => {
+      const factor = Number(slider.value) / 100;
+      out.textContent = `${slider.value}%`;
+      bars.forEach((bar) => {
+        const base = Number(bar.getAttribute('data-value'));
+        const height = Math.max(0, Math.min(150, base * factor));
+        bar.setAttribute('height', String(height));
+        bar.setAttribute('y', String(150 - height));
+      });
+    };
+
+    slider.addEventListener('input', render);
+    render();
+  });
+</script>

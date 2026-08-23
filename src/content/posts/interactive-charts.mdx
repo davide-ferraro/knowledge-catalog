@@ -1,0 +1,17 @@
+---
+title: "Interactive charts in posts"
+date: 2026-08-21
+category: "meta"
+tags: ["setup", "charts"]
+description: "How to embed an interactive component in a post."
+---
+
+import BarChart from '../../components/BarChart.astro';
+
+Posts are MDX, so a post can import a component and render it inline. Drag the
+slider to scale the bars:
+
+<BarChart labels={["Mon", "Tue", "Wed", "Thu"]} values={[40, 80, 55, 120]} />
+
+The component ships its own small script, and pages without a component ship no
+JavaScript at all. See [[hello-knowledge-hub]] for the wider setup.
