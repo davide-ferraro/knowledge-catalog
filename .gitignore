@@ -23,6 +23,6 @@ pnpm-debug.log*
 # jetbrains setting folder
 .idea/
 
-# Reference material — copyrighted source texts, kept local, never published.
-# The repo is public; see docs/superpowers/specs/ for context.
-reference/
+# reference/ is committed, but only for openly-licensed sources.
+# The repo is public: check the licence before adding anything here,
+# and record it in reference/README.md.
