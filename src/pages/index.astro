@@ -1,17 +1,44 @@
 ---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import { postHref, tagHref, categoryHref } from '../lib/paths.mjs';
 
+const posts = (await getCollection('posts')).sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime(),
+);
+const base = import.meta.env.BASE_URL;
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Base title="Knowledge hub">
+  <h1>Knowledge hub</h1>
+  <p>Everything I learn, written down and cross-linked.</p>
+  <ul>
+    {
+      posts.map((post) => (
+        <li>
+          <time datetime={post.data.date.toISOString()}>
+            {post.data.date.toISOString().slice(0, 10)}
+          </time>
+          {' — '}
+          <a href={postHref(post.id, base)}>{post.data.title}</a>
+          {' ('}
+          <a href={categoryHref(post.data.category, base)}>{post.data.category}</a>
+          {')'}
+          {
+            post.data.tags.length > 0 && (
+              <span>
+                {' '}
+                {post.data.tags.map((tag) => (
+                  <>
+                    {' '}
+                    <a href={tagHref(tag, base)}>#{tag}</a>
+                  </>
+                ))}
+              </span>
+            )
+          }
+        </li>
+      ))
+    }
+  </ul>
+</Base>

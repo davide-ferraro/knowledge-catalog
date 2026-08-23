@@ -1,0 +1,26 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { categoryHref } from '../../lib/paths.mjs';
+
+const posts = await getCollection('posts');
+const counts = new Map<string, number>();
+for (const post of posts) {
+  counts.set(post.data.category, (counts.get(post.data.category) ?? 0) + 1);
+}
+const categories = [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+const base = import.meta.env.BASE_URL;
+---
+
+<Base title="Categories">
+  <h1>Categories</h1>
+  <ul>
+    {
+      categories.map(([category, count]) => (
+        <li>
+          <a href={categoryHref(category, base)}>{category}</a> ({count})
+        </li>
+      ))
+    }
+  </ul>
+</Base>

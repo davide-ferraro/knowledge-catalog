@@ -1,0 +1,42 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { postHref } from '../../lib/paths.mjs';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts');
+  const byCategory = new Map();
+  for (const post of posts) {
+    const key = post.data.category;
+    if (!byCategory.has(key)) byCategory.set(key, []);
+    byCategory.get(key).push(post);
+  }
+  return [...byCategory.entries()].map(([category, grouped]) => ({
+    params: { category },
+    props: {
+      category,
+      posts: grouped.sort((a, b) => b.data.date.getTime() - a.data.date.getTime()),
+    },
+  }));
+}
+
+const { category, posts } = Astro.props;
+const base = import.meta.env.BASE_URL;
+---
+
+<Base title={`Category: ${category}`}>
+  <h1>Category: {category}</h1>
+  <ul>
+    {
+      posts.map((post) => (
+        <li>
+          <time datetime={post.data.date.toISOString()}>
+            {post.data.date.toISOString().slice(0, 10)}
+          </time>
+          {' — '}
+          <a href={postHref(post.id, base)}>{post.data.title}</a>
+        </li>
+      ))
+    }
+  </ul>
+</Base>
