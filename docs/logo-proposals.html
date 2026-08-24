@@ -107,7 +107,9 @@ function logoNightGrid(n) {
   return tile('night', `
     <rect width="96" height="96" rx="22" fill="url(#gNight)"/>
     ${lines}${dots}
-    ${badgeBR(n)}`, defs);
+    <text x="85" y="84" text-anchor="end" dominant-baseline="alphabetic"
+          font-family="${FONT}" font-weight="700"
+          font-size="${String(n).length > 1 ? 24 : 27}" fill="#f5f4ef">${n}</text>`, defs);
 }
 
 /* ---------- 2 · Cover blocks ---------- */

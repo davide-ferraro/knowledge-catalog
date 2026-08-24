@@ -10,6 +10,10 @@ const posts = defineCollection({
     category: z.string(),
     tags: z.array(z.string()).default([]),
     description: z.string().optional(),
+    /** Post series slug (e.g. "eeme" for the electricity-markets book notes). */
+    series: z.string().optional(),
+    /** Chapter number shown on the series icon. */
+    chapter: z.number().int().positive().optional(),
   }),
 });
 

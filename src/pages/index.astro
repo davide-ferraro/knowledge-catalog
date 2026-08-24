@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import { postHref, tagHref, categoryHref } from '../lib/paths.mjs';
 import { visiblePosts } from '../lib/visibility.mjs';
+import SeriesIcon from '../components/SeriesIcon.astro';
 import { Badge } from '@/components/ui/badge';
 
 const posts = visiblePosts(await getCollection('posts')).sort(
@@ -27,7 +28,10 @@ const base = import.meta.env.BASE_URL;
             href={postHref(post.id, base)}
             class="hover:bg-accent/60 -mx-3 block rounded-lg px-3 py-3 transition-colors"
           >
-            <div class="flex items-baseline gap-3">
+            <div class="flex items-center gap-3">
+              {post.data.series === 'eeme' && (
+                <SeriesIcon chapter={post.data.chapter} size={32} class="shrink-0" />
+              )}
               <span class="font-medium">{post.data.title}</span>
               <time
                 datetime={post.data.date.toISOString()}
