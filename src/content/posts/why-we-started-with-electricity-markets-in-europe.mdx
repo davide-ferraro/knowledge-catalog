@@ -3,11 +3,12 @@ title: "Why did we start with electricity markets in Europe?"
 date: 2026-08-23
 category: "energy-markets"
 tags: ["book-notes", "eu-policy", "market-design", "regulation"]
-description: "Notes on chapter 1 of Meeus, The Evolution of Electricity Markets in Europe — the political, technical and economic case for a single European power market."
+description: "Notes on chapter 1 of Meeus, The Evolution of Electricity Markets in Europe — how Europe ended up with a single power market, and what it is actually worth."
 ---
 
 import Callout from '../../components/Callout.astro';
 import Toggle from '../../components/Toggle.astro';
+import Chart from '../../components/Chart.tsx';
 import {
   Table,
   TableBody,
@@ -18,179 +19,377 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-Notes on chapter 1 of Leonardo Meeus, *The Evolution of Electricity Markets in
-Europe* (Edward Elgar, 2020), written with Valerie Reif.
+These are my notes on chapter 1 of *The Evolution of Electricity Markets in
+Europe* by Leonardo Meeus (2020, written with Valerie Reif). Meeus is a
+professor at Vlerick Business School and at the Florence School of Regulation,
+the institute that trains a lot of Europe's energy regulators. The book's
+promise is unusual: the European market design is spread across thousands of
+pages of legislation that never state the design explicitly, and the book
+reconstructs it.
 
-The chapter is organised around three questions, and they map onto three
-different kinds of answer — political, technical, and economic. Keeping them
-separate is most of the value: the reasons Europe *built* a single market are
-not the same as the reasons it *works*.
+The chapter asks one question — why did Europe build a single electricity
+market? — and gives three answers that are easy to mix up:
+
+1. **A political answer**: the EU wanted a single market for everything, and
+   electricity was one of the last holdouts.
+2. **A technical answer**: connected power systems are physically easier and
+   cheaper to keep stable, which is why grids were interconnected decades
+   *before* anyone talked about markets.
+3. **An economic answer**: countries have different power plants, different
+   weather and different consumption patterns, so trading between them saves
+   real money — billions per year.
+
+I go through them in order, with some context the book assumes you already
+have.
 
 {/* TODO: one paragraph on why I'm reading this and what I want out of it. */}
 
-## 1. The political process
+## 1. The political story: three layers of rules
 
-Integration happened in three layers, each more detailed than the last: the
-treaties set the goal, the legislative packages restructured the industry, and
-the network codes wrote the actual market rules.
+Before the 1990s, electricity in most of Europe worked like this: each country
+had one utility (or a few regional ones), usually owned by the state, that did
+everything itself — it owned the power plants, the transmission lines, the
+distribution grids, and it sold the electricity to you. The industry term for
+this is a **vertically integrated monopoly**: one company controlling every
+step of the chain, with no competition at any step. Cables to neighbouring
+countries existed but were used sparingly, mostly for emergencies, and there
+were no common rules for trading across them.
 
-**The treaties.** The ambition of a common market with no internal trade
-barriers goes back to the Treaty of Rome (1957). The Single European Act (1986)
-made it concrete by requiring an internal market by 31 December 1992, and the
-Single Market became reality on 1 January 1993 for the then-12 Member States.
-Energy took much longer than expected, because the sector was still dominated by
-state-owned, vertically integrated utilities holding regional or national
-monopolies, with little interconnection and no rules for cross-border trade.
+Turning that into one European market took three layers of rules, each more
+detailed than the previous one: treaties, then "packages" of legislation, then
+network codes.
 
-**The packages.** Four of them, roughly one per decade-and-a-half of ambition:
+### The treaties set the goal
+
+The ambition of a common European market with no internal trade barriers goes
+back to the Treaty of Rome (1957), the founding treaty of what became the EU.
+The Single European Act (1986) made it concrete: it required an internal market
+to be established by 31 December 1992, and on 1 January 1993 the Single Market
+became reality for the twelve member states of the time.
+
+Electricity missed that deadline by decades. Goods like cars or food could be
+traded once tariffs and standards were harmonised, but electricity had no
+markets to open up in the first place — the national monopolies had to be
+broken apart before anyone could compete. The year 1993 turned out to be the
+starting point, not the finish line.
+
+### The packages restructured the industry
+
+The actual restructuring came through four waves of EU legislation, known as
+the energy packages. Two terms help to read the table below:
+
+- A **directive** is an EU law that each country must translate into its own
+  national law (with some freedom in how).
+- A **regulation** applies directly, word for word, in every member state.
 
 <Table>
-  <TableCaption>The four EU legislative energy packages.</TableCaption>
+  <TableCaption>
+    The four EU energy packages and what each one changed.
+  </TableCaption>
   <TableHeader>
     <TableRow>
       <TableHead>Package</TableHead>
-      <TableHead>Directive</TableHead>
-      <TableHead>Key regulations</TableHead>
-      <TableHead>Unbundling step</TableHead>
+      <TableHead>Main electricity laws</TableHead>
+      <TableHead>What it did in practice</TableHead>
     </TableRow>
   </TableHeader>
   <TableBody>
     <TableRow>
       <TableCell>First (1996)</TableCell>
-      <TableCell>96/92/EC</TableCell>
-      <TableCell>—</TableCell>
-      <TableCell>Management &amp; accounting</TableCell>
+      <TableCell>Directive 96/92/EC</TableCell>
+      <TableCell>
+        Started liberalisation: separated the network (a natural monopoly,
+        stays regulated) from generation and supply (opened to competition).
+        Left countries so much freedom that market opening varied wildly.
+      </TableCell>
     </TableRow>
     <TableRow>
       <TableCell>Second (2003)</TableCell>
-      <TableCell>2003/54/EC</TableCell>
-      <TableCell>1228/2003</TableCell>
-      <TableCell>Legal (TSO 2004, DSO 2007)</TableCell>
+      <TableCell>Directive 2003/54/EC, Regulation 1228/2003</TableCell>
+      <TableCell>
+        Forced network operators to become separate legal companies, required
+        every country to have an energy regulator independent of the industry,
+        and set the first common rules for cross-border trade.
+      </TableCell>
     </TableRow>
     <TableRow>
       <TableCell>Third (2009)</TableCell>
-      <TableCell>2009/72/EC</TableCell>
-      <TableCell>714/2009; 713/2009 (ACER)</TableCell>
-      <TableCell>Certified: OU / ISO / ITO</TableCell>
+      <TableCell>Directive 2009/72/EC, Regulations 714/2009 and 713/2009</TableCell>
+      <TableCell>
+        Pushed unbundling further (see below), made regulators independent of
+        governments too, and created the two European institutions: ENTSO-E
+        and ACER.
+      </TableCell>
     </TableRow>
     <TableRow>
-      <TableCell>Clean Energy (2019)</TableCell>
-      <TableCell>2019/944</TableCell>
-      <TableCell>2019/943; 2019/942; 2019/941</TableCell>
-      <TableCell>—</TableCell>
+      <TableCell>Clean Energy Package (2019)</TableCell>
+      <TableCell>Directive 2019/944, Regulations 2019/943, 2019/942, 2019/941</TableCell>
+      <TableCell>
+        Adapted the market rules to the energy transition, strengthened ACER,
+        and added an EU-level body for distribution grid operators.
+      </TableCell>
     </TableRow>
   </TableBody>
 </Table>
 
-Two institutions came out of this: **ENTSO-E** (Third Package) and **ACER**
-(Third Package), with an **EU DSO entity** added by the Clean Energy Package.
-Ownership unbundling became the dominant model in practice, and national
-regulators were pushed step by step towards genuine independence — the Second
-Package required them to exist, the Third made them independent of government.
+A few of the recurring terms, in plain words:
 
-**The network codes.** Eight legislative acts entered into force between 2015 and
-the end of 2017, in three families.
+- **Unbundling** means separating the grid from the rest of the business. The
+  logic: the grid is a monopoly (nobody builds a second set of power lines),
+  so whoever runs it must not favour their own power plants. It happened in
+  steps — first separate *accounting* (1996), then separate *legal entities*
+  (2003), then the Third Package required full separation, with **ownership
+  unbundling** (the grid company has different owners than the generators)
+  becoming the dominant model in Europe.
+- A **TSO** (transmission system operator) runs the high-voltage grid of a
+  country and is responsible for keeping it stable. **ENTSO-E** is the
+  association through which all European TSOs must cooperate — it drafts the
+  technical and market rules and coordinates grid planning.
+- An **NRA** (national regulatory authority) is a country's energy regulator.
+  **ACER** is the EU agency that coordinates the NRAs and decides when they
+  cannot agree on cross-border matters.
 
-<Toggle title="The first generation of network codes and guidelines">
-  **Market codes** — CACM GL (capacity allocation and congestion management),
-  FCA GL (forward capacity allocation), EB GL (electricity balancing).
-
-  **Connection codes** — RfG NC (requirements for generators), DC NC (demand
-  connection), HVDC NC.
-
-  **Operation codes** — SO GL (system operation), ER NC (emergency and
-  restoration).
-
-  Four are guidelines and four are network codes. Both are Commission
-  regulations and directly applicable, but guidelines push more of the detail
-  into the implementation phase, via Terms and Conditions or Methodologies
-  (TCMs) developed by TSOs or NEMOs and approved by regulators.
+<Toggle title="A detail I liked: nobody uses the official names">
+  The book points out (Box 1.1) that essentially all EU energy legislation
+  goes by nicknames — everyone says "the Third Package" or "the Clean Energy
+  Package", and nobody remembers numbers like 2009/72/EC. The nicknames were
+  not even stable: the Clean Energy Package was at various points called the
+  Fourth Package, the 2030 Package, the Jumbo Package and the Winter Package.
+  Meeus's argument for mentioning this: if you want to work in this industry,
+  speaking its language matters more than you would think.
 </Toggle>
 
-<Callout icon="🔑" title="The insight I want to remember">
-  The rules do not prescribe one market design. Meeus's framing is that they
-  "reduce the degree of freedom that countries have" — the design is left
-  *implicit*, and making it explicit is the stated purpose of the book. That
-  reframes the whole thing: there is no single European market design document
-  to go read.
+### The network codes wrote the actual market rules
+
+The packages built the institutions but not the detailed trading rules. Those
+came in a third layer: eight EU regulations called **network codes and
+guidelines**, all entering into force between 2015 and the end of 2017. They
+were drafted mainly by ENTSO-E (the TSOs themselves), reviewed by ACER, and
+adopted by the European Commission — the industry proposes, the regulators
+challenge.
+
+<Toggle title="The eight network codes and guidelines, by family">
+  **Market codes** — how electricity is traded across borders:
+  CACM GL (capacity allocation and congestion management — the day-ahead and
+  intraday markets), FCA GL (forward markets), EB GL (balancing markets).
+
+  **Connection codes** — what anything plugged into the grid must be able to
+  do: RfG NC (generators), DC NC (demand), HVDC NC (high-voltage DC links).
+
+  **Operation codes** — how TSOs run the system: SO GL (system operation),
+  ER NC (emergencies and restoration).
+
+  Four are "network codes" and four are "guidelines". The practical
+  difference: guidelines leave more detail to be worked out later, through
+  methodologies (called TCMs) that TSOs and power exchanges develop and
+  regulators approve. That implementation phase is where much of the real
+  design work happens — the book notes it was expected to run until around
+  2025.
+</Toggle>
+
+<Callout icon="🔑" title="The chapter's key idea">
+  Even with thousands of pages of rules, there is no document that says "this
+  is the European market design". Meeus's framing: the rules only "reduce the
+  degree of freedom that countries have". The design is implicit, and making
+  it explicit is the purpose of the book. That explains something I had
+  noticed before: you cannot go read the European market design anywhere —
+  you have to reconstruct it.
 </Callout>
 
-{/* TODO: does this match what I see in practice at work? Where does the
-    remaining national freedom actually bite? */}
+## 2. The technical story: one big machine
 
-## 2. The technical drivers
+This part needs one piece of background. Almost all of the European
+continent's grid is **synchronous**: every conventional generator from
+Portugal to (since 2025) the Baltic states spins in lockstep, producing
+alternating current at the same 50 Hz rhythm. Physically it behaves as one
+machine. This Continental Europe synchronous area is the largest synchronous
+grid in the world, serving over 400 million people — and it was built up
+decade by decade *before* electricity markets existed, for engineering
+reasons, not commercial ones.
 
-The chapter's argument is that there are technical **advantages of scale**, and
-that cross-border cooperation on these grounds *pre-dated* markets entirely.
+The book explains those reasons with a tandem-bicycle analogy: generators and
+consumers are cyclists on one very long bicycle, the chain is the transmission
+grid, the chain's speed is the frequency and its tension is the voltage. Some
+cyclists pedal directly on the chain (large thermal and nuclear plants), some
+through gears (hydro), some through a belt that lets them pedal at their own
+pace (wind turbines behind an inverter). The system works only if the chain
+keeps constant speed and tension, whatever any individual cyclist does.
 
-Meeus explains it with a tandem-bicycle analogy: generators and loads are
-cyclists on one long bike, the chain is the transmission network, chain speed is
-frequency and chain tension is voltage. Different generator types couple to the
-chain differently — directly (large thermal and nuclear), through gears (hydro),
-or through a belt allowing variable speed (wind with a frequency inverter).
+Two mechanisms make a *bigger* bicycle better:
 
-Two mechanisms matter:
+- **Inertia.** Every spinning generator stores kinetic energy, like a
+  flywheel. When a big power plant suddenly fails, that stored energy is
+  released automatically and slows down the frequency drop, buying the
+  operators seconds to react. More connected machines means more inertia, so
+  the same incident causes a smaller disturbance.
+- **Reserves.** Inertia only buys time — it cannot restore the balance
+  between production and consumption. That is done by reserves: plants
+  deliberately held back from full output so they can jump in. A stand-alone
+  country must keep enough reserves to survive losing its single largest
+  plant. In a shared system that worst case barely grows, while the pool of
+  helpers grows enormously — so everyone can hold proportionally fewer
+  reserves. TSOs set up exactly such "solidarity" reserve-sharing schemes
+  long before markets existed.
 
-- **Inertia.** More synchronously connected rotating machines means more stored
-  kinetic energy, which slows frequency deviations after a sudden mismatch.
-- **Reserves.** Inertia only buys time; it cannot restore balance. Reserves do
-  that, and a bigger synchronous area needs proportionally fewer of them,
-  because the largest single credible incident shrinks relative to system size.
-  Hence reserve-sharing "solidarity" schemes between TSOs, long before markets.
+There is a modern illustration of both mechanisms. On 8 January 2021 the
+Continental European grid **split in two** after an overloaded substation
+tripped in Croatia and the failure cascaded. The north-west part suddenly
+lacked 6.3 GW; frequency fell to 49.74 Hz within 15 seconds. It was contained
+because the system responded as designed: about 1.7 GW of industrial customers
+in France and Italy that are paid to be disconnectable were switched off, and
+neighbouring grids (the Nordic area and Great Britain) pushed in support over
+their DC links. The two halves were resynchronised about an hour later. In a
+small isolated system, the same event would have meant blackouts.
 
 <Callout icon="⚡" title="Worth being precise about">
-  Inertia helps with *near-instantaneous* imbalances — a generator tripping, a
-  sudden load change. It does **not** help with ordinary imbalances caused by
-  forecast error, where production and consumption plans simply diverge. Those
-  need reserves. Easy to blur these two together.
+  Inertia helps only with <em>near-instantaneous</em> imbalances — a plant
+  tripping, a sudden change in load. It does <strong>not</strong> help with
+  ordinary imbalances caused by forecast errors, where production and
+  consumption plans simply drift apart. Those are handled by reserves and the
+  balancing market. This distinction is directly relevant to forecasting
+  work: the imbalance a better forecast removes is precisely the part that
+  inertia never covered.
 </Callout>
 
-{/* TODO: this is directly relevant to forecasting work — the forecast-error
-    imbalance is exactly the part inertia does not cover. Expand. */}
+## 3. The economic story: differences are worth billions
 
-## 3. What we know about the benefits
+Trade is valuable when the trading partners are different, and European
+power systems are *very* different. The book lists the differences
+qualitatively; here is what they look like in 2024 data:
 
-The qualitative case has been understood for decades and rests on
-**differences** between countries:
+<Chart
+  client:only="react"
+  kind="bar"
+  height={300}
+  series={["nuclear", "hydro", "windSolar", "fossil"]}
+  labels={{ nuclear: "Nuclear", hydro: "Hydro", windSolar: "Wind & solar", fossil: "Fossil" }}
+  data={[
+    { label: "France", nuclear: 67.7, hydro: 12.7, windSolar: 12.5, fossil: 5.1 },
+    { label: "Germany", nuclear: 0, hydro: 4.8, windSolar: 43.4, fossil: 41.3 },
+    { label: "Spain", nuclear: 19.4, hydro: 12.2, windSolar: 42.8, fossil: 23.2 },
+    { label: "Italy", nuclear: 0, hydro: 19.9, windSolar: 21.8, fossil: 49.8 },
+    { label: "Norway", nuclear: 0, hydro: 88.8, windSolar: 9.6, fossil: 1.4 },
+    { label: "Great Britain", nuclear: 14.3, hydro: 2.0, windSolar: 34.5, fossil: 35.1 },
+  ]}
+/>
 
-- **Generation mix** — France nuclear-dominated, Germany still coal-heavy,
-  Norway hydro-rich, UK/Spain/Italy relatively gas-heavy.
-- **Load patterns** — countries with lots of electric heating (France, Norway)
-  swing much harder between summer and winter.
-- **Timing** — demand peaks do not coincide across time zones and cultures.
-- **Weather** — and more recently the big one: uneven wind and solar across
-  Member States.
+*Share of electricity generation in 2024, in percent (remainder to 100% is
+bioenergy and other sources). Own calculation from Ember's yearly dataset via
+Our World in Data.*
 
-The quantitative case arrived surprisingly late. The Commission's early-2000s
-benchmarking reports tracked indicators — concentration, the share of the three
-largest generators and suppliers, switching rates, price convergence,
-cross-border exchange — but none of them actually quantified the benefit of
-integration. Only around 2012 did the Commission commission that assessment,
-which put it at **several billions of euros a year**, an order of magnitude ACER
-later confirmed. ACER's annual market monitoring report is the standing
-reference.
+France runs on nuclear, Norway on hydro, Italy mostly on gas, Germany and
+Spain increasingly on wind and solar. On top of the generation mix, demand
+differs too: countries with lots of electric heating (France, Norway) swing
+much harder between summer and winter, daily peaks fall at different hours
+across time zones and cultures, and — increasingly the dominant factor — wind
+and sun do not blow and shine in the same places at the same time. Every one
+of these differences is an opportunity: when French nuclear output is cheap at
+night it can displace German gas; when it is windy in the North Sea, exports
+flow south.
 
-The Brexit counterfactual is the mirror image: a hard electricity Brexit with
-little interconnector expansion and decoupled markets was estimated to cost
-Great Britain **several hundred million euros a year by 2030**.
+### How big are the gains? The number arrived surprisingly late
 
-{/* TODO: chart here once I pull the actual ACER benefit figures by year —
-    <Chart client:only="react" kind="line" series={["benefitBnEur"]} data={[...]} />
-    Don't invent the numbers; get them from the ACER MMR. */}
+The qualitative argument was understood for decades — even before
+liberalisation, utilities sometimes preferred a long-term import contract with
+a neighbour over building a new domestic plant. But nobody put a number on
+integration for a long time. The European Commission's benchmarking reports of
+the early 2000s tracked indicators (market concentration, switching rates,
+price convergence, use of interconnectors) without ever quantifying what
+integration was worth.
+
+The first real quantification came only in 2013, when the Commission had
+consultants (Booz & Company, with economists David Newbery and Goran Strbac)
+assess it. Their headline results:
+
+- Coupling the day-ahead markets alone — making sure cheap electricity
+  automatically flows to where prices are high — is worth **€2.5–4 billion
+  per year**, roughly €5–8 per European per year. About 58–66% of that was
+  already being captured in 2013.
+- Full market integration was estimated at **€12.5–40 billion per year by
+  2030**, and coordinating where renewables get built across borders could
+  add another €16–30 billion per year on top.
+
+ACER, the EU regulators' agency, later confirmed the order of magnitude and
+now tracks it continuously in its annual Market Monitoring Report. Its most
+recent headline estimate is that cross-border trade delivered about **€34
+billion of benefits in 2021**.
+
+### The natural experiment: Brexit
+
+Brexit turned the question around: what does it cost to *leave*? Researchers
+at Imperial College and Cambridge modelled a "hard Elecxit" — Great Britain
+decoupled from the EU market with little further interconnector expansion —
+and estimated it would raise generation costs by roughly **€560–700 million
+per year by 2030** (about 1.5–2%), with Great Britain bearing around 60% of
+the loss.
+
+This stopped being hypothetical after the book was published. On 1 January
+2021 Great Britain did leave the internal energy market. Electricity still
+flows over the cables, but trading reverted to the clumsy old method the EU
+had spent years eliminating: traders must buy capacity on each cable in a
+separate auction, then trade the energy separately — so power sometimes flows
+from the expensive side to the cheap side, which coupled markets make
+impossible. The EU–UK trade agreement sketched a replacement mechanism
+("multi-region loose volume coupling"), but five years on it still has not
+been implemented; as of late 2025 the TSOs' technical reports were still
+under discussion, and the industry on both sides was openly calling for a
+return to proper price coupling.
 
 ## Open questions
 
 {/* These are mine, not the book's — the point of keeping them here. */}
 
 - If the design is implicit, where is it most contested today?
-- How much of the measured benefit is interconnection capacity versus market
-  coupling *rules*?
-- The reserve-sharing argument assumes synchronous area. How does it change with
-  HVDC links and non-synchronous interconnection?
+- How much of the measured benefit comes from building interconnectors versus
+  from the market coupling *rules* that use them better?
+- The reserve-sharing argument assumes one synchronous area. How does it
+  change with HVDC links and non-synchronous interconnection (GB, Nordics)?
 
-## Source
+## Sources
 
-Meeus, L. (2020). *The Evolution of Electricity Markets in Europe*, ch. 1,
-"Why did we start with electricity markets in Europe?" (with Valerie Reif).
-Edward Elgar, Loyola de Palacio Series on European Energy Policy.
-ISBN 978-1-78990-546-5. [doi:10.4337/9781789905472](https://doi.org/10.4337/9781789905472)
+**The book**
+
+- Meeus, L. (2020). [*The Evolution of Electricity Markets in Europe*](https://doi.org/10.4337/9781789905472),
+  ch. 1, "Why did we start with electricity markets in Europe?" (with Valerie
+  Reif). Edward Elgar, Loyola de Palacio Series. ISBN 978-1-78990-546-5.
+
+**Legislation** (the four packages' electricity directives)
+
+- [Directive 96/92/EC](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=celex%3A31996L0092) (First Package) ·
+  [Directive 2003/54/EC](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=celex%3A32003L0054) (Second) ·
+  [Directive 2009/72/EC](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=celex%3A32009L0072) (Third) ·
+  [Directive (EU) 2019/944](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=celex%3A32019L0944) (Clean Energy Package)
+
+**Benefit estimates**
+
+- Booz & Company, Newbery, Strbac et al. (2013),
+  [*Benefits of an Integrated European Energy Market*](https://www.ab.gov.tr/files/ardb/evt/Benefits_of_an_Integrated_European_Energy_Market.pdf),
+  final report for the European Commission, DG Energy.
+- ACER (2022), [Consumers still benefit from energy market integration](https://acer.europa.eu/news/consumers-still-benefit-energy-market-integration-eu) —
+  the ~€34 bn/year estimate from ACER's final assessment of the EU wholesale
+  electricity market design.
+- Zachmann et al. (2024), [*Unity in power, power in unity: why the EU needs more integrated electricity markets*](https://www.bruegel.org/policy-brief/unity-power-power-unity-why-eu-needs-more-integrated-electricity-markets),
+  Bruegel policy brief.
+
+**Brexit / Elecxit**
+
+- Geske, J., R. Green and I. Staffell (2020),
+  [Elecxit: The cost of bilaterally uncoupling British–EU electricity trade](https://www.sciencedirect.com/science/article/pii/S0140988319303949),
+  *Energy Economics* 85; accessible summary at
+  [UKERC](https://ukerc.ac.uk/news/elecxit-could-cost-270-million-a-year/).
+- ENTSO-E, [Single Day-ahead Coupling (SDAC)](https://www.entsoe.eu/network_codes/cacm/implementation/sdac/).
+- Elia Group (2024), [press release on restoring EU–UK price coupling](https://www.eliagroup.eu/en/press/2024/10/20241014_eu-uk-price-coupling).
+- ENTSO-E (Dec 2025), [TSO responses on Multi-Region Loose Volume Coupling](https://www.entsoe.eu/news/2025/12/19/entso-e-publishes-non-confidential-version-of-the-responses-from-the-tso-group-to-technical-questions-on-multi-region-loose-volume-coupling-between-eu-and-uk/).
+
+**The grid**
+
+- Wikipedia, [Continental Europe Synchronous Area](https://en.wikipedia.org/wiki/Continental_Europe_Synchronous_Area).
+- ENTSO-E (2021), [System separation in Continental Europe on 8 January 2021 — 2nd update](https://www.entsoe.eu/news/2021/01/26/system-separation-in-the-continental-europe-synchronous-area-on-8-january-2021-2nd-update/).
+- ENTSO-E (2025), [Baltic synchronisation with Continental Europe](https://www.entsoe.eu/news/2025/02/09/entso-e-confirms-successful-synchronization-of-the-continental-european-electricity-system-with-the-systems-of-the-baltic-countries/).
+
+**Chart data**
+
+- Ember yearly electricity data via Our World in Data,
+  [Electricity production by source](https://ourworldindata.org/grapher/electricity-prod-source-stacked)
+  (2024 values; shares are my own calculation). Ember's own summary:
+  [European Electricity Review 2025](https://ember-energy.org/latest-insights/european-electricity-review-2025/2024-at-a-glance/).

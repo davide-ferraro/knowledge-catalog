@@ -9,6 +9,8 @@ import {
 } from 'recharts';
 import {
   ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
@@ -19,8 +21,10 @@ export interface ChartProps {
   data: Array<Record<string, string | number>>;
   /** Key in `data` holding the x-axis label. */
   labelKey?: string;
-  /** Keys in `data` to plot as series. */
+  /** Keys in `data` to plot as series. Keys must be CSS-variable-safe. */
   series: string[];
+  /** Optional display names per series key, e.g. { windSolar: 'Wind & solar' }. */
+  labels?: Record<string, string>;
   kind?: 'bar' | 'line';
   height?: number;
 }
@@ -34,13 +38,14 @@ export function Chart({
   data,
   labelKey = 'label',
   series,
+  labels,
   kind = 'bar',
   height = 260,
 }: ChartProps) {
   const config: ChartConfig = Object.fromEntries(
     series.map((key, i) => [
       key,
-      { label: key, color: `var(--chart-${(i % 5) + 1})` },
+      { label: labels?.[key] ?? key, color: `var(--chart-${(i % 5) + 1})` },
     ]),
   );
 
@@ -56,6 +61,7 @@ export function Chart({
       />
       <YAxis tickLine={false} axisLine={false} width={32} fontSize={12} />
       <ChartTooltip content={<ChartTooltipContent />} />
+      {series.length > 1 && <ChartLegend content={<ChartLegendContent />} />}
     </>
   );
 
