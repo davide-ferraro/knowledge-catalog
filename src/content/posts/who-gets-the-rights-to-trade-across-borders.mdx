@@ -5,7 +5,7 @@ category: "energy-markets"
 tags: ["book-notes", "market-design", "market-coupling", "transmission-rights"]
 series: "eeme"
 chapter: 2
-description: "Notes on chapter 2 of Meeus, The Evolution of Electricity Markets in Europe — how Europe took the cross-border cables away from the old monopolies and reinvented, timeframe by timeframe, how to hand them out."
+description: "Notes on chapter 2 of Meeus, The Evolution of Electricity Markets in Europe: how Europe took the cross-border cables away from the old monopolies and reinvented, timeframe by timeframe, how to hand them out."
 ---
 
 import Callout from '../../components/Callout.astro';
@@ -32,7 +32,7 @@ makes cross-border trade happen.
 One idea holds the whole chapter together. **A cable between two countries has
 limited capacity, and whoever holds the right to use it holds real economic
 power.** If electricity costs €30/MWh in country A and €50/MWh in country B,
-moving 1 MWh across earns €20 — but only for whoever has the right to use the
+moving 1 MWh across earns €20, but only for whoever has the right to use the
 cable. The chapter is the story of how Europe took those rights away from the
 old monopolies and then spent twenty years figuring out how to hand them out
 fairly, separately for each trading timeframe: months and years ahead, the
@@ -52,7 +52,7 @@ The whole story at a glance:
       kind: "law",
       title: "First Directive",
       detail:
-        "Network operators must give all users non-discriminatory access — on paper. In practice the old utilities keep their reserved cable capacity.",
+        "Network operators must give all users non-discriminatory access, at least on paper. In practice the old utilities keep their reserved cable capacity.",
     },
     {
       year: "2003",
@@ -73,7 +73,7 @@ The whole story at a glance:
       kind: "market",
       title: "Trilateral market coupling goes live",
       detail:
-        "Belgium, France and the Netherlands couple their day-ahead auctions — the design that would win.",
+        "Belgium, France and the Netherlands couple their day-ahead auctions. This is the design that would win.",
     },
     {
       year: "2015",
@@ -115,21 +115,21 @@ The whole story at a glance:
 />
 
 The book's annex also contains a worked numerical example of how market
-coupling sets prices in two countries — I'm keeping that for its own post,
+coupling sets prices in two countries; I'm keeping that for its own post,
 because it deserves to be interactive.
 
 ## 1. ⚖️ The starting point: rights inherited from the monopoly era
 
 Before liberalisation, the rights to use cross-border cables mostly sat inside
 long-term contracts between neighbouring national utilities. When markets
-opened in the late 1990s, those contracts hadn't expired — so newcomers who
+opened in the late 1990s, those contracts hadn't expired, so newcomers who
 wanted to import cheap power found the border already "full", legally if not
 physically. The First Directive said network access must be
 non-discriminatory, but the old privileges survived it.
 
 What broke the deadlock was a court case. In the Netherlands, the regulator
-had reserved a large share of the country's import capacity — 1,500 of the
-3,200 MW available in 2000 — for the long-term contracts of SEP, the former
+had reserved a large share of the country's import capacity (1,500 of the
+3,200 MW available in 2000) for the long-term contracts of SEP, the former
 national generation monopoly. Three parties challenged the decision: VEMW (an
 association of large industrial energy consumers), the Amsterdam Power
 Exchange, and the utility Eneco. The case went up to the European Court of
@@ -143,12 +143,12 @@ That created the next problem: how do you allocate the freed-up capacity
 fairly? A 2004 survey of European borders shows a patchwork of methods, some
 of them barely disguised versions of the old order:
 
-- **Priority lists** — whoever signed up first got the capacity. In practice:
+- **Priority lists**: whoever signed up first got the capacity. In practice:
   incumbents and large industrials.
-- **Pro-rata rationing** — everyone gets a share proportional to what they
+- **Pro-rata rationing**: everyone gets a share proportional to what they
   asked for. In practice: asking for more gets you more, so everyone inflates
   requests.
-- **Explicit auctions** and **market splitting** — the first genuinely
+- **Explicit auctions** and **market splitting**: the first genuinely
   market-based methods, and the subject of the rest of the chapter.
 
 ## 2. 🎫 Explicit auctions: sell the cable separately (and watch it fail)
@@ -163,9 +163,9 @@ sell it in the Netherlands.
 
 The flaw is baked into the word *separately*. To know what a capacity right
 is worth, you must predict tomorrow's *price difference* between the two
-countries, hour by hour — and traders turned out to be bad at that. The
+countries, hour by hour, and traders turned out to be bad at that. The
 Commission's 2007 Sector Inquiry found that on the German–Dutch border alone,
-the value lost to bad guesses in 2004 was about **€50 million — half of the
+the value lost to bad guesses in 2004 was about **€50 million, half of the
 total value of the trade**. In roughly 40% of the hours, power flowed towards
 the Netherlands while Germany was the more expensive side: traders had paid
 for capacity and then lost money using it in the wrong direction.
@@ -178,16 +178,16 @@ price spread and which way power actually flowed:
 
 The fix Europe converged on is the **implicit auction**: stop selling
 capacity to traders altogether. Give it to the power exchanges instead, and
-let their day-ahead auction use it — the algorithm sees the actual bids on
+let their day-ahead auction use it. The algorithm sees the actual bids on
 both sides of the border, so it never guesses wrong and never wastes a
 profitable megawatt. Because this welds the national day-ahead auctions
 together, the approach was renamed **market coupling**.
 
 <Callout icon="🔑" title="The distinction everything else builds on">
   <strong>Explicit</strong>: capacity is a product you buy, separately from
-  energy — so someone has to forecast the price spread, and forecast errors
+  energy, so someone has to forecast the price spread, and forecast errors
   burn real money. <strong>Implicit</strong>: capacity is an input to the
-  energy auction itself — nobody buys it, the algorithm allocates it while
+  energy auction itself: nobody buys it, the algorithm allocates it while
   clearing the market. Everything in sections 3–5 is Europe applying this
   lesson to one timeframe after another.
 </Callout>
@@ -216,7 +216,7 @@ share with each other:
     <TableRow>
       <TableCell>Market splitting</TableCell>
       <TableCell>Nord Pool (Nordics)</TableCell>
-      <TableCell>Trivially — one exchange, one order book</TableCell>
+      <TableCell>Trivially: one exchange, one order book</TableCell>
       <TableCell>
         Worked from the start: compute one price for the whole region, and
         only "split" into price areas when a cable is congested.
@@ -226,7 +226,7 @@ share with each other:
       <TableCell>Trilateral market coupling</TableCell>
       <TableCell>Belgium, France, Netherlands (3 exchanges, 3 TSOs)</TableCell>
       <TableCell>
-        First tried not to (aggregated "net export curves") — the shortcut
+        First tried not to (aggregated "net export curves"), but the shortcut
         failed. Went live in 2006 with fully shared order books.
       </TableCell>
       <TableCell>The winning design; grew into today's system.</TableCell>
@@ -267,7 +267,7 @@ look:
   countries allow several competing NEMOs; some (Italy, Spain, Greece and
   others) kept a single legal-monopoly exchange.
 - **MCO function** (Market Coupling Operator): the *task* of running the
-  coupled calculation — collecting all order books and all available cable
+  coupled calculation: collecting all order books and all available cable
   capacities, and computing prices and cross-border flows for every zone at
   once. It is jointly operated by all NEMOs: each day one NEMO runs the
   system, one coordinates, one stands by as hot backup, and the others may
@@ -279,7 +279,7 @@ look:
 
 ### The open issues the book flags
 
-**Governance — cooperating competitors.** The NEMOs must run the MCO function
+**Governance: cooperating competitors.** The NEMOs must run the MCO function
 together while competing for the same customers. That tension is not
 hypothetical: in 2014 the European Commission fined the two biggest
 exchanges, EPEX Spot and Nord Pool Spot, €5.9 million for agreeing not to
@@ -288,14 +288,14 @@ debating whether the MCO should be pulled out into a single independent
 entity; so far the Commission has judged it too early.
 
 **Cost sharing.** The NEMOs bear the coupling costs, national TSOs *may*
-contribute but don't have to, and the sharing keys differ by country — so
+contribute but don't have to, and the sharing keys differ by country, so
 exchanges operating in several countries face uneven cost burdens they pass
 into their fees.
 
 **The algorithm is being pushed to its limits.** On 7 June 2019 a software
 bug at EPEX Spot kept its order books out of the coupling entirely: the
 fall-back was national markets without cross-border trade, and prices went
-unusually low in some countries and extremely high in others — a live
+unusually low in some countries and extremely high in others: a live
 demonstration of what the coupling is worth. Beyond incidents, complexity
 keeps growing: EUPHEMIA must digest both **multi-part orders** (bids
 reflecting power-plant technicalities like start-up costs) and **block
@@ -307,11 +307,11 @@ those very prices. Academics debate fixing this with "complex pricing" (side
 payments that make everyone whole, as US-style power pools do); Meeus's own
 research argues the modest trade gains aren't worth the administrative
 machinery. Meanwhile the load has only grown: since the book, the coupled
-market moved from hourly to **15-minute periods** (30 September 2025) —
-96 prices per zone per day instead of 24.
+market moved from hourly to **15-minute periods** (30 September 2025),
+which means 96 prices per zone per day instead of 24.
 
 One thing that did get settled: harmonised price limits. Since regulators
-couldn't agree, ACER decided — day-ahead prices are capped at **€3,000/MWh**
+couldn't agree, ACER decided: day-ahead prices are capped at **€3,000/MWh**
 and floored at **−€500/MWh**, and the cap automatically rises by €1,000 if
 prices ever come within 60% of it, so it cannot act as a hidden price cap.
 
@@ -328,15 +328,15 @@ prices ever come within 60% of it, so it cannot act as a hidden price cap.
 Everything months or years ahead of delivery is the **forward market**, and
 it works differently: mostly bilateral deals and over-the-counter (OTC)
 trading, with exchanges offering standardised futures as trading platforms
-rather than daily auctions. No daily auction means there is nothing to couple
-— so for this timeframe, cross-border capacity is *still* sold in explicit
+rather than daily auctions. No daily auction means there is nothing to couple,
+so for this timeframe cross-border capacity is *still* sold in explicit
 auctions, the method day-ahead abandoned.
 
 The TSOs run these auctions jointly through **JAO** (the Joint Allocation
 Office in Luxembourg), which started as a voluntary initiative and became the
 single European allocation platform under the FCA guideline (2016). TSOs must
 offer capacity at least year-ahead and month-ahead; how much to release at
-each horizon is still argued about — traders want lots of capacity early (it's
+each horizon is still argued about: traders want lots of capacity early (it's
 their hedge), TSOs prefer drip-feeding it (early promises can bite them
 later).
 
@@ -348,8 +348,8 @@ The interesting design question is what kind of right you get, and this is
 where two acronyms earn their keep. A **PTR** (physical transmission right)
 lets you actually nominate a flow across the border. But under the
 **use-it-or-sell-it** principle (UIOSI), if you don't nominate, the capacity
-is handed to the day-ahead coupling and you're paid the day-ahead spread —
-you lose nothing by doing nothing. An **FTR** (financial transmission right)
+is handed to the day-ahead coupling and you're paid the day-ahead spread,
+so you lose nothing by doing nothing. An **FTR** (financial transmission right)
 drops the physical part entirely: it's a pure payout on the spread. Play with
 the slider and watch what happens:
 
@@ -359,7 +359,7 @@ Two more details worth remembering from this section:
 
 - **Curtailment.** If a TSO has to cancel rights it sold (a network problem),
   compensation depends on the cause: *force majeure* refunds the auction
-  price, ordinary curtailment pays the full day-ahead spread — the holder's
+  price, ordinary curtailment pays the full day-ahead spread, the holder's
   lost opportunity. Who judges what counts as force majeure? The TSO's
   national regulator, which the book flags as an unresolved asymmetry.
 - **You don't need transmission rights at all** if other hedges exist. The
@@ -371,7 +371,7 @@ Two more details worth remembering from this section:
 ## 5. ⏱️ After day-ahead: intraday, the youngest and least finished market
 
 Between the day-ahead auction and real time sits the **intraday market**,
-where positions get corrected as reality diverges from plans — a wind
+where positions get corrected as reality diverges from plans: a wind
 forecast shifts, a plant trips. It matters far beyond its (small) traded
 volumes, because it's the last chance to fix an imbalance in the market
 before the TSO fixes it for you at balancing prices.
@@ -379,19 +379,19 @@ before the TSO fixes it for you at balancing prices.
 Intraday trading in Europe is **continuous**: a shared order book where bids
 match the moment they cross, like a stock exchange, rather than in one big
 auction. Cross-border continuous trading went live on 12 June 2018 (the XBID
-platform, formally **SIDC** — single intraday coupling). The CACM guideline
+platform, formally **SIDC**, short for single intraday coupling). The CACM guideline
 requires cross-border intraday trading to stay open until at most one hour
 before delivery; within a country you can often trade even closer to real
 time.
 
 The awkward part, which the book calls out directly: in continuous trading,
-cross-border capacity is used **free of charge, first-come-first-served** —
+cross-border capacity is used **free of charge, first-come-first-served**:
 whoever's order matches first gets the cable. That is *not* a market-based
 allocation, the very principle Regulation 1228/2003 established. When the
 capacity is scarce and valuable (say, before a windy evening), giving it away
 by speed rewards the fastest algorithms rather than the highest-value trades.
-The regulators' answer — after they failed to agree and ACER had to decide in
-2019 — was to bolt **three pan-European intraday auctions** (IDAs) onto the
+The regulators' answer, reached after they failed to agree and ACER had to
+decide in 2019, was to bolt **three pan-European intraday auctions** (IDAs) onto the
 continuous market, so scarce capacity gets priced at least three times per
 day. The book left this as an open question; the auctions actually launched
 on 13 June 2024, clearing at 15:00 and 22:00 the day before delivery and at
@@ -411,50 +411,50 @@ on 13 June 2024, clearing at 15:00 and 22:00 the day before delivery and at
 
 Historical privileges were dismantled by the courts (VEMW, 2005). Market-based
 allocation became mandatory in 2003, and Europe learned the hard way that
-*explicit* auctions — selling the cable separately — waste real money.
+*explicit* auctions (selling the cable separately) waste real money.
 Day-ahead converged on *implicit* allocation: market coupling, grown from
 regional experiments into SDAC, one algorithm clearing nearly all of Europe.
 Before day-ahead, explicit auctions survive as long-term transmission rights
 on the JAO platform, drifting from physical to financial form. After
 day-ahead, intraday trading is continuous and its capacity was long given
-away for free — the newly added intraday auctions are the still-unfinished
+away for free; the newly added intraday auctions are the still-unfinished
 fix.
 
 <Toggle title="Acronym cheat sheet for this chapter">
-  **CACM GL** — Capacity Allocation and Congestion Management guideline
+  **CACM GL**: Capacity Allocation and Congestion Management guideline
   (2015): the EU regulation that makes day-ahead and intraday coupling
   binding.
 
-  **FCA GL** — Forward Capacity Allocation guideline (2016): same, for
+  **FCA GL**: Forward Capacity Allocation guideline (2016): same, for
   long-term transmission rights.
 
-  **SDAC / SIDC** — Single Day-Ahead Coupling / Single Intraday Coupling: the
+  **SDAC / SIDC**: Single Day-Ahead Coupling / Single Intraday Coupling: the
   two operational pan-European coupling systems.
 
-  **NEMO** — Nominated Electricity Market Operator: a certified power
+  **NEMO**: Nominated Electricity Market Operator: a certified power
   exchange participating in the coupling.
 
-  **MCO** — Market Coupling Operator function: the jointly-run task of
+  **MCO**: Market Coupling Operator function: the jointly-run task of
   computing all prices and cross-border flows.
 
-  **EUPHEMIA** — the day-ahead clearing algorithm.
+  **EUPHEMIA**: the day-ahead clearing algorithm.
 
-  **XBID** — the shared IT platform behind continuous intraday coupling.
+  **XBID**: the shared IT platform behind continuous intraday coupling.
 
-  **IDA** — the three pan-European intraday auctions (live since June 2024).
+  **IDA**: the three pan-European intraday auctions (live since June 2024).
 
-  **JAO** — Joint Allocation Office: the single platform auctioning long-term
+  **JAO**: Joint Allocation Office: the single platform auctioning long-term
   transmission rights.
 
-  **PTR / FTR** — physical / financial transmission right.
+  **PTR / FTR**: physical / financial transmission right.
 
-  **UIOSI** — use-it-or-sell-it: unused physical rights are resold in the
+  **UIOSI**: use-it-or-sell-it: unused physical rights are resold in the
   day-ahead auction and the holder is paid the spread.
 
-  **OTC** — over-the-counter: bilateral trades struck outside an exchange —
+  **OTC**: over-the-counter: bilateral trades struck outside an exchange,
   still the bulk of all electricity trade.
 
-  **EPAD** — the Nordic contract for hedging the gap between a zone price and
+  **EPAD**: the Nordic contract for hedging the gap between a zone price and
   the system price, used instead of transmission rights.
 </Toggle>
 
@@ -484,5 +484,5 @@ fix.
 - EPEX Spot (2024), [Intraday Auctions (IDAs) were implemented across Europe on 13 June 2024](https://www.epexspot.com/en/news/intraday-auctions-idas-were-implemented-across-europe-13-june-2024);
   ENTSO-E, [Intraday auctions on SIDC](https://www.entsoe.eu/network_codes/cacm/implementation/ida/).
 - Austrian Power Grid (2025), [Go-live of 15-minute market time unit in day-ahead coupling successful as of 30 September 2025](https://markt.apg.at/en/news-press/sdac-go-live-of-15-minute-market-time-unit-in-day-ahead-market-coupling-successful-as-of-september-30-2025/).
-- [JAO — Joint Allocation Office](https://www.jao.eu), the single allocation
+- [JAO](https://www.jao.eu), the Joint Allocation Office: the single allocation
   platform for long-term transmission rights.

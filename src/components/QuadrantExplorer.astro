@@ -78,7 +78,7 @@
   <p class="text-muted-foreground mt-2 min-h-[2.75rem] text-sm leading-relaxed" data-qx-info></p>
 
   <figcaption class="text-muted-foreground mt-2 border-t pt-3 text-xs leading-relaxed">
-    Each dot is one delivery hour (illustrative positions — the real 2004
+    Each dot is one delivery hour (illustrative positions; the real 2004
     Germany–Netherlands data behind this pattern is in Figure 2.2 of the book).
     Hover or tap a quadrant for the explanation; switch modes to see what
     market coupling eliminates.
@@ -136,17 +136,17 @@
   const INFO: Record<string, Record<string, string>> = {
     explicit: {
       default:
-        'Under explicit auctions traders bought capacity days ahead, guessing tomorrow’s prices. The guesses were often wrong — dots land in every quadrant.',
+        'Under explicit auctions traders bought capacity days ahead, guessing tomorrow’s prices. The guesses were often wrong, so dots land in every quadrant.',
       tl: '✗ Power flows towards B even though A is the expensive side: the trader paid for a right and then lost the spread on top. On the German–Dutch border this happened in ~40% of all hours in 2004.',
-      tr: '✓ Right direction — but notice how many dots sit well below the cable’s capacity while a price spread exists: paid-for rights left unused, trade left on the table.',
+      tr: '✓ Right direction, but notice how many dots sit well below the cable’s capacity while a price spread exists: paid-for rights left unused, trade left on the table.',
       bl: '✓ Right direction (mirror image of the top-right quadrant), with the same problem: the cable is rarely used to the full.',
-      br: '✗ Power flows towards A while B is the expensive side — money-losing trades in this direction too.',
+      br: '✗ Power flows towards A while B is the expensive side: money-losing trades in this direction too.',
     },
     coupled: {
       default:
         'Under market coupling the day-ahead algorithm allocates the cable itself: no dot can land in a ✗ quadrant any more.',
       tl: 'Empty by construction: the algorithm never schedules flow towards the cheaper side.',
-      tr: 'Whenever B is more expensive, the cable is loaded exactly to its limit towards B — every profitable MW gets moved.',
+      tr: 'Whenever B is more expensive, the cable is loaded exactly to its limit towards B, so every profitable MW gets moved.',
       bl: 'Mirror image: whenever A is more expensive, the cable is full towards A.',
       br: 'Empty by construction: the algorithm never schedules flow towards the cheaper side.',
     },

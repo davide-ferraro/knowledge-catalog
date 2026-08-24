@@ -60,7 +60,7 @@
 
   <figcaption class="text-muted-foreground mt-3 border-t pt-3 text-xs leading-relaxed">
     Move the slider across the whole range: the two payouts never differ.
-    That is the point — once the day-ahead market is coupled, a physical
+    That is the point: once the day-ahead market is coupled, a physical
     right with use-it-or-sell-it is financially identical to a financial
     right. The only thing the PTR adds is the option to schedule the flow
     yourself, which coupling already does optimally. Hence Europe's ongoing
@@ -85,7 +85,7 @@
 
       q('[data-rp-ptr-text]').textContent =
         spread > 0
-          ? `B is €${spread} more expensive: you can nominate the physical flow and earn the spread — or do nothing, in which case use-it-or-sell-it hands the capacity to the day-ahead auction and pays you the same €${spread}.`
+          ? `B is €${spread} more expensive: you can nominate the physical flow and earn the spread, or do nothing, in which case use-it-or-sell-it hands the capacity to the day-ahead auction and pays you the same €${spread}.`
           : 'The spread is zero or negative: flowing A → B would lose money, so you nominate nothing. Use-it-or-sell-it resells the capacity, worth €0 in this direction.';
 
       q('[data-rp-ftr-text]').textContent =
