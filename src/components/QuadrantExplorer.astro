@@ -1,0 +1,203 @@
+---
+/**
+ * Interactive quadrant diagram for cross-border trade outcomes.
+ * X: day-ahead price difference (B − A). Y: scheduled flow A → B.
+ * Toggle between "explicit auctions" (traders guess → dots everywhere)
+ * and "market coupling" (algorithm → only efficient patterns remain).
+ * Dot positions are hardcoded illustrative data, not real market data.
+ */
+---
+
+<figure class="not-prose border-border my-6 rounded-lg border p-4 sm:p-5" data-qx>
+  <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+    <p class="text-sm font-medium">Where do the traded hours land?</p>
+    <div class="border-border flex rounded-md border p-0.5 text-xs" role="group">
+      <button
+        type="button"
+        data-qx-mode="explicit"
+        class="rounded px-2.5 py-1 font-medium transition-colors"
+      >
+        Explicit auctions
+      </button>
+      <button
+        type="button"
+        data-qx-mode="coupled"
+        class="rounded px-2.5 py-1 font-medium transition-colors"
+      >
+        Market coupling
+      </button>
+    </div>
+  </div>
+
+  <svg
+    viewBox="0 0 560 360"
+    class="w-full select-none"
+    aria-label="Quadrant diagram of price difference versus cross-border flow"
+  >
+    <!-- quadrant hover targets (top-left, top-right, bottom-left, bottom-right) -->
+    <rect data-qx-quad="tl" x="20" y="20" width="260" height="150" fill="var(--chart-5)" opacity="0.06"></rect>
+    <rect data-qx-quad="tr" x="280" y="20" width="260" height="150" fill="var(--chart-2)" opacity="0.06"></rect>
+    <rect data-qx-quad="bl" x="20" y="170" width="260" height="150" fill="var(--chart-2)" opacity="0.06"></rect>
+    <rect data-qx-quad="br" x="280" y="170" width="260" height="150" fill="var(--chart-5)" opacity="0.06"></rect>
+
+    <!-- axes -->
+    <line x1="20" y1="170" x2="540" y2="170" stroke="var(--border)" stroke-width="1.5"></line>
+    <line x1="280" y1="20" x2="280" y2="320" stroke="var(--border)" stroke-width="1.5"></line>
+
+    <!-- axis labels -->
+    <text x="538" y="186" text-anchor="end" class="fill-muted-foreground" font-size="11">
+      B more expensive →
+    </text>
+    <text x="24" y="186" text-anchor="start" class="fill-muted-foreground" font-size="11">
+      ← A more expensive
+    </text>
+    <text x="290" y="32" text-anchor="start" class="fill-muted-foreground" font-size="11">
+      ↑ flow A → B
+    </text>
+    <text x="290" y="316" text-anchor="start" class="fill-muted-foreground" font-size="11">
+      ↓ flow B → A
+    </text>
+
+    <!-- quadrant verdicts -->
+    <text x="46" y="52" class="fill-foreground" font-size="12" font-weight="600" data-qx-label="tl">✗ wrong way</text>
+    <text x="446" y="52" class="fill-foreground" font-size="12" font-weight="600" data-qx-label="tr">✓ right way</text>
+    <text x="46" y="300" class="fill-foreground" font-size="12" font-weight="600" data-qx-label="bl">✓ right way</text>
+    <text x="446" y="300" class="fill-foreground" font-size="12" font-weight="600" data-qx-label="br">✗ wrong way</text>
+
+    <!-- capacity guides (coupling mode) -->
+    <g data-qx-caps style="opacity: 0" aria-hidden="true">
+      <line x1="20" y1="60" x2="540" y2="60" stroke="var(--muted-foreground)" stroke-width="1" stroke-dasharray="4 4" opacity="0.5"></line>
+      <line x1="20" y1="280" x2="540" y2="280" stroke="var(--muted-foreground)" stroke-width="1" stroke-dasharray="4 4" opacity="0.5"></line>
+      <text x="168" y="56" class="fill-muted-foreground" font-size="10">cable full A → B</text>
+      <text x="168" y="276" class="fill-muted-foreground" font-size="10">cable full B → A</text>
+    </g>
+
+    <g data-qx-dots></g>
+  </svg>
+
+  <p class="text-muted-foreground mt-2 min-h-[2.75rem] text-sm leading-relaxed" data-qx-info></p>
+
+  <figcaption class="text-muted-foreground mt-2 border-t pt-3 text-xs leading-relaxed">
+    Each dot is one delivery hour (illustrative positions — the real 2004
+    Germany–Netherlands data behind this pattern is in Figure 2.2 of the book).
+    Hover or tap a quadrant for the explanation; switch modes to see what
+    market coupling eliminates.
+  </figcaption>
+</figure>
+
+<script>
+  // Deterministic pseudo-random so dots are stable across renders.
+  function mulberry32(seed: number) {
+    let a = seed;
+    return () => {
+      a |= 0;
+      a = (a + 0x6d2b79f5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  const CX = 280;
+  const CY = 170;
+  const CAP_Y = 110; // px from centre = "cable full"
+
+  function explicitDots() {
+    const rnd = mulberry32(7);
+    const pts: Array<[number, number]> = [];
+    // right way, but flow rarely uses the full cable (missed opportunity)
+    for (let i = 0; i < 34; i++) {
+      pts.push([CX + 15 + rnd() * 235, CY - 8 - rnd() * (CAP_Y + 25)]);
+      pts.push([CX - 15 - rnd() * 235, CY + 8 + rnd() * (CAP_Y + 25)]);
+    }
+    // wrong way: paid for rights, then flowed against the price
+    for (let i = 0; i < 16; i++) {
+      pts.push([CX - 15 - rnd() * 200, CY - 8 - rnd() * (CAP_Y - 5)]);
+      pts.push([CX + 15 + rnd() * 200, CY + 8 + rnd() * (CAP_Y - 5)]);
+    }
+    return pts;
+  }
+
+  function coupledDots() {
+    const rnd = mulberry32(11);
+    const pts: Array<[number, number]> = [];
+    // spread > 0 → cable exactly full towards B (and mirrored)
+    for (let i = 0; i < 26; i++) {
+      pts.push([CX + 15 + rnd() * 235, CY - CAP_Y + (rnd() - 0.5) * 5]);
+      pts.push([CX - 15 - rnd() * 235, CY + CAP_Y + (rnd() - 0.5) * 5]);
+    }
+    // cable not full → prices equalised, spread = 0
+    for (let i = 0; i < 30; i++) {
+      pts.push([CX + (rnd() - 0.5) * 8, CY - CAP_Y + rnd() * (2 * CAP_Y)]);
+    }
+    return pts;
+  }
+
+  const INFO: Record<string, Record<string, string>> = {
+    explicit: {
+      default:
+        'Under explicit auctions traders bought capacity days ahead, guessing tomorrow’s prices. The guesses were often wrong — dots land in every quadrant.',
+      tl: '✗ Power flows towards B even though A is the expensive side: the trader paid for a right and then lost the spread on top. On the German–Dutch border this happened in ~40% of all hours in 2004.',
+      tr: '✓ Right direction — but notice how many dots sit well below the cable’s capacity while a price spread exists: paid-for rights left unused, trade left on the table.',
+      bl: '✓ Right direction (mirror image of the top-right quadrant), with the same problem: the cable is rarely used to the full.',
+      br: '✗ Power flows towards A while B is the expensive side — money-losing trades in this direction too.',
+    },
+    coupled: {
+      default:
+        'Under market coupling the day-ahead algorithm allocates the cable itself: no dot can land in a ✗ quadrant any more.',
+      tl: 'Empty by construction: the algorithm never schedules flow towards the cheaper side.',
+      tr: 'Whenever B is more expensive, the cable is loaded exactly to its limit towards B — every profitable MW gets moved.',
+      bl: 'Mirror image: whenever A is more expensive, the cable is full towards A.',
+      br: 'Empty by construction: the algorithm never schedules flow towards the cheaper side.',
+    },
+  };
+
+  document.querySelectorAll<HTMLElement>('[data-qx]').forEach((root) => {
+    const dotsGroup = root.querySelector('[data-qx-dots]')!;
+    const info = root.querySelector<HTMLElement>('[data-qx-info]')!;
+    const caps = root.querySelector<SVGGElement>('[data-qx-caps]')!;
+    const buttons = root.querySelectorAll<HTMLButtonElement>('[data-qx-mode]');
+    let mode = 'explicit';
+
+    function render() {
+      const pts = mode === 'explicit' ? explicitDots() : coupledDots();
+      dotsGroup.innerHTML = pts
+        .map(
+          ([x, y]) =>
+            `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="var(--chart-1)" opacity="0.65"></circle>`,
+        )
+        .join('');
+      caps.style.opacity = mode === 'coupled' ? '1' : '0';
+      info.textContent = INFO[mode].default;
+      buttons.forEach((b) => {
+        const active = b.dataset.qxMode === mode;
+        b.classList.toggle('bg-muted', active);
+        b.classList.toggle('text-muted-foreground', !active);
+      });
+    }
+
+    buttons.forEach((b) =>
+      b.addEventListener('click', () => {
+        mode = b.dataset.qxMode!;
+        render();
+      }),
+    );
+
+    root.querySelectorAll<SVGRectElement>('[data-qx-quad]').forEach((rect) => {
+      const key = rect.dataset.qxQuad!;
+      const show = () => {
+        info.textContent = INFO[mode][key];
+        rect.setAttribute('opacity', '0.16');
+      };
+      const hide = () => {
+        info.textContent = INFO[mode].default;
+        rect.setAttribute('opacity', '0.06');
+      };
+      rect.addEventListener('mouseenter', show);
+      rect.addEventListener('mouseleave', hide);
+      rect.addEventListener('click', show);
+    });
+
+    render();
+  });
+</script>
