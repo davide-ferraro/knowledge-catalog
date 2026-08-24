@@ -9,6 +9,7 @@ description: "Notes on chapter 1 of Meeus, The Evolution of Electricity Markets 
 import Callout from '../../components/Callout.astro';
 import Toggle from '../../components/Toggle.astro';
 import Chart from '../../components/Chart.tsx';
+import Timeline from '../../components/Timeline.astro';
 import {
   Table,
   TableBody,
@@ -44,7 +45,7 @@ have.
 
 {/* TODO: one paragraph on why I'm reading this and what I want out of it. */}
 
-## 1. The political story: three layers of rules
+## 1. 🏛️ The political story: three layers of rules
 
 Before the 1990s, electricity in most of Europe worked like this: each country
 had one utility (or a few regional ones), usually owned by the state, that did
@@ -58,6 +59,72 @@ were no common rules for trading across them.
 Turning that into one European market took three layers of rules, each more
 detailed than the previous one: treaties, then "packages" of legislation, then
 network codes.
+
+<Timeline
+  kinds={{
+    treaty: "Treaty",
+    package: "Package",
+    code: "Network codes",
+  }}
+  items={[
+    {
+      year: "1957",
+      kind: "treaty",
+      title: "Treaty of Rome",
+      detail:
+        "The founding goal: a common European market with no internal trade barriers.",
+    },
+    {
+      year: "1986",
+      kind: "treaty",
+      title: "Single European Act",
+      detail: "Sets a hard deadline: internal market by 31 December 1992.",
+    },
+    {
+      year: "1993",
+      kind: "treaty",
+      title: "The Single Market becomes reality",
+      detail:
+        "For most goods and services — but electricity is still national monopolies.",
+    },
+    {
+      year: "1996",
+      kind: "package",
+      title: "First Package",
+      detail:
+        "Liberalisation starts: the network is separated from generation and supply.",
+    },
+    {
+      year: "2003",
+      kind: "package",
+      title: "Second Package",
+      detail:
+        "Legal unbundling; every country must have an energy regulator independent of the industry.",
+    },
+    {
+      year: "2009",
+      kind: "package",
+      title: "Third Package",
+      detail:
+        "Ownership unbundling becomes the norm; ENTSO-E and ACER are created.",
+    },
+    {
+      year: "2015–17",
+      kind: "code",
+      title: "Eight network codes and guidelines",
+      detail:
+        "The detailed market, connection and operation rules enter into force.",
+    },
+    {
+      year: "2019",
+      kind: "package",
+      title: "Clean Energy Package",
+      detail:
+        "Rules adapted to the energy transition; ACER strengthened; implementation of the codes' methodologies runs to ~2025.",
+    },
+  ]}
+  caption="Sixty years from goal to detailed rules. Each layer is more concrete than the one before — and the layers interleave in time."
+/>
 
 ### The treaties set the goal
 
@@ -196,7 +263,7 @@ challenge.
   you have to reconstruct it.
 </Callout>
 
-## 2. The technical story: one big machine
+## 2. ⚙️ The technical story: one big machine
 
 This part needs one piece of background. Almost all of the European
 continent's grid is **synchronous**: every conventional generator from
@@ -251,7 +318,7 @@ small isolated system, the same event would have meant blackouts.
   inertia never covered.
 </Callout>
 
-## 3. The economic story: differences are worth billions
+## 3. 💶 The economic story: differences are worth billions
 
 Trade is valuable when the trading partners are different, and European
 power systems are *very* different. The book lists the differences
@@ -335,7 +402,7 @@ been implemented; as of late 2025 the TSOs' technical reports were still
 under discussion, and the industry on both sides was openly calling for a
 return to proper price coupling.
 
-## Open questions
+## ❓ Open questions
 
 {/* These are mine, not the book's — the point of keeping them here. */}
 
@@ -345,7 +412,7 @@ return to proper price coupling.
 - The reserve-sharing argument assumes one synchronous area. How does it
   change with HVDC links and non-synchronous interconnection (GB, Nordics)?
 
-## Sources
+## 📚 Sources
 
 **The book**
 

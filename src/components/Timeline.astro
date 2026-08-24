@@ -1,0 +1,64 @@
+---
+interface Item {
+  /** Year or range shown in the left gutter, e.g. "1957" or "2015–17". */
+  year: string;
+  title: string;
+  detail?: string;
+  /** Key into `kinds`; picks the marker colour and the small label. */
+  kind?: string;
+}
+
+interface Props {
+  items: Item[];
+  /** Ordered kind keys → labels; colours follow --chart-1..5 in order. */
+  kinds?: Record<string, string>;
+  caption?: string;
+}
+
+const { items, kinds = {}, caption } = Astro.props;
+const kindKeys = Object.keys(kinds);
+
+const colorFor = (kind?: string) => {
+  const i = kind ? kindKeys.indexOf(kind) : -1;
+  return `var(--chart-${(i >= 0 ? i % 5 : 0) + 1})`;
+};
+---
+
+<figure class="not-prose my-6">
+  <ol class="border-border ml-24 flex flex-col gap-5 border-l pl-5">
+    {
+      items.map((item) => (
+        <li class="relative">
+          <span
+            class="ring-background absolute top-[0.3rem] -left-[calc(1.25rem+7px)] size-3 rounded-full ring-4"
+            style={`background-color: ${colorFor(item.kind)}`}
+            aria-hidden="true"
+          />
+          <span class="text-muted-foreground absolute top-[0.1rem] right-full mr-10 text-right font-mono text-xs leading-5 whitespace-nowrap">
+            {item.year}
+          </span>
+          <p class="text-[0.9375rem] leading-5 font-medium">
+            {item.title}
+            {item.kind && kinds[item.kind] && (
+              <span class="text-muted-foreground ml-1.5 align-middle text-[0.6875rem] font-normal tracking-wide uppercase">
+                {kinds[item.kind]}
+              </span>
+            )}
+          </p>
+          {item.detail && (
+            <p class="text-muted-foreground mt-1 text-sm leading-relaxed">
+              {item.detail}
+            </p>
+          )}
+        </li>
+      ))
+    }
+  </ol>
+  {
+    caption && (
+      <figcaption class="text-muted-foreground mt-4 text-sm">
+        {caption}
+      </figcaption>
+    )
+  }
+</figure>
