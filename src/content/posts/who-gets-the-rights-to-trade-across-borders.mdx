@@ -194,15 +194,59 @@ together, the approach was renamed **market coupling**.
 
 ## 3. 🔗 Day-ahead: from three regional experiments to one algorithm
 
-Market coupling wasn't designed top-down. Three regional experiments competed,
-differing mainly in how much information the power exchanges were willing to
-share with each other:
+Before the history, it helps to be precise about what is being coupled.
+
+### What a day-ahead auction actually is
+
+A **power exchange** is a trading platform where buyers and sellers of
+electricity meet anonymously; the exchange sits in the middle of every trade,
+so nobody has to worry about whether the counterparty will pay. Its main
+product is the **day-ahead auction**: one auction per day, held around noon,
+that sets a price for every delivery period of the *next* day.
+
+The daily rhythm (from the book's annex) is strict:
+
+1. By **11:00** Central European Time, the TSOs publish how much cross-border
+   capacity is available on each border for tomorrow.
+2. Until **12:00**, market parties submit their orders to the exchange in
+   their country. A sell order says "I offer this many MWh in hour 19 at
+   €X/MWh or more"; a buy order says "I want this many MWh at €Y/MWh or
+   less". The collected orders form the **order book**: the complete list of
+   everything anyone is willing to buy or sell, at what price.
+3. The order books and the capacities go to the coupling algorithm.
+4. Around **12:55**, the results come back: one price per zone per period,
+   plus the flows scheduled on every border.
+
+How is the price set? By **marginal pricing**: sort the sell orders from
+cheapest to most expensive, accept them until demand is covered, and the
+price of the *last accepted* (marginal) order becomes the price that
+*everyone* pays and receives. A tiny example, one country and one hour:
+
+- Sell orders: 100 MWh at €20 (wind), 60 MWh at €45 (gas plant A), 80 MWh at
+  €70 (gas plant B).
+- Buyers need 140 MWh.
+- The wind is accepted in full, gas plant A covers the remaining 40 MWh, gas
+  plant B is out. The marginal order is gas plant A, so the clearing price is
+  **€45** for all 140 MWh, including the wind that offered at €20.
+
+This matters for coupling because it explains what the algorithm can do that
+a trader cannot: when two countries' auctions are cleared *together*, the
+algorithm sees both order books and simply accepts cheap orders in one
+country to serve demand in the other, up to the cable's capacity. Nobody has
+to predict any price. (How exactly prices and flows come out of a coupled
+clearing is the worked numerical example I'm saving for its own post.)
+
+### The three regional experiments
+
+Market coupling wasn't designed top-down. Starting with the Nordics in the
+1990s, three regional experiments competed. They differed in one thing above
+all:
+how much of their order books the exchanges were willing to show each other.
 
 <Table>
   <TableCaption>
     The three coupling experiments and today's SDAC (book Table 2.1,
-    simplified). An "order book" is an exchange's full list of buy and sell
-    bids.
+    simplified).
   </TableCaption>
   <TableHeader>
     <TableRow>
@@ -252,68 +296,181 @@ share with each other:
   </TableBody>
 </Table>
 
-The lesson from the two failures is worth spelling out: exchanges kept
-trying to couple *without* showing each other their order books (a summary
-curve instead of the raw bids), and it kept producing wrong prices and flows.
-Coupling only works when one algorithm sees everything.
+What each experiment actually did:
+
+**Market splitting (Nordics).** The easy case, because one exchange, Nord
+Pool, already covered Norway, Sweden, Finland and Denmark, so there was one
+order book by construction. Its algorithm worked in two steps. Step one:
+clear the whole region as if the cables were infinite, producing a single
+**system price**. Step two: check whether the cross-border flows implied by
+that clearing actually fit on the cables. If they don't (say, cheap
+hydropower in the north exceeds what the cables south can carry), *split* the
+region into smaller price areas: the exporting area gets a lower price, the
+importing area a higher one, and the cable between them is used exactly to
+its limit. Hence the name.
+
+**Trilateral market coupling (Belgium, France, the Netherlands).** The hard
+case: three separate exchanges (APX, Belpex, Powernext) and three TSOs
+(TenneT, Elia, RTE) wanted the same result *without* merging into one
+exchange. Their first idea was to share only a summary instead of the raw
+bids: each exchange would send a **net export curve**, one line per hour
+saying "at a price of X, my country would in total export (or import) this
+many MW". A central algorithm would intersect these curves, fix the
+cross-border volumes, and each exchange would then compute its own national
+prices with those volumes locked in. Elegant, and Meeus worked on it himself,
+but his research also showed where it breaks: the summary curve throws away
+information about orders that link hours together (see block orders below),
+so the volumes the central step fixes can be wrong for the actual order
+books. After a piloting phase the partners accepted this and went live in
+2006 with the honest version: the exchanges share their full order books, and
+one algorithm clears everything. They take turns running it, or run it in
+parallel, partly to build resilience into the procedure.
+
+**Volume coupling (Germany and the Nordics).** Two years after the trilateral
+project dropped the net-export-curve idea, EEX and Nord Pool revived it under
+a new name: a central algorithm decides only the *volumes* flowing between
+the regions, and each exchange prices its own market afterwards. The problems
+Meeus's research had predicted for the trilateral case duly appeared (his
+follow-up paper is literally titled "Implicit auctioning on the Kontek Cable:
+third time lucky?"; it wasn't). After several repair attempts the project was
+stopped. This short-lived experiment settled the competition between designs
+for good: full order-book sharing won.
 
 ### Who runs what today
 
-Three acronyms describe the current setup, and they're less scary than they
-look:
+The trilateral design scaled up region by region, and the CACM guideline
+(2015) made it legally binding everywhere: the **single day-ahead coupling
+(SDAC)**. At the book's writing it covered 22 countries and roughly 90% of
+European electricity consumption, and it has kept growing since. Three
+acronyms describe the machinery:
 
 - **NEMO** (Nominated Electricity Market Operator): a power exchange that a
-  country has officially certified to take part in the coupling. Most
-  countries allow several competing NEMOs; some (Italy, Spain, Greece and
-  others) kept a single legal-monopoly exchange.
-- **MCO function** (Market Coupling Operator): the *task* of running the
-  coupled calculation: collecting all order books and all available cable
-  capacities, and computing prices and cross-border flows for every zone at
-  once. It is jointly operated by all NEMOs: each day one NEMO runs the
-  system, one coordinates, one stands by as hot backup, and the others may
-  recompute in parallel to check the results.
+  country has officially designated to run day-ahead and intraday coupling.
+  The CACM default is *competing* NEMOs in each country, and a NEMO certified
+  in one country may offer its services in the others; but a country that had
+  a legal exchange monopoly when CACM entered into force could keep it, and
+  Italy, Spain, Portugal, Greece, Ireland, Hungary, Bulgaria, Slovakia, the
+  Czech Republic and Romania did.
+- **MCO function** (Market Coupling Operator): not a company but a *task*
+  defined in CACM: matching the orders from all bidding zones and allocating
+  the cross-border capacity in one calculation. The NEMOs must operate it
+  jointly. In practice they rotate daily: one NEMO acts as **operator** and
+  runs the system, one as **coordinator** (announces official results, calls
+  the incident committee if something breaks), one stands by as **hot
+  backup**, and the rest may recompute everything in parallel to validate the
+  results. Competitors forced to run one shared machine together.
 - **EUPHEMIA**: the algorithm itself (Pan-European Hybrid Electricity Market
-  Integration Algorithm), a direct descendant of the trilateral project. It
-  has roughly ten minutes each day to clear the whole European day-ahead
-  market.
+  Integration Algorithm; the "hybrid" is real, as we'll see). It grew out of
+  the trilateral project's algorithm and has roughly **ten minutes** each day
+  to clear the entire European day-ahead market.
 
-### The open issues the book flags
+### Open issue 1: governance, or competitors running a shared monopoly
 
-**Governance: cooperating competitors.** The NEMOs must run the MCO function
-together while competing for the same customers. That tension is not
-hypothetical: in 2014 the European Commission fined the two biggest
-exchanges, EPEX Spot and Nord Pool Spot, €5.9 million for agreeing not to
-compete and carving up European territories between them. Regulators keep
-debating whether the MCO should be pulled out into a single independent
-entity; so far the Commission has judged it too early.
+The NEMOs must operate the MCO function together while competing for the same
+traders. The book traces where this tension has already led:
 
-**Cost sharing.** The NEMOs bear the coupling costs, national TSOs *may*
-contribute but don't have to, and the sharing keys differ by country, so
-exchanges operating in several countries face uneven cost burdens they pass
-into their fees.
+- During the drafting of CACM, regulators asked whether exchanges should now
+  be *regulated as monopolies*, since together they hold a monopoly on
+  cross-border trade in the day-ahead timeframe. Meeus's own research
+  concluded the competitive model is worth keeping (services like trader
+  interfaces, fees and settlement genuinely benefit from competition), but
+  warned that market coupling must not turn into a *cartel* of exchanges.
+- The warning aged well: in 2014 the European Commission fined EPEX Spot and
+  Nord Pool Spot, the two dominant exchanges, **€5.9 million** for agreeing
+  not to compete with each other and dividing European territories between
+  them.
+- ENTSO-E (the TSOs) has since argued for separating the MCO function more
+  strictly from the NEMOs' commercial business, preferably with TSO
+  involvement; ACER floated the more radical option of a **single independent
+  MCO entity**, which CACM allows as a fallback. The Commission looked at it
+  in 2018 and decided it was too early to act. The question is still open.
 
-**The algorithm is being pushed to its limits.** On 7 June 2019 a software
-bug at EPEX Spot kept its order books out of the coupling entirely: the
-fall-back was national markets without cross-border trade, and prices went
-unusually low in some countries and extremely high in others: a live
-demonstration of what the coupling is worth. Beyond incidents, complexity
-keeps growing: EUPHEMIA must digest both **multi-part orders** (bids
-reflecting power-plant technicalities like start-up costs) and **block
-orders** (all-or-nothing bids linking many hours, e.g. "run my plant flat out
-all night or not at all"). Block orders create a wrinkle called
-**paradoxically rejected blocks**: a block bid that *looks* profitable at the
-final prices can still be rejected, because accepting it would have changed
-those very prices. Academics debate fixing this with "complex pricing" (side
-payments that make everyone whole, as US-style power pools do); Meeus's own
-research argues the modest trade gains aren't worth the administrative
-machinery. Meanwhile the load has only grown: since the book, the coupled
-market moved from hourly to **15-minute periods** (30 September 2025),
-which means 96 prices per zone per day instead of 24.
+### Open issue 2: who pays for the machine
 
-One thing that did get settled: harmonised price limits. Since regulators
-couldn't agree, ACER decided: day-ahead prices are capped at **€3,000/MWh**
-and floored at **−€500/MWh**, and the cap automatically rises by €1,000 if
-prices ever come within 60% of it, so it cannot act as a hidden price cap.
+The costs of building and running the coupling systems are borne by the
+NEMOs. CACM says TSOs *may* chip in but are not obliged to, and where they
+don't, NEMOs may recover the remaining costs through regulated fees. The
+catch: those cost-sharing arrangements are decided nationally, while several
+NEMOs operate across many countries. The same exchange can find its coupling
+costs covered in one country and left on its own books in another, and the
+difference ends up in its trading fees.
+
+### Open issue 3: the algorithm is being pushed to its limits
+
+The single-market approach stands on one algorithm, so its limits are
+everyone's limits. Three angles:
+
+**When it fails, everyone notices.** On 7 June 2019 a software bug at EPEX
+Spot (the biggest exchange in central Europe) meant its order books could not
+be fed into EUPHEMIA. The fallback was brutal in its simplicity: the affected
+countries cleared as isolated national markets with no cross-border trade
+that day. Prices came out unusually low in some countries and extremely high
+in others, which is the coupling benefit made visible by removing it for 24
+hours.
+
+**It carries two market cultures at once.** The "hybrid" in EUPHEMIA's name
+is the heart of this issue. When the NEMOs were asked under CACM to propose
+which order types they would support, they simply listed everything anyone
+already used, which is the union of two traditions:
+
+- **Multi-part orders**, typical of power *pools*: a bid that describes the
+  power plant behind it, with separate terms for start-up cost, minimum
+  output and how fast it can ramp up or down. The algorithm decides how to
+  run the plant.
+- **Block orders**, typical of power *exchanges*: all-or-nothing bids
+  spanning several periods, such as "sell 100 MW in every hour from 00:00 to
+  06:00 at an average price of at least €40, or nothing at all". Useful for a
+  plant that cannot profitably start for a single hour.
+
+Block orders force an awkward compromise called **paradoxically rejected
+blocks**. EUPHEMIA is never allowed to accept a block that would lose money
+at the final prices, but it *is* allowed to reject a block that would have
+been profitable. The example below shows why that is unavoidable rather than
+a bug:
+
+<Toggle title="A worked example of a paradoxically rejected block">
+  A coal plant bids a block: 100 MW in all six night hours, at an average
+  price of at least €40/MWh.
+
+  Without the block, the night hours clear at an average of €42/MWh. Looking
+  at those published prices, the block is in the money: €42 is above the €40
+  limit, and the plant owner will be upset to see it rejected.
+
+  But now suppose the algorithm *had* accepted it. The extra 100 MW of cheap
+  supply in every night hour pushes the marginal order down, and the night
+  average drops to, say, €36/MWh. That is below the block's €40 limit, so
+  accepting it would have violated its own condition.
+
+  There is no price at which this block can be accepted consistently, so the
+  algorithm rejects it even though the final prices make it look profitable.
+  The block was rejected *because accepting it would have destroyed the very
+  prices that make it attractive*.
+</Toggle>
+
+Power pools handle the same tension differently, with **complex pricing**:
+plants whose technical bids don't fit the clearing price receive **side
+payments** (an administered top-up, sometimes called an uplift, recovered
+from other market participants) so that nobody runs at a loss. European
+exchanges deliberately do not do side payments; a block is either accepted at
+the clearing price or rejected. Whether Europe should switch is a live
+academic debate: colleagues of Meeus argue complex pricing would actually
+*simplify* the algorithm, while Meeus's side of the argument is that the
+extra trade gains are small compared to the machinery of administering side
+payments. Changing it would require amending CACM.
+
+**And the workload keeps growing.** More countries keep joining, and EUPHEMIA
+still has the same ten-minute window. The book predicted the granularity
+would increase, and it did: since 30 September 2025 the coupled day-ahead
+market clears **15-minute periods**, which means 96 prices per zone per day
+instead of 24, in the same ten minutes.
+
+One thing that did get settled: harmonised price limits. CACM required the
+NEMOs to propose common minimum and maximum prices, the national regulators
+could not reach a unanimous agreement, and the decision fell to ACER (this
+escalation path is itself a CACM design feature). ACER set the day-ahead cap
+at **€3,000/MWh** and the floor at **−€500/MWh**, and made the cap dynamic:
+if the clearing price ever exceeds 60% of the cap, the cap rises by €1,000.
+A ceiling that steps out of the way cannot act as a hidden price cap.
 
 <Callout icon="⚡" title="Yes, negative prices are real">
   The floor is negative because prices below zero are meaningful: a nuclear
