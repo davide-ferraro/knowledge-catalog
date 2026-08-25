@@ -13,6 +13,7 @@ import Toggle from '../../components/Toggle.astro';
 import Timeline from '../../components/Timeline.astro';
 import QuadrantExplorer from '../../components/QuadrantExplorer.astro';
 import RightsPayoff from '../../components/RightsPayoff.astro';
+import ExperimentDiagram from '../../components/ExperimentDiagram.astro';
 import {
   Table,
   TableBody,
@@ -309,6 +310,8 @@ region into smaller price areas: the exporting area gets a lower price, the
 importing area a higher one, and the cable between them is used exactly to
 its limit. Hence the name.
 
+<ExperimentDiagram kind="splitting" />
+
 **Trilateral market coupling (Belgium, France, the Netherlands).** The hard
 case: three separate exchanges (APX, Belpex, Powernext) and three TSOs
 (TenneT, Elia, RTE) wanted the same result *without* merging into one
@@ -326,6 +329,8 @@ books. After a piloting phase the partners accepted this and went live in
 one algorithm clears everything. They take turns running it, or run it in
 parallel, partly to build resilience into the procedure.
 
+<ExperimentDiagram kind="trilateral" />
+
 **Volume coupling (Germany and the Nordics).** Two years after the trilateral
 project dropped the net-export-curve idea, EEX and Nord Pool revived it under
 a new name: a central algorithm decides only the *volumes* flowing between
@@ -335,6 +340,8 @@ follow-up paper is literally titled "Implicit auctioning on the Kontek Cable:
 third time lucky?"; it wasn't). After several repair attempts the project was
 stopped. This short-lived experiment settled the competition between designs
 for good: full order-book sharing won.
+
+<ExperimentDiagram kind="volume" />
 
 ### Who runs what today
 
