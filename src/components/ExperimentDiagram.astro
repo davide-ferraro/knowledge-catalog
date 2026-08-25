@@ -1,10 +1,13 @@
 ---
 /**
- * Diagrams for the three market-coupling experiments (EEME chapter 2).
- * kind="splitting": Nordic market splitting, toggle uncongested/congested.
- * kind="trilateral": summary curves vs full order books, toggle.
- * kind="volume": volume coupling and why it failed, static.
- * Shared toggle behaviour: buttons [data-ed-btn] show/hide [data-ed-state].
+ * Interactive models of the three market-coupling experiments (EEME ch. 2).
+ * kind="splitting": two zones, sliders for cable capacity and south demand;
+ *   linear supply curves, prices/flow/split computed live.
+ * kind="trilateral": architecture toggle (summaries vs full order books)
+ *   plus a two-hour block-order model where a demand slider shows when the
+ *   summary design produces invalid volumes.
+ * kind="volume": the user plays the volume-fixing algorithm with a flow
+ *   slider and sees prices diverge or flow the wrong way.
  */
 interface Props {
   kind: 'splitting' | 'trilateral' | 'volume';
@@ -14,71 +17,55 @@ const { kind } = Astro.props;
 
 {
   kind === 'splitting' && (
-    <figure class="not-prose border-border my-6 rounded-lg border p-4 sm:p-5" data-ed>
-      <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <p class="text-sm font-medium">Market splitting, step by step</p>
-        <div class="border-border flex rounded-md border p-0.5 text-xs" role="group">
-          <button type="button" data-ed-btn="a" class="rounded px-2.5 py-1 font-medium transition-colors">
-            Step 1: cables ignored
-          </button>
-          <button type="button" data-ed-btn="b" class="rounded px-2.5 py-1 font-medium transition-colors">
-            Step 2: cable too small
-          </button>
-        </div>
+    <figure class="not-prose border-border my-6 rounded-lg border p-4 sm:p-5" data-sp>
+      <p class="text-sm font-medium">Market splitting: you set the constraints</p>
+      <p class="text-muted-foreground mt-1 text-sm">
+        Two zones, one order book. Change the cable and the demand and watch
+        when the region splits.
+      </p>
+
+      <div class="mt-3 grid gap-3 sm:grid-cols-2">
+        <label class="text-muted-foreground block text-xs">
+          Cable capacity: <span class="text-foreground font-mono" data-sp-cap-label />
+          <input type="range" min="0" max="1200" step="25" value="400" data-sp-cap class="accent-primary mt-1 w-full" />
+        </label>
+        <label class="text-muted-foreground block text-xs">
+          Demand in the south: <span class="text-foreground font-mono" data-sp-dem-label />
+          <input type="range" min="1200" max="1800" step="25" value="1500" data-sp-dem class="accent-primary mt-1 w-full" />
+        </label>
       </div>
 
-      <svg viewBox="0 0 560 220" class="w-full select-none" aria-label="Market splitting diagram">
-        <rect x="30" y="40" width="200" height="140" rx="10" fill="none" stroke="var(--border)" stroke-width="1.5" />
-        <rect x="330" y="40" width="200" height="140" rx="10" fill="none" stroke="var(--border)" stroke-width="1.5" />
-        <text x="130" y="64" text-anchor="middle" class="fill-muted-foreground" font-size="11" letter-spacing="1">NORTH</text>
-        <text x="130" y="79" text-anchor="middle" class="fill-muted-foreground" font-size="10">cheap hydro, wants to export</text>
-        <text x="430" y="64" text-anchor="middle" class="fill-muted-foreground" font-size="11" letter-spacing="1">SOUTH</text>
-        <text x="430" y="79" text-anchor="middle" class="fill-muted-foreground" font-size="10">more demand, pricier plants</text>
-        <line x1="230" y1="118" x2="330" y2="118" stroke="var(--border)" stroke-width="8" opacity="0.5" />
-        <text x="280" y="102" text-anchor="middle" class="fill-muted-foreground" font-size="10">cable: 1,000 MW</text>
-
-        <g data-ed-state="a">
-          <rect x="30" y="40" width="200" height="140" rx="10" fill="var(--chart-1)" opacity="0.10" />
-          <rect x="330" y="40" width="200" height="140" rx="10" fill="var(--chart-1)" opacity="0.10" />
-          <text x="130" y="140" text-anchor="middle" class="fill-foreground" font-size="26" font-weight="700">€35</text>
-          <text x="430" y="140" text-anchor="middle" class="fill-foreground" font-size="26" font-weight="700">€35</text>
-          <text x="130" y="160" text-anchor="middle" class="fill-muted-foreground" font-size="10">system price</text>
-          <text x="430" y="160" text-anchor="middle" class="fill-muted-foreground" font-size="10">system price</text>
-          <path d="M245 118 H310 l-8 -6 m8 6 l-8 6" fill="none" stroke="var(--chart-1)" stroke-width="2.5" />
-          <text x="280" y="140" text-anchor="middle" class="fill-foreground" font-size="10">600 MW: it fits</text>
-        </g>
-
-        <g data-ed-state="b" style="display:none">
-          <rect x="30" y="40" width="200" height="140" rx="10" fill="var(--chart-2)" opacity="0.12" />
-          <rect x="330" y="40" width="200" height="140" rx="10" fill="var(--chart-3)" opacity="0.12" />
-          <text x="130" y="140" text-anchor="middle" class="fill-foreground" font-size="26" font-weight="700">€30</text>
-          <text x="430" y="140" text-anchor="middle" class="fill-foreground" font-size="26" font-weight="700">€40</text>
-          <text x="130" y="160" text-anchor="middle" class="fill-muted-foreground" font-size="10">exporting area: lower price</text>
-          <text x="430" y="160" text-anchor="middle" class="fill-muted-foreground" font-size="10">importing area: higher price</text>
-          <path d="M245 118 H310 l-8 -6 m8 6 l-8 6" fill="none" stroke="var(--chart-3)" stroke-width="2.5" />
-          <text x="280" y="140" text-anchor="middle" class="fill-foreground" font-size="10">1,000 MW: full</text>
-          <line x1="280" y1="30" x2="280" y2="88" stroke="var(--chart-5)" stroke-width="1.5" stroke-dasharray="4 4" />
-          <text x="280" y="22" text-anchor="middle" class="fill-foreground" font-size="10" font-weight="600">market splits here</text>
+      <svg viewBox="0 0 560 214" class="mt-2 w-full select-none" aria-label="Market splitting model">
+        <rect x="30" y="34" width="200" height="140" rx="10" fill="var(--chart-2)" data-sp-tint-n opacity="0.10" />
+        <rect x="330" y="34" width="200" height="140" rx="10" fill="var(--chart-3)" data-sp-tint-s opacity="0.10" />
+        <rect x="30" y="34" width="200" height="140" rx="10" fill="none" stroke="var(--border)" stroke-width="1.5" />
+        <rect x="330" y="34" width="200" height="140" rx="10" fill="none" stroke="var(--border)" stroke-width="1.5" />
+        <text x="130" y="58" text-anchor="middle" class="fill-muted-foreground" font-size="11" letter-spacing="1">NORTH</text>
+        <text x="130" y="73" text-anchor="middle" class="fill-muted-foreground" font-size="10">cheap hydro, wants to export</text>
+        <text x="430" y="58" text-anchor="middle" class="fill-muted-foreground" font-size="11" letter-spacing="1">SOUTH</text>
+        <text x="430" y="73" text-anchor="middle" class="fill-muted-foreground" font-size="10">more demand, pricier plants</text>
+        <line x1="230" y1="112" x2="330" y2="112" stroke="var(--border)" stroke-width="8" opacity="0.5" />
+        <path d="M245 112 H310 l-8 -6 m8 6 l-8 6" fill="none" stroke="var(--chart-1)" stroke-width="2.5" data-sp-arrow />
+        <text x="280" y="96" text-anchor="middle" class="fill-muted-foreground" font-size="10" data-sp-cap-svg />
+        <text x="280" y="134" text-anchor="middle" class="fill-foreground" font-size="10" font-weight="600" data-sp-flow />
+        <text x="130" y="134" text-anchor="middle" class="fill-foreground" font-size="26" font-weight="700" data-sp-pn />
+        <text x="430" y="134" text-anchor="middle" class="fill-foreground" font-size="26" font-weight="700" data-sp-ps />
+        <text x="130" y="154" text-anchor="middle" class="fill-muted-foreground" font-size="10" data-sp-pn-sub />
+        <text x="430" y="154" text-anchor="middle" class="fill-muted-foreground" font-size="10" data-sp-ps-sub />
+        <g data-sp-split>
+          <line x1="280" y1="26" x2="280" y2="84" stroke="var(--chart-5)" stroke-width="1.5" stroke-dasharray="4 4" />
+          <text x="280" y="18" text-anchor="middle" class="fill-foreground" font-size="10" font-weight="600">market splits here</text>
         </g>
       </svg>
 
-      <p class="text-muted-foreground mt-2 min-h-[2.5rem] text-sm leading-relaxed">
-        <span data-ed-state="a">
-          Step 1: clear the whole region with one order book as if cables were
-          infinite. The result is a single system price. Then check: do the
-          implied flows fit on the cables? If yes, done, everyone pays €35.
-        </span>
-        <span data-ed-state="b" style="display:none">
-          If the trade doesn't fit (the north would export 1,400 MW through a
-          1,000 MW cable), split the region at the congested cable. The north
-          re-clears with less export (price falls to €30), the south with less
-          import (price rises to €40), and the cable carries exactly its limit.
-        </span>
-      </p>
+      <p class="text-muted-foreground mt-2 min-h-[3.75rem] text-sm leading-relaxed" data-sp-info />
+
       <figcaption class="text-muted-foreground mt-2 border-t pt-3 text-xs leading-relaxed">
-        Nord Pool could do this from day one because it was already one
-        exchange with one order book. The hard question was how to get the
-        same result with <em>several</em> exchanges.
+        Behind the picture is a small model: the north's supply gets more
+        expensive as it exports more, the south's gets cheaper as it imports.
+        Full coupling would trade until prices meet; the cable decides whether
+        that is allowed. The price gap times the flow is the money the cable
+        earns, the congestion rent (chapter 4's topic).
       </figcaption>
     </figure>
   )
@@ -150,24 +137,38 @@ const { kind } = Astro.props;
         </g>
       </svg>
 
-      <p class="text-muted-foreground mt-2 min-h-[2.5rem] text-sm leading-relaxed">
-        <span data-ed-state="a">
-          Design 1 tried to keep the order books private: each exchange sends
-          only a summary (the net export curve), the central step fixes the
-          cross-border volumes, and each exchange prices its own market with
-          those volumes locked in. Piloting showed the summaries lose too much
-          information; it was abandoned before going live.
-        </span>
-        <span data-ed-state="b" style="display:none">
-          Design 2 is the honest version: share everything, clear everything
-          in one calculation. This is what went live in 2006 and what all of
-          Europe runs today. The compromise for the exchanges: they jointly
-          control the algorithm and take turns operating it.
-        </span>
-      </p>
-      <figcaption class="text-muted-foreground mt-2 border-t pt-3 text-xs leading-relaxed">
-        The green and red bars inside each exchange are its order book: buy
-        and sell bids. The whole design question is who gets to see them.
+      <div class="border-border mt-4 rounded-md border p-3 sm:p-4" data-tl>
+        <p class="text-sm font-medium">Try to break the summary design yourself</p>
+        <p class="text-muted-foreground mt-1 text-sm leading-relaxed">
+          A two-hour toy market. Country A exports to country B over a 100 MW
+          cable. A has 40 MW of wind at €10 in each hour, plus one <strong>block
+          order</strong>: 60 MW in <em>both</em> hours at ≥ €35, all or nothing.
+          B needs 100 MW in hour 1. You control B's demand in hour 2:
+        </p>
+        <label class="text-muted-foreground mt-3 block text-xs">
+          B's demand in hour 2: <span class="text-foreground font-mono" data-tl-dem-label />
+          <input type="range" min="0" max="100" step="5" value="70" data-tl-dem class="accent-primary mt-1 w-full" />
+        </label>
+
+        <div class="mt-3 grid gap-3 sm:grid-cols-2">
+          <div class="border-border rounded-md border p-3">
+            <p class="text-xs font-semibold tracking-wide uppercase">Design 1: fix volumes from summaries</p>
+            <p class="mt-2 font-mono text-sm" data-tl-s-flows />
+            <p class="text-muted-foreground mt-1 min-h-[4rem] text-sm leading-relaxed" data-tl-s-text />
+          </div>
+          <div class="border-border rounded-md border p-3">
+            <p class="text-xs font-semibold tracking-wide uppercase">Design 2: clear the full order books</p>
+            <p class="mt-2 font-mono text-sm" data-tl-f-flows />
+            <p class="text-muted-foreground mt-1 min-h-[4rem] text-sm leading-relaxed" data-tl-f-text />
+          </div>
+        </div>
+      </div>
+
+      <figcaption class="text-muted-foreground mt-3 border-t pt-3 text-xs leading-relaxed">
+        Slide across the whole range: the summary design only agrees with the
+        truth at the extreme where the block happens to fit exactly (100 MW).
+        Everywhere else it schedules a fraction of an all-or-nothing bid,
+        which no exchange can execute. This is what the pilots kept finding.
       </figcaption>
     </figure>
   )
@@ -175,50 +176,56 @@ const { kind } = Astro.props;
 
 {
   kind === 'volume' && (
-    <figure class="not-prose border-border my-6 rounded-lg border p-4 sm:p-5" data-ed>
-      <p class="mb-3 text-sm font-medium">Volume coupling: the summary shortcut, tried once more</p>
+    <figure class="not-prose border-border my-6 rounded-lg border p-4 sm:p-5" data-vc>
+      <p class="text-sm font-medium">Volume coupling: you are the volume-fixing algorithm</p>
+      <p class="text-muted-foreground mt-1 text-sm leading-relaxed">
+        The central step fixes only the MW on the Kontek cable; each exchange
+        then prices its own market with that volume locked in. Pick the
+        volume and see what your choice does to the two prices:
+      </p>
 
-      <svg viewBox="0 0 560 250" class="w-full select-none" aria-label="Volume coupling diagram">
-        <rect x="30" y="36" width="190" height="110" rx="10" fill="var(--chart-1)" opacity="0.08" />
-        <rect x="30" y="36" width="190" height="110" rx="10" fill="none" stroke="var(--border)" stroke-width="1.5" />
-        <rect x="340" y="36" width="190" height="110" rx="10" fill="var(--chart-3)" opacity="0.08" />
-        <rect x="340" y="36" width="190" height="110" rx="10" fill="none" stroke="var(--border)" stroke-width="1.5" />
-        <text x="125" y="60" text-anchor="middle" class="fill-foreground" font-size="12" font-weight="600">Nord Pool · East Denmark</text>
-        <text x="435" y="60" text-anchor="middle" class="fill-foreground" font-size="12" font-weight="600">EEX · Germany</text>
-        <text x="125" y="100" text-anchor="middle" class="fill-foreground" font-size="24" font-weight="700">€45</text>
-        <text x="435" y="100" text-anchor="middle" class="fill-foreground" font-size="24" font-weight="700">€50</text>
-        <text x="125" y="122" text-anchor="middle" class="fill-muted-foreground" font-size="10">prices its market on its own</text>
-        <text x="435" y="122" text-anchor="middle" class="fill-muted-foreground" font-size="10">prices its market on its own</text>
+      <label class="text-muted-foreground mt-3 block text-xs">
+        Flow fixed on the cable (Germany → East Denmark):
+        <span class="text-foreground font-mono" data-vc-v-label />
+        <input type="range" min="0" max="100" step="1" value="40" data-vc-v class="accent-primary mt-1 w-full" />
+      </label>
 
-        <line x1="220" y1="91" x2="340" y2="91" stroke="var(--border)" stroke-width="8" opacity="0.5" />
-        <text x="280" y="75" text-anchor="middle" class="fill-muted-foreground" font-size="10">Kontek cable</text>
-        <path d="M325 91 H240 l8 -6 m-8 6 l8 6" fill="none" stroke="var(--chart-5)" stroke-width="2.5" />
-        <text x="280" y="112" text-anchor="middle" class="fill-foreground" font-size="11" font-weight="600">✗ wrong-way flow</text>
-
-        <rect x="195" y="182" width="170" height="46" rx="8" fill="none" stroke="var(--border)" stroke-width="1.5" />
-        <text x="280" y="201" text-anchor="middle" class="fill-foreground" font-size="12" font-weight="600">volume-only algorithm</text>
-        <text x="280" y="217" text-anchor="middle" class="fill-muted-foreground" font-size="10">fixes MW on the cable from summaries</text>
-        <path d="M280 182 V 130 l-6 8 m6 -8 l6 8" fill="none" stroke="var(--muted-foreground)" stroke-width="1.5" stroke-dasharray="4 3" />
+      <svg viewBox="0 0 560 160" class="mt-2 w-full select-none" aria-label="Volume coupling model">
+        <rect x="330" y="20" width="200" height="120" rx="10" fill="var(--chart-3)" opacity="0.08" />
+        <rect x="30" y="20" width="200" height="120" rx="10" fill="var(--chart-1)" opacity="0.08" />
+        <rect x="30" y="20" width="200" height="120" rx="10" fill="none" stroke="var(--border)" stroke-width="1.5" />
+        <rect x="330" y="20" width="200" height="120" rx="10" fill="none" stroke="var(--border)" stroke-width="1.5" />
+        <text x="130" y="44" text-anchor="middle" class="fill-foreground" font-size="12" font-weight="600">EEX · Germany</text>
+        <text x="430" y="44" text-anchor="middle" class="fill-foreground" font-size="12" font-weight="600">Nord Pool · East Denmark</text>
+        <text x="130" y="88" text-anchor="middle" class="fill-foreground" font-size="24" font-weight="700" data-vc-pde />
+        <text x="430" y="88" text-anchor="middle" class="fill-foreground" font-size="24" font-weight="700" data-vc-pdk />
+        <text x="130" y="110" text-anchor="middle" class="fill-muted-foreground" font-size="10">priced on its own, exports</text>
+        <text x="430" y="110" text-anchor="middle" class="fill-muted-foreground" font-size="10">priced on its own, imports</text>
+        <line x1="230" y1="75" x2="330" y2="75" stroke="var(--border)" stroke-width="8" opacity="0.5" />
+        <path d="M245 75 H315 l-8 -6 m8 6 l-8 6" fill="none" stroke="var(--chart-1)" stroke-width="2.5" data-vc-arrow />
+        <text x="280" y="60" text-anchor="middle" class="fill-muted-foreground" font-size="10">Kontek cable</text>
+        <text x="280" y="97" text-anchor="middle" class="fill-foreground" font-size="10" font-weight="600" data-vc-flow />
       </svg>
 
+      <p class="text-muted-foreground mt-2 min-h-[3.75rem] text-sm leading-relaxed" data-vc-info />
+
       <figcaption class="text-muted-foreground mt-2 border-t pt-3 text-xs leading-relaxed">
-        Two years after the trilateral project dropped the summary idea, EEX
-        and Nord Pool revived it: a central step fixes only the volumes on the
-        cable, each exchange then sets its own price. Because the volumes were
-        fixed from summaries, they could disagree with the real order books,
-        and hours occurred where power was scheduled towards the cheaper side,
-        exactly the explicit-auction disease coupling was meant to cure. The
-        project was repaired several times and then stopped.
+        Full coupling computes the one volume where the prices meet (here
+        71 MW at about €41 on both sides) because it sees both order books.
+        The volume-coupling algorithm had to aim for that point using only
+        summaries, and when it missed, real hours looked like the right side
+        of this slider: power flowing towards the cheaper market. After
+        several repair attempts the project was stopped.
       </figcaption>
     </figure>
   )
 }
 
 <script>
+  /* shared two-state toggle (trilateral architecture drawing) */
   document.querySelectorAll<HTMLElement>('[data-ed]').forEach((root) => {
     const buttons = root.querySelectorAll<HTMLButtonElement>('[data-ed-btn]');
     if (buttons.length === 0) return;
-
     function show(state: string) {
       root.querySelectorAll<HTMLElement>('[data-ed-state]').forEach((el) => {
         el.style.display = el.dataset.edState === state ? '' : 'none';
@@ -229,10 +236,118 @@ const { kind } = Astro.props;
         b.classList.toggle('text-muted-foreground', !active);
       });
     }
-
-    buttons.forEach((b) =>
-      b.addEventListener('click', () => show(b.dataset.edBtn!)),
-    );
+    buttons.forEach((b) => b.addEventListener('click', () => show(b.dataset.edBtn!)));
     show('a');
+  });
+
+  /* market splitting model
+     North supply price after exporting F with demand 1000: pN = 30 + 0.02 F
+     South supply price with demand D and import F:          pS = 20 + 0.04 (D − F)
+     Unconstrained equilibrium: pN = pS  →  F* = (0.04 D − 10) / 0.06 */
+  document.querySelectorAll<HTMLElement>('[data-sp]').forEach((root) => {
+    const q = (s: string) => root.querySelector<HTMLElement>(s)!;
+    const capEl = root.querySelector<HTMLInputElement>('[data-sp-cap]')!;
+    const demEl = root.querySelector<HTMLInputElement>('[data-sp-dem]')!;
+
+    function render() {
+      const cap = Number(capEl.value);
+      const D = Number(demEl.value);
+      const fStar = (0.04 * D - 10) / 0.06;
+      const congested = cap < fStar;
+      const F = Math.round(congested ? cap : fStar);
+      const pN = Math.round(30 + 0.02 * F);
+      const pS = Math.round(20 + 0.04 * (D - F));
+      const spread = pS - pN;
+
+      q('[data-sp-cap-label]').textContent = `${cap} MW`;
+      q('[data-sp-dem-label]').textContent = `${D} MW`;
+      q('[data-sp-cap-svg]').textContent = `cable: ${cap} MW`;
+      q('[data-sp-flow]').textContent = congested ? `${F} MW: full` : `${F} MW: it fits`;
+      q('[data-sp-pn]').textContent = `€${pN}`;
+      q('[data-sp-ps]').textContent = `€${pS}`;
+      q('[data-sp-pn-sub]').textContent = congested ? 'exporting area: lower price' : 'system price';
+      q('[data-sp-ps-sub]').textContent = congested ? 'importing area: higher price' : 'system price';
+      q('[data-sp-split]').style.display = congested ? '' : 'none';
+      q('[data-sp-tint-n]').setAttribute('fill', congested ? 'var(--chart-2)' : 'var(--chart-1)');
+      q('[data-sp-tint-s]').setAttribute('fill', congested ? 'var(--chart-3)' : 'var(--chart-1)');
+      q('[data-sp-arrow]').setAttribute('stroke', congested ? 'var(--chart-3)' : 'var(--chart-1)');
+
+      q('[data-sp-info]').textContent = congested
+        ? `The full trade would be ${Math.round(fStar)} MW, but only ${cap} MW fits. The region splits: the north keeps cheap surplus (€${pN}), the south pays €${pS}. Price gap €${spread}/MWh × ${F} MW of flow = €${(spread * F).toLocaleString('en')}/h of congestion rent earned by the cable.`
+        : `The equilibrium trade of ${F} MW fits on the ${cap} MW cable, so the whole region clears at one system price of €${pN}/MWh. No split, no price gap, no congestion rent.`;
+    }
+
+    capEl.addEventListener('input', render);
+    demEl.addEventListener('input', render);
+    render();
+  });
+
+  /* trilateral block-order model (two hours, cable 100 MW)
+     A: wind 40 MW at €10 each hour + block 60 MW in both hours at ≥ €35.
+     B: demand 100 in h1, D in h2 (slider); local gas at €60. */
+  document.querySelectorAll<HTMLElement>('[data-tl]').forEach((root) => {
+    const q = (s: string) => root.querySelector<HTMLElement>(s)!;
+    const demEl = root.querySelector<HTMLInputElement>('[data-tl-dem]')!;
+
+    function render() {
+      const D = Number(demEl.value);
+      q('[data-tl-dem-label]').textContent = `${D} MW`;
+
+      // Design 1: per-hour summaries treat the block as divisible.
+      const s1 = Math.min(100, 40 + 60); // h1: demand 100, all 100 MW cheap
+      const s2 = Math.min(D, 100);
+      const blockH2 = Math.max(0, s2 - 40);
+      const consistent = blockH2 === 60; // h1 always uses 60 of the block
+      q('[data-tl-s-flows]').textContent = `flows: ${s1} MW (h1) · ${s2} MW (h2)`;
+      q('[data-tl-s-text]').textContent = consistent
+        ? '✓ By luck, the volumes use the block fully in both hours, so they happen to be executable. The summary design only works at this corner.'
+        : `⚠ Invalid. These volumes use 60 MW of the block in hour 1 but ${blockH2} MW in hour 2. An all-or-nothing bid cannot run at ${blockH2}/60, so the exchanges cannot execute the schedule and the process breaks down.`;
+
+      // Design 2: full clearing respects the block.
+      const accept = D >= 60; // block output must be absorbed in h2
+      const f1 = accept ? 100 : 40;
+      const f2 = accept ? D : Math.min(40, D);
+      q('[data-tl-f-flows]').textContent = `flows: ${f1} MW (h1) · ${f2} MW (h2)`;
+      q('[data-tl-f-text]').textContent = accept
+        ? '✓ The block is accepted: hour 2 can absorb its 60 MW, so both hours export cheap power and B saves on gas in hour 1 too.'
+        : `✓ The block is rejected: hour 2 demand (${D} MW) cannot absorb its 60 MW, so accepting it is infeasible. Only the wind exports. Less trade, but every scheduled MW is executable.`;
+    }
+
+    demEl.addEventListener('input', render);
+    render();
+  });
+
+  /* volume coupling model
+     Prices after a fixed flow V: pDE = 30 + 0.15 V, pDK = 55 − 0.20 V.
+     Prices meet at V* = 25 / 0.35 ≈ 71 MW. */
+  document.querySelectorAll<HTMLElement>('[data-vc]').forEach((root) => {
+    const q = (s: string) => root.querySelector<HTMLElement>(s)!;
+    const vEl = root.querySelector<HTMLInputElement>('[data-vc-v]')!;
+    const V_STAR = 25 / 0.35;
+
+    function render() {
+      const V = Number(vEl.value);
+      const pDE = Math.round(30 + 0.15 * V);
+      const pDK = Math.round(55 - 0.2 * V);
+      const atOptimum = Math.abs(V - V_STAR) <= 2;
+
+      q('[data-vc-v-label]').textContent = `${V} MW`;
+      q('[data-vc-pde]').textContent = `€${pDE}`;
+      q('[data-vc-pdk]').textContent = `€${pDK}`;
+      q('[data-vc-flow]').textContent = `${V} MW fixed`;
+      q('[data-vc-arrow]').setAttribute(
+        'stroke',
+        atOptimum ? 'var(--chart-2)' : pDE > pDK ? 'var(--chart-5)' : 'var(--chart-3)',
+      );
+
+      q('[data-vc-info]').textContent = atOptimum
+        ? `✓ You hit the coupled solution: at ${V} MW the two markets price almost identically (€${pDE} vs €${pDK}). This is the answer full order-book sharing computes directly.`
+        : pDE > pDK
+          ? `✗ Wrong-way flow. With ${V} MW locked in, Germany now prices at €${pDE}, above Denmark's €${pDK}, yet power still flows to the cheaper side. Real hours like this occurred on the Kontek cable.`
+          : `Money left on the table: Denmark still prices €${pDK - pDE}/MWh above Germany, so more trade would be profitable, but the fixed volume forbids it. Same disease as explicit auctions, milder symptom.`;
+    }
+
+    vEl.addEventListener('input', render);
+    render();
   });
 </script>
