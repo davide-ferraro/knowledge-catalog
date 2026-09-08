@@ -37,6 +37,21 @@ const uid = `si${variant}${Math.abs(
   [...(chapter?.toString() ?? '')].reduce((a, c) => a + c.charCodeAt(0), size),
 )}`;
 const twoDigits = (chapter ?? 0) > 9;
+
+/* Astro does not evaluate expressions inside <style>, so the theme- and
+   motion-dependent rules are built here and injected with set:html. */
+const gridCss = `
+@media (prefers-reduced-motion: reduce) { .${uid}-anim { display: none; } }
+.${uid}-end { stop-color: #b9c9d4; }
+.${uid}-num { fill: #1f2a33; }
+html.dark .${uid}-end { stop-color: #080b0e; }
+html.dark .${uid}-num { fill: #f5f4ef; }
+`;
+const cableCss = `
+@media (prefers-reduced-motion: reduce) { .${uid}-pulse { display: none; } }
+.${uid}-end { stop-color: #dcc5ae; }
+html.dark .${uid}-end { stop-color: #120b06; }
+`;
 ---
 
 {
@@ -54,16 +69,14 @@ const twoDigits = (chapter ?? 0) > 9;
         <radialGradient id={`${uid}-bg`} cx="0.38" cy="0.3" r="1.05">
           <stop offset="0" stop-color="#17456b" />
           <stop offset="0.55" stop-color="#0d2033" />
-          <stop offset="1" stop-color="#080b0e" />
+          <stop class={`${uid}-end`} offset="1" stop-color="#080b0e" />
         </radialGradient>
         <linearGradient id={`${uid}-line`} x1="0" y1="1" x2="1" y2="0">
           <stop offset="0" stop-color="#6fb644" />
           <stop offset="1" stop-color="#d9f27e" />
         </linearGradient>
       </defs>
-      <style>
-        {`@media (prefers-reduced-motion: reduce) { .${uid}-anim { display: none; } }`}
-      </style>
+      <style is:inline set:html={gridCss} />
       <rect width="96" height="96" rx="22" fill={`url(#${uid}-bg)`} />
       {links.map(([a, b]) => (
         <line
@@ -99,6 +112,7 @@ const twoDigits = (chapter ?? 0) > 9;
         />
       </circle>
       <text
+        class={`${uid}-num`}
         x="85"
         y="84"
         text-anchor="end"
@@ -128,12 +142,10 @@ const twoDigits = (chapter ?? 0) > 9;
         <radialGradient id={`${uid}-bg`} cx="0.5" cy="0.2" r="1.15">
           <stop offset="0" stop-color="#7a3a16" />
           <stop offset="0.5" stop-color="#3c1d0c" />
-          <stop offset="1" stop-color="#120b06" />
+          <stop class={`${uid}-end`} offset="1" stop-color="#120b06" />
         </radialGradient>
       </defs>
-      <style>
-        {`@media (prefers-reduced-motion: reduce) { .${uid}-pulse { display: none; } }`}
-      </style>
+      <style is:inline set:html={cableCss} />
       <rect width="96" height="96" rx="22" fill={`url(#${uid}-bg)`} />
       <path
         d="M12 66 q8 -5 16 0 q8 5 16 0 q8 -5 16 0 q8 5 16 0 q8 -5 8 -3"
