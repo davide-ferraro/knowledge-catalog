@@ -1,8 +1,15 @@
 ---
 /**
- * Series icon for the EEME book notes ("night grid" design): the book
- * cover's satellite Europe reduced to a constellation of glowing nodes on a
- * night gradient, with the chapter number bottom-right.
+ * Icons for the EEME book-notes series, in one visual family (night
+ * gradient, glowing lime elements).
+ *
+ * Chapter posts (a `chapter` number is given) get the "night grid": the book
+ * cover's satellite Europe as a constellation, chapter number bottom-right.
+ *
+ * Companion posts (no chapter) get the "sea cable": one glowing subsea cable
+ * between two shores, drawn in three segments (two broken attempts, one that
+ * works) with a light pulse travelling along it. The pulse is hidden when
+ * the user prefers reduced motion.
  */
 interface Props {
   chapter?: number;
@@ -12,6 +19,7 @@ interface Props {
 }
 
 const { chapter, size = 40, class: className } = Astro.props;
+const variant = chapter ? 'grid' : 'cable';
 
 const nodes: Array<[number, number]> = [
   [26, 66],
@@ -25,56 +33,52 @@ const nodes: Array<[number, number]> = [
 const links: Array<[number, number]> = [
   [0, 1], [1, 2], [1, 4], [2, 3], [3, 4], [4, 5], [4, 6], [3, 6], [0, 5],
 ];
-const uid = `si${Math.abs(
+const uid = `si${variant}${Math.abs(
   [...(chapter?.toString() ?? '')].reduce((a, c) => a + c.charCodeAt(0), size),
 )}`;
 const twoDigits = (chapter ?? 0) > 9;
 ---
 
-<svg
-  xmlns="http://www.w3.org/2000/svg"
-  viewBox="0 0 96 96"
-  width={size}
-  height={size}
-  class={className}
-  role="img"
-  aria-label={chapter ? `Book series icon, chapter ${chapter}` : 'Book series icon'}
->
-  <defs>
-    <radialGradient id={`${uid}-bg`} cx="0.38" cy="0.3" r="1.05">
-      <stop offset="0" stop-color="#17456b"></stop>
-      <stop offset="0.55" stop-color="#0d2033"></stop>
-      <stop offset="1" stop-color="#080b0e"></stop>
-    </radialGradient>
-    <linearGradient id={`${uid}-line`} x1="0" y1="1" x2="1" y2="0">
-      <stop offset="0" stop-color="#6fb644"></stop>
-      <stop offset="1" stop-color="#d9f27e"></stop>
-    </linearGradient>
-  </defs>
-  <rect width="96" height="96" rx="22" fill={`url(#${uid}-bg)`}></rect>
-  {
-    links.map(([a, b]) => (
-      <line
-        x1={nodes[a][0]}
-        y1={nodes[a][1]}
-        x2={nodes[b][0]}
-        y2={nodes[b][1]}
-        stroke={`url(#${uid}-line)`}
-        stroke-width="1.4"
-        opacity="0.55"
-      />
-    ))
-  }
-  {
-    nodes.map(([x, y], i) => (
-      <>
-        <circle cx={x} cy={y} r="5" fill="#d9f27e" opacity="0.16" />
-        <circle cx={x} cy={y} r="2.4" fill={i === 4 ? '#ffb347' : '#d9f27e'} />
-      </>
-    ))
-  }
-  {
-    chapter && (
+{
+  variant === 'grid' && (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 96 96"
+      width={size}
+      height={size}
+      class={className}
+      role="img"
+      aria-label={`Book series icon, chapter ${chapter}`}
+    >
+      <defs>
+        <radialGradient id={`${uid}-bg`} cx="0.38" cy="0.3" r="1.05">
+          <stop offset="0" stop-color="#17456b" />
+          <stop offset="0.55" stop-color="#0d2033" />
+          <stop offset="1" stop-color="#080b0e" />
+        </radialGradient>
+        <linearGradient id={`${uid}-line`} x1="0" y1="1" x2="1" y2="0">
+          <stop offset="0" stop-color="#6fb644" />
+          <stop offset="1" stop-color="#d9f27e" />
+        </linearGradient>
+      </defs>
+      <rect width="96" height="96" rx="22" fill={`url(#${uid}-bg)`} />
+      {links.map(([a, b]) => (
+        <line
+          x1={nodes[a][0]}
+          y1={nodes[a][1]}
+          x2={nodes[b][0]}
+          y2={nodes[b][1]}
+          stroke={`url(#${uid}-line)`}
+          stroke-width="1.4"
+          opacity="0.55"
+        />
+      ))}
+      {nodes.map(([x, y], i) => (
+        <>
+          <circle cx={x} cy={y} r="5" fill="#d9f27e" opacity="0.16" />
+          <circle cx={x} cy={y} r="2.4" fill={i === 4 ? '#ffb347' : '#d9f27e'} />
+        </>
+      ))}
       <text
         x="85"
         y="84"
@@ -86,6 +90,60 @@ const twoDigits = (chapter ?? 0) > 9;
       >
         {chapter}
       </text>
-    )
-  }
-</svg>
+    </svg>
+  )
+}
+
+{
+  variant === 'cable' && (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 96 96"
+      width={size}
+      height={size}
+      class={className}
+      role="img"
+      aria-label="Book series companion post icon"
+    >
+      <defs>
+        <radialGradient id={`${uid}-bg`} cx="0.5" cy="0.22" r="1.1">
+          <stop offset="0" stop-color="#124a5e" />
+          <stop offset="0.55" stop-color="#0c2233" />
+          <stop offset="1" stop-color="#080b0e" />
+        </radialGradient>
+      </defs>
+      <style>
+        {`@media (prefers-reduced-motion: reduce) { .${uid}-pulse { display: none; } }`}
+      </style>
+      <rect width="96" height="96" rx="22" fill={`url(#${uid}-bg)`} />
+      <path
+        d="M12 66 q8 -5 16 0 q8 5 16 0 q8 -5 16 0 q8 5 16 0 q8 -5 8 -3"
+        fill="none"
+        stroke="#2e6a86"
+        stroke-width="1.6"
+        opacity="0.45"
+      />
+      <path
+        d="M18 78 q8 -5 16 0 q8 5 16 0 q8 -5 16 0 q8 5 12 1"
+        fill="none"
+        stroke="#2e6a86"
+        stroke-width="1.6"
+        opacity="0.3"
+      />
+      <path d="M20 42 Q 30 52 39 54.5" fill="none" stroke="#e0705f" stroke-width="2.2" stroke-dasharray="4 4" opacity="0.85" />
+      <path d="M39 54.5 Q 48 56.5 57 54.5" fill="none" stroke="#ffb347" stroke-width="2.2" stroke-dasharray="6 3" opacity="0.9" />
+      <path d="M57 54.5 Q 66 52 76 42" fill="none" stroke="#d9f27e" stroke-width="2.6" />
+      <circle cx="20" cy="42" r="7" fill="#d9f27e" opacity="0.16" />
+      <circle cx="76" cy="42" r="7" fill="#d9f27e" opacity="0.16" />
+      <circle cx="20" cy="42" r="3.2" fill="#d9f27e" />
+      <circle cx="76" cy="42" r="3.2" fill="#d9f27e" />
+      <circle class={`${uid}-pulse`} r="2.6" fill="#f5f4ef" opacity="0.95">
+        <animateMotion
+          dur="2.8s"
+          repeatCount="indefinite"
+          path="M20 42 Q 33 55 48 55.5 Q 63 55 76 42"
+        />
+      </circle>
+    </svg>
+  )
+}

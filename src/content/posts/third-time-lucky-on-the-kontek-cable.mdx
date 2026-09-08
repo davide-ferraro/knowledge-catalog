@@ -11,6 +11,8 @@ import Callout from '../../components/Callout.astro';
 import Toggle from '../../components/Toggle.astro';
 import Chart from '../../components/Chart.tsx';
 import Timeline from '../../components/Timeline.astro';
+import PriceBands from '../../components/PriceBands.astro';
+import LossTicker from '../../components/LossTicker.astro';
 
 In the [[who-gets-the-rights-to-trade-across-borders|chapter 2 notes]],
 volume coupling got two paragraphs: the failed experiment whose problems
@@ -132,17 +134,20 @@ while they figured out what had gone wrong. The paper dissects four causes:
 
 **1. The design flaw: prices are not unique.** This is the deep one. In an
 auction with discrete orders, the optimal volumes usually do not pin down a
-single price; they pin down a *range* of valid prices. A tiny example: if the
-last accepted sell order in a market is at €40 and the first rejected one is
-at €45, any price between €40 and €45 clears that market correctly. Now let
-two exchanges each pick a price from their own range by their own rule, say
-"take the lowest valid price". Germany's range might be €40 to €45 (it picks
-€40) and East Denmark's €38 to €44 (it picks €38). The published result:
-Denmark imports at €38 while Germany exports at €40, power apparently flowing
-towards the *cheaper* market, even though the volumes were optimal and a
-common price (anything from €40 to €44) existed. Nobody was in charge of
-picking it. That is why "no price coordination" is not a harmless
-simplification but a structural defect.
+single price; they pin down a *range* of valid prices. If the last accepted
+sell order in a market is at €40 and the first rejected one is at €45, any
+price between €40 and €45 clears that market correctly. Volume coupling
+leaves each exchange to pick from its own range, by its own rule. Try being
+the two exchanges yourself:
+
+<PriceBands />
+
+Nobody was in charge of picking a price from the overlap, so the published
+prices routinely disagreed even in hours where the volumes were perfect. That
+is why "no price coordination" is not a harmless simplification but a
+structural defect. (The mode buttons above preview the fix: attempt 3 lets
+one market follow the other, and price coupling removes the choice
+entirely.)
 
 **2. The dead band.** EMCC only used the cable to the extent that the
 resulting congestion rent covered the cable's grid losses. A deliberate
@@ -209,6 +214,10 @@ to reverse). Annualised, per unit of cable capacity:
 In absolute terms: roughly €10.8M, €28.4M and €0.6M per year. The average
 loss per hour was €1,228, €3,246 and €67; statistical tests confirm the
 three levels are significantly different.*
+
+Averages per hour are abstract, so here they are made concrete:
+
+<LossTicker />
 
 Two things stand out:
 

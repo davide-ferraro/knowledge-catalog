@@ -1,0 +1,169 @@
+---
+/**
+ * Interactive model of price indeterminacy under volume coupling (EEME
+ * Kontek post). The volumes are fixed and optimal; each market is left with
+ * a RANGE of valid prices (Germany 40-45, East Denmark 38-44). Three modes:
+ * no coordination (attempt 2), one-way coordination (attempt 3), and full
+ * price coupling. Sliders move each market's published price inside its
+ * range; the readout shows the spread the outside world sees.
+ */
+const Y_TOP = 24; // y of price 46
+const Y_BOTTOM = 188; // y of price 36
+const priceY = (p: number) => Y_BOTTOM - ((p - 36) * (Y_BOTTOM - Y_TOP)) / 10;
+---
+
+<figure class="not-prose border-border my-6 rounded-lg border p-4 sm:p-5" data-pb>
+  <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+    <p class="text-sm font-medium">Same volumes, pick the prices yourself</p>
+    <div class="border-border flex rounded-md border p-0.5 text-xs" role="group">
+      <button type="button" data-pb-mode="none" class="rounded px-2.5 py-1 font-medium transition-colors">
+        Attempt 2: no coordination
+      </button>
+      <button type="button" data-pb-mode="oneway" class="rounded px-2.5 py-1 font-medium transition-colors">
+        Attempt 3: one-way
+      </button>
+      <button type="button" data-pb-mode="coupled" class="rounded px-2.5 py-1 font-medium transition-colors">
+        Price coupling
+      </button>
+    </div>
+  </div>
+  <p class="text-muted-foreground text-sm leading-relaxed">
+    EMCC has fixed the optimal flow: Germany exports, East Denmark imports,
+    the cable is optimally used. After inserting those volumes, any price
+    between €40 and €45 validly clears the German order book, and any price
+    between €38 and €44 clears the Danish one. Someone still has to pick.
+  </p>
+
+  <svg viewBox="0 0 560 232" class="mt-2 w-full select-none" aria-label="Valid price ranges of the two markets">
+    <!-- price axis -->
+    {
+      [38, 40, 42, 44].map((p) => (
+        <>
+          <line x1="52" y1={priceY(p)} x2="540" y2={priceY(p)} stroke="var(--border)" stroke-width="1" opacity="0.5" />
+          <text x="46" y={priceY(p) + 4} text-anchor="end" class="fill-muted-foreground" font-size="10">
+            €{p}
+          </text>
+        </>
+      ))
+    }
+
+    <!-- overlap strip -->
+    <rect x="52" y={priceY(44)} width="488" height={priceY(40) - priceY(44)} fill="var(--chart-2)" opacity="0.07"></rect>
+    <text x="296" y={priceY(44) - 6} text-anchor="middle" class="fill-muted-foreground" font-size="10">
+      prices from €40 to €44 would satisfy both markets at once
+    </text>
+
+    <!-- Germany band -->
+    <rect x="130" y={priceY(45)} width="90" height={priceY(40) - priceY(45)} rx="6" fill="var(--chart-1)" opacity="0.18"></rect>
+    <text x="175" y="212" text-anchor="middle" class="fill-foreground" font-size="11" font-weight="600">Germany (exports)</text>
+    <text x="175" y="226" text-anchor="middle" class="fill-muted-foreground" font-size="10">valid: €40 to €45</text>
+    <line data-pb-de-marker x1="122" x2="228" y1="0" y2="0" stroke="var(--chart-1)" stroke-width="3"></line>
+    <text data-pb-de-label x="236" y="0" class="fill-foreground" font-size="12" font-weight="700"></text>
+
+    <!-- Denmark band -->
+    <rect x="340" y={priceY(44)} width="90" height={priceY(38) - priceY(44)} rx="6" fill="var(--chart-3)" opacity="0.18"></rect>
+    <text x="385" y="212" text-anchor="middle" class="fill-foreground" font-size="11" font-weight="600">East Denmark (imports)</text>
+    <text x="385" y="226" text-anchor="middle" class="fill-muted-foreground" font-size="10">valid: €38 to €44</text>
+    <line data-pb-dk-marker x1="332" x2="438" y1="0" y2="0" stroke="var(--chart-3)" stroke-width="3"></line>
+    <text data-pb-dk-label x="446" y="0" class="fill-foreground" font-size="12" font-weight="700"></text>
+  </svg>
+
+  <div class="mt-3 grid gap-3 sm:grid-cols-2">
+    <label class="text-muted-foreground block text-xs">
+      Germany publishes: <span class="text-foreground font-mono" data-pb-de-val></span>
+      <input type="range" min="40" max="45" step="0.5" value="40" data-pb-de class="accent-primary mt-1 w-full" />
+    </label>
+    <label class="text-muted-foreground block text-xs">
+      East Denmark publishes: <span class="text-foreground font-mono" data-pb-dk-val></span>
+      <input type="range" min="38" max="44" step="0.5" value="38" data-pb-dk class="accent-primary mt-1 w-full" />
+    </label>
+  </div>
+
+  <p class="mt-2 min-h-[3.75rem] text-sm leading-relaxed" data-pb-verdict></p>
+
+  <figcaption class="text-muted-foreground mt-2 border-t pt-3 text-xs leading-relaxed">
+    The ranges (€40-45 and €38-44) are this post's illustration, not the
+    paper's data; the mechanism is the paper's. Both exchanges on the Kontek
+    Cable used their own price rule, such as "take the lowest valid price",
+    which is the default position of the sliders in attempt 2.
+  </figcaption>
+</figure>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-pb]').forEach((root) => {
+    const q = (s: string) => root.querySelector<HTMLElement>(s)!;
+    const deEl = root.querySelector<HTMLInputElement>('[data-pb-de]')!;
+    const dkEl = root.querySelector<HTMLInputElement>('[data-pb-dk]')!;
+    const buttons = root.querySelectorAll<HTMLButtonElement>('[data-pb-mode]');
+    let mode = 'none';
+
+    const Y_TOP = 24;
+    const Y_BOTTOM = 188;
+    const priceY = (p: number) => Y_BOTTOM - ((p - 36) * (Y_BOTTOM - Y_TOP)) / 10;
+    const eur = (v: number) => `€${v % 1 === 0 ? v : v.toFixed(1)}`;
+
+    function render() {
+      let de = Number(deEl.value);
+      let dk = Number(dkEl.value);
+
+      if (mode === 'oneway') {
+        dk = Math.min(44, Math.max(38, de));
+        dkEl.value = String(dk);
+      } else if (mode === 'coupled') {
+        de = 42;
+        dk = 42;
+        deEl.value = '42';
+        dkEl.value = '42';
+      }
+      dkEl.disabled = mode !== 'none';
+      deEl.disabled = mode === 'coupled';
+
+      for (const [key, val] of [
+        ['de', de],
+        ['dk', dk],
+      ] as const) {
+        const y = priceY(val);
+        const marker = q(`[data-pb-${key}-marker]`);
+        marker.setAttribute('y1', String(y));
+        marker.setAttribute('y2', String(y));
+        const label = q(`[data-pb-${key}-label]`);
+        label.setAttribute('y', String(y + 4));
+        label.textContent = eur(val);
+        q(`[data-pb-${key}-val]`).textContent = `${eur(val)}/MWh`;
+      }
+
+      const spread = de - dk;
+      const verdict = q('[data-pb-verdict]');
+      if (Math.abs(spread) < 0.01) {
+        verdict.textContent =
+          mode === 'coupled'
+            ? '✓ Price coupling picks one price from the overlap for both markets. No spread can exist, by construction. This is what Europe eventually chose.'
+            : '✓ The two published prices happen to agree. Nothing in this design guarantees it: move a slider and the agreement is gone.';
+      } else if (spread > 0) {
+        verdict.textContent = `✗ The exporter (Germany, ${eur(de)}) publishes a higher price than the importer (${eur(dk)}). To the outside world, ${eur(spread)}/MWh of spread with power flowing towards the cheaper market: a wrong-way flow, even though the volumes are optimal. Hours like this are what observers saw during the ten days.`;
+      } else {
+        verdict.textContent = `The importer publishes ${eur(-spread)}/MWh above the exporter. That looks like money left on the table (a spread while the cable is "full"), and traders reading the published prices cannot tell it is only a pricing artefact.`;
+      }
+    }
+
+    buttons.forEach((b) =>
+      b.addEventListener('click', () => {
+        mode = b.dataset.pbMode!;
+        if (mode === 'none') {
+          deEl.value = '40';
+          dkEl.value = '38';
+        }
+        buttons.forEach((x) => {
+          const active = x.dataset.pbMode === mode;
+          x.classList.toggle('bg-muted', active);
+          x.classList.toggle('text-muted-foreground', !active);
+        });
+        render();
+      }),
+    );
+
+    deEl.addEventListener('input', render);
+    dkEl.addEventListener('input', render);
+    buttons[0].click();
+  });
+</script>
