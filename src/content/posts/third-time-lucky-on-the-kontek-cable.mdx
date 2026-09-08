@@ -1,0 +1,284 @@
+---
+title: "Third time lucky? The Kontek cable experiment"
+date: 2026-09-08
+category: "energy-markets"
+tags: ["paper-notes", "market-coupling", "volume-coupling", "nordics"]
+series: "eeme"
+description: "Notes on Meeus (2011), the paper behind the volume-coupling story in chapter 2: one cable between Denmark and Germany tried three different coupling designs, and the numbers show exactly which ideas failed and why."
+---
+
+import Callout from '../../components/Callout.astro';
+import Toggle from '../../components/Toggle.astro';
+import Chart from '../../components/Chart.tsx';
+import Timeline from '../../components/Timeline.astro';
+
+In the [[who-gets-the-rights-to-trade-across-borders|chapter 2 notes]],
+volume coupling got two paragraphs: the failed experiment whose problems
+"Meeus's research had predicted", with a paper title used as a punchline. This
+post is the full story behind that punchline. The paper is Leonardo Meeus
+(2011), "Implicit auctioning on the Kontek Cable: Third time lucky?",
+published in *Energy Economics*; a free working-paper version exists (EUI
+RSCAS 2010/49), and everything below comes from it unless linked otherwise.
+
+Why this paper is worth a post of its own: it is a rare natural experiment.
+One and the same cable tried **three different designs for implicit
+auctioning** in sequence, under comparable conditions, with public hourly
+data. That makes it possible to do something normally impossible in market
+design: measure the designs against each other and put a euro number on each
+idea.
+
+## The setting
+
+The **Kontek cable** is a 550 MW connection (in both directions) between East
+Denmark and Germany, in operation since 1995. On the Danish side the power
+exchange is Nord Pool, on the German side EEX. For years the cable barely had
+a market: most of its capacity was reserved by old **priority access
+contracts**, the historical privileges from section 1 of the chapter 2 notes;
+the last of them expired in 2006. Explicit auctions for the remaining
+capacity only started in 2002.
+
+Then came three attempts to do better:
+
+<Timeline
+  kinds={{
+    context: "Context",
+    attempt: "Implicit auctioning attempt",
+    after: "Aftermath",
+  }}
+  items={[
+    {
+      year: "1995",
+      kind: "context",
+      title: "Kontek cable in operation",
+      detail: "550 MW between East Denmark and Germany. Most capacity tied up in old priority contracts.",
+    },
+    {
+      year: "2002",
+      kind: "context",
+      title: "Explicit auctions start",
+      detail: "For the capacity not covered by the priority contracts, which expire in 2005 and 2006.",
+    },
+    {
+      year: "2005",
+      kind: "attempt",
+      title: "Attempt 1: Nord Pool opens a German platform",
+      detail: "One exchange on both sides of the border, so it can allocate the cable inside its own auction. But EEX keeps most German trading, so two German prices coexist.",
+    },
+    {
+      year: "2008",
+      kind: "attempt",
+      title: "Attempt 2: volume coupling via EMCC",
+      detail: "Nord Pool and EEX found a joint venture that computes the optimal flow, while each exchange keeps pricing its own market. Launched 29 September, suspended after 10 days.",
+    },
+    {
+      year: "2009",
+      kind: "attempt",
+      title: "Attempt 3: one-way price coordination",
+      detail: "Relaunched 9 November after 13 months back on attempt 1. Same setup, but EMCC now tells Nord Pool what EEX's price will be. This one sticks.",
+    },
+    {
+      year: "2010",
+      kind: "after",
+      title: "The exchanges choose price coupling",
+      detail: "In March, six European exchanges launch the joint project that becomes the pan-European price coupling algorithm (today's EUPHEMIA).",
+    },
+    {
+      year: "2014",
+      kind: "after",
+      title: "Volume coupling retired",
+      detail: "EMCC's system had survived as the interim bridge between the Nordic and Central West European markets. On 4 February 2014 full price coupling of North-Western Europe goes live and replaces it.",
+    },
+  ]}
+  caption="Three designs on one cable, then the aftermath. The paper analyses hourly data from 29 September 2008 to 16 April 2010, which covers all three."
+/>
+
+## Attempt 1 (2005): one exchange on both sides
+
+Nord Pool's idea was simple: if the problem is coordinating two exchanges,
+become both of them. It opened its own trading platform in Germany, so its
+auction could see bids on both sides of the cable and allocate the capacity
+internally, like Nordic market splitting extended across the border.
+
+The catch: EEX did not go away. Most German volume kept trading on EEX, so
+Germany now had **two prices**, one quoted by Nord Pool's thin German
+platform and one by EEX. Someone still had to arbitrage between those two,
+with the same guesswork as under explicit auctions. A study by Kristiansen
+(2007) found the two German prices differed significantly, and that Nord
+Pool's German price tracked East Denmark more closely than it tracked EEX.
+The paper's verdict: this design sits *in between* explicit and implicit
+auctioning. Better than nothing, but the cross-border arbitrage was still
+being done by traders' forecasts rather than by an algorithm.
+
+## Attempt 2 (2008): volume coupling, ten days
+
+For the second attempt, Nord Pool closed its German platform and the two
+exchanges founded a joint venture, the **European Market Coupling Company
+(EMCC)**. The procedure, step by step:
+
+1. EEX and Nord Pool send their order books to EMCC.
+2. EMCC computes the optimal use of the cable (the volumes).
+3. Each exchange inserts the result into its own order book as a
+   price-taking order: the importing side gets an extra supply order, the
+   exporting side an extra demand order.
+4. Each exchange calculates its own price, independently.
+
+This is what the chapter calls volume coupling (the paper also uses "dome
+coupling"). Stakeholders promoted it as institutionally easier than full
+price coupling: nobody has to give up their pricing.
+
+It went live on 29 September 2008 and was suspended on 7 October 2008, after
+**ten days**. The exchanges then fell back to attempt 1 for thirteen months
+while they figured out what had gone wrong. The paper dissects four causes:
+
+**1. The design flaw: prices are not unique.** This is the deep one. In an
+auction with discrete orders, the optimal volumes usually do not pin down a
+single price; they pin down a *range* of valid prices. A tiny example: if the
+last accepted sell order in a market is at €40 and the first rejected one is
+at €45, any price between €40 and €45 clears that market correctly. Now let
+two exchanges each pick a price from their own range by their own rule, say
+"take the lowest valid price". Germany's range might be €40 to €45 (it picks
+€40) and East Denmark's €38 to €44 (it picks €38). The published result:
+Denmark imports at €38 while Germany exports at €40, power apparently flowing
+towards the *cheaper* market, even though the volumes were optimal and a
+common price (anything from €40 to €44) existed. Nobody was in charge of
+picking it. That is why "no price coordination" is not a harmless
+simplification but a structural defect.
+
+**2. The dead band.** EMCC only used the cable to the extent that the
+resulting congestion rent covered the cable's grid losses. A deliberate
+constraint, but one more source of unused profitable capacity.
+
+**3. Price caps that did not match.** At the time, EEX prices could range
+from −€3,000 to +€3,000/MWh while Nord Pool's could only range from €0 to
++€2,000. During the ten days of operation, the EEX price actually went beyond
+Nord Pool's tighter caps in three consecutive hours: hours where the two
+markets were not even *allowed* to agree on a price. (There were also hours
+with negative prices on EEX while Nord Pool sat at €59.9 with no exchange
+scheduled, which the paper notes cannot be explained by the caps alone.)
+
+**4. Plain engineering.** The algorithms run by Nord Pool, EEX and EMCC did
+not calculate with the same numerical precision, causing rounding
+mismatches; and EEX's order book is in euros while Nord Pool's is partly in
+Danish, Norwegian and Swedish crowns, and EMCC did not apply the same
+exchange rate as Nord Pool when converting.
+
+<Callout icon="🔑" title="The lesson in one sentence">
+  Fixing the volumes is not enough: with discrete bids the volumes leave a
+  range of valid prices, and two exchanges choosing independently from their
+  own ranges will publish spreads and wrong-way flows that a single
+  coordinated price would never produce. Allocation and pricing are one
+  problem, not two.
+</Callout>
+
+## Attempt 3 (2009): quietly giving up on the pure idea
+
+The relaunch on 9 November 2009 was originally meant to fix only the
+engineering (the algorithm). Testing showed that was not enough, so the
+coordination itself was changed: EMCC now gives Nord Pool an **indication of
+what EEX's price will be**, and Nord Pool takes it into account when picking
+its own price from the valid range. EEX keeps pricing independently.
+
+That is one-way price coordination, and the paper walks through why one-way
+is still imperfect: coordination works when the informed exchange happens to
+be the one whose range needs adjusting, and does nothing in the mirror-image
+case. The dead band also stayed, and the caps were only partly harmonised
+(Nord Pool's floor moved from €0 to −€200, against EEX's −€3,000). But it
+worked far better, as the numbers show.
+
+## The scoreboard
+
+The paper computes the welfare loss of each design from public hourly data:
+for every hour, the price spread multiplied by the unused capacity (with
+wrong-way flows counting as up to 1,100 MW unused, since the flow would have
+to reverse). Annualised, per unit of cable capacity:
+
+<Chart
+  client:only="react"
+  kind="bar"
+  height={280}
+  series={["loss"]}
+  labels={{ loss: "Welfare loss (k€ per MW per year)" }}
+  data={[
+    { label: "1: Nord Pool platform", loss: 19.6 },
+    { label: "2: volume coupling", loss: 51.7 },
+    { label: "3: one-way coordination", loss: 1.1 },
+  ]}
+/>
+
+*Welfare loss per MW of cable capacity per year, from Table 1 of the paper.
+In absolute terms: roughly €10.8M, €28.4M and €0.6M per year. The average
+loss per hour was €1,228, €3,246 and €67; statistical tests confirm the
+three levels are significantly different.*
+
+Two things stand out:
+
+- **Volume coupling was not just imperfect, it was worse than the halfway
+  design it replaced.** Attempt 2 lost money at almost triple the rate of
+  attempt 1. For calibration, the paper compares with explicit auctions on
+  the French borders in 2008, which lost between €22k and €78k per MW per
+  year: attempts 1 and 2 sat in the same league as the method implicit
+  auctioning was supposed to replace.
+- **Coordinating prices, even one-way, cut the loss by a factor of about
+  fifty.** Attempt 3 still leaked about €0.5M a year (the one-way asymmetry
+  and the dead band), but it clearly outperformed everything before it.
+
+Hence the title's answer: yes, third time lucky, but only because the third
+implementation partly abandoned volume coupling. The "institutionally easier"
+idea of coupling volumes while keeping pricing sovereign is exactly the part
+that had to go.
+
+## Why this paper mattered
+
+The point was never one 550 MW cable. In 2008-2010, volume coupling was being
+promoted (including in a joint paper by the European associations of power
+exchanges and TSOs) as *the* model for coupling Europe's regions, precisely
+because it let every exchange keep its own pricing. This paper, together with
+the author's earlier work showing why price coordination between exchanges is
+essential, put empirical numbers on the counterargument.
+
+The market listened. In March 2010, while the third implementation was still
+running, six exchanges (APX-Endex, Belpex, EPEX Spot, GME, Nord Pool Spot and
+OMEL) launched the joint project to build one shared **price coupling**
+algorithm for Europe. That project's algorithm is EUPHEMIA, the one that
+clears nearly all of Europe's day-ahead market today. EMCC's volume coupling
+lived on only as a temporary bridge between the Nordic and Central West
+European regions until 4 February 2014, when full price coupling of
+North-Western Europe went live and retired it.
+
+If you want to *feel* the failure mode rather than read about it, the
+[[who-gets-the-rights-to-trade-across-borders|chapter 2 post]] has an
+interactive volume-coupling model where you fix the cable volume yourself and
+watch the two independently computed prices diverge.
+
+<Toggle title="Further reading from the same research line">
+  **Meeus, Vandezande, Cole, Belmans (2009)**, "Market coupling and the
+  importance of price coordination between power exchanges" (*Energy* 34):
+  the theory paper that predicted the problem before the Kontek launch.
+
+  **Meeus, Verhaegen, Belmans (2009)**, "Block order restrictions in
+  combinatorial electric energy auctions" (*EJOR* 196): why discrete block
+  orders make clearing (and price uniqueness) hard, the same mechanism behind
+  paradoxically rejected blocks in today's EUPHEMIA.
+
+  **"Tight Volume Coupling: analytical model, adverse flow causality and
+  potential improvements" (EUI RSCAS working paper 2012/09)**: a later
+  analytical treatment of the adverse flows in the interim solution that
+  bridged the Nordics and Central West Europe until 2014.
+</Toggle>
+
+## 📚 Sources
+
+- Meeus, L. (2011), [Implicit auctioning on the Kontek Cable: Third time lucky?](https://doi.org/10.1016/j.eneco.2010.10.008),
+  *Energy Economics* 33(3), 413-418. Free working-paper version:
+  [EUI RSCAS 2010/49](https://ideas.repec.org/p/rsc/rsceui/2010-49.html).
+  All figures and implementation details above are from this paper.
+- Meeus, L., L. Vandezande, S. Cole and R. Belmans (2009),
+  [Market coupling and the importance of price coordination between power exchanges](https://ideas.repec.org/a/eee/energy/v34y2009i3p228-234.html),
+  *Energy* 34(3), 228-234.
+- Meeus, L. (2020), [*The Evolution of Electricity Markets in Europe*](https://doi.org/10.4337/9781789905472),
+  ch. 2 (with Tim Schittekatte), where this episode gets its two paragraphs.
+- EPEX Spot, [European market coupling](https://www.epexspot.com/en/marketcoupling)
+  and [10 years since the first market coupling initiative](https://www.epexspot.com/en/news/10-years-first-market-coupling-initiative-tlc),
+  for the price-coupling project and the 4 February 2014 NWE go-live.
+- EUI Cadmus, [Tight Volume Coupling: analytical model, adverse flow causality and potential improvements](https://cadmus.eui.eu/handle/1814/21296),
+  RSCAS working paper 2012/09.
