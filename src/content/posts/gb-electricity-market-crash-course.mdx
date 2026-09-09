@@ -110,11 +110,19 @@ runs on one big day-ahead auction. GB works differently:
    **gate closure**, one hour before delivery.
 3. **NESO balances the rest** in the **Balancing Mechanism**: generators and
    flexible consumers submit bids and offers to deviate from their plans,
-   and NESO accepts them in real time to keep the system stable. This is
-   also where it pays to resolve congestion ("constraints").
+   and NESO accepts them in real time to keep the system stable. Congestion
+   is handled here too, as paid redispatch: a constrained-off wind farm is
+   paid its accepted bid to turn down, a plant behind the bottleneck is paid
+   its offer to turn up.
 4. **Elexon settles the differences.** Whoever was out of balance pays or
-   receives the **cash-out price** (imbalance price) for the gap between
-   contracts and reality, under the Balancing and Settlement Code.
+   receives the **cash-out price** (one single imbalance price per
+   half-hour, set by the marginal balancing actions NESO took) for the gap
+   between contracts and reality, under the Balancing and Settlement Code.
+   Note what this implies: cash-out is built from NESO's actions, so NESO's
+   own demand and wind forecast errors move the price everyone settles
+   against. Traders live on forecast revisions: wind, solar, demand,
+   outages, gas prices and interconnector flows between the day-ahead
+   auction and gate closure.
 
 Two structural consequences: GB is **self-dispatch** (every plant decides its
 own schedule from its trades, there is no central optimiser like EUPHEMIA),
@@ -243,6 +251,22 @@ instruments on top:
   from clean sources by 2030 (2024 actual mix: gas 30%, wind 29%, nuclear
   14%, solar 5%).
 
+## The data angle: GB shows you everything
+
+One GB trait matters enormously for anyone in the forecasting business: **GB
+publishes physical and market data at a depth most European markets keep
+opaque**. Elexon's Insights platform exposes, per individual plant (per "BM
+Unit"): its declared production plan for every half-hour (the physical
+notification), its bids and offers into the Balancing Mechanism, what NESO
+accepted, and the resulting detailed system prices. NESO's data portal adds
+the system operator's own demand and wind forecasts and constraint-cost
+data. In the Nordics you mostly see zone-level aggregates; in GB you can
+watch a single battery's behaviour half-hour by half-hour.
+
+That transparency is why GB has a crowded ecosystem of market analytics
+vendors (Modo Energy, EnAppSys, LCP Delta and others) and highly quantified
+trading desks and battery optimisers as their customers.
+
 ## Questions worth asking tomorrow
 
 1. What will "reformed national pricing" actually change in practice, and
@@ -259,8 +283,12 @@ instruments on top:
 6. Where do GB traders feel underserved on data and forecasts today: shaping
    day-ahead positions, trading intraday, or anticipating the Balancing
    Mechanism and cash-out prices?
-7. Who are the established forecast and analytics vendors serving GB traders,
-   and what do they consistently get wrong or not cover?
+7. Who are the established forecast and analytics vendors serving GB traders
+   (Modo Energy, EnAppSys, LCP Delta...), why are they popular, and what do
+   they consistently get wrong or not cover?
+8. How exactly do intraday prices and the cash-out price form, and how much
+   of cash-out is really predictable from NESO's published forecasts and the
+   Balancing Mechanism data?
 
 ## 📚 Sources
 
@@ -280,6 +308,11 @@ instruments on top:
   (14.7 GW total, 8.4 GW offshore wind).
 - Cornwall Insight, [Octopus Energy becomes GB's largest household supplier](https://www.cornwall-insight.com/press-and-media/press-release/octopus-energy-becomes-gbs-largest-household-supplier/)
   (23.7% share, October 2024).
+- Elexon, [Insights Solution](https://bmrs.elexon.co.uk/) (per-BM-Unit
+  [physical and bid-offer data](https://bmrs.elexon.co.uk/balancing-mechanism-market-view),
+  [detailed system prices](https://bmrs.elexon.co.uk/detailed-system-prices))
+  and NESO's [Data Portal](https://www.neso.energy/data-portal), the open
+  data behind the transparency section.
 - 2024 generation mix: own calculation from
   [Ember data via Our World in Data](https://ourworldindata.org/grapher/electricity-prod-source-stacked),
   same dataset as the [[why-we-started-with-electricity-markets-in-europe|chapter 1 post]].
