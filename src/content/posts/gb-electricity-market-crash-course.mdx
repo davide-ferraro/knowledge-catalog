@@ -4,11 +4,13 @@ date: 2026-09-09
 category: "energy-markets"
 tags: ["gb-market", "primer", "market-design"]
 icon: "gb"
-description: "The story, the mechanics and the players of the British power market in a ten-minute read: what to know before talking to a GB market expert."
+description: "The story, the mechanics and the players of the British power market: how prices form, who does what, how it compares to the Nordics, and where it's heading. With worked numbers and things to play with."
 ---
 
 import Callout from '../../components/Callout.astro';
 import Timeline from '../../components/Timeline.astro';
+import CashOutExplorer from '../../components/CashOutExplorer.astro';
+import CfdPayoff from '../../components/CfdPayoff.astro';
 import {
   Table,
   TableBody,
@@ -19,13 +21,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-A deliberately short primer. The one thing to hold onto: **Great Britain
-invented electricity liberalisation, then chose a different market design
-than the rest of Europe**, and most GB-specific jargon follows from that
-choice. Everything here is verified and linked; ask me to go deeper on any
-section.
+The one thing to hold onto: **Great Britain invented electricity
+liberalisation, then chose a different market design than the rest of
+Europe**, and most GB-specific jargon follows from that choice. The post goes
+story → design → prices → players → money → data → future; everything is
+verified and linked, and the interactive bits are the fastest way to make the
+mechanics stick.
 
-## The story in one timeline
+## 1. 📜 The story in one timeline
 
 <Timeline
   kinds={{
@@ -93,7 +96,7 @@ section.
   caption="Thirty-five years in eight steps: pool, then bilateral market, then ever more state instruments layered on top."
 />
 
-## How a MWh gets traded (and why it's not like the EU)
+## 2. ⚙️ The design: how a MWh gets traded
 
 The [[who-gets-the-rights-to-trade-across-borders|European coupled market]]
 runs on one big day-ahead auction. GB works differently:
@@ -109,20 +112,10 @@ runs on one big day-ahead auction. GB works differently:
 3. **NESO balances the rest** in the **Balancing Mechanism**: generators and
    flexible consumers submit bids and offers to deviate from their plans,
    and NESO accepts them in real time to keep the system stable. Congestion
-   is handled here too, as paid redispatch: a constrained-off wind farm is
-   paid its accepted bid to turn down, a plant behind the bottleneck is paid
-   its offer to turn up.
+   is handled here too, as paid redispatch.
 4. **Elexon settles the differences.** Whoever was out of balance pays or
-   receives the **cash-out price** (one single imbalance price per
-   half-hour, set by the marginal balancing actions NESO took) for the gap
-   between contracts and reality, under the Balancing and Settlement Code.
-   Note what this implies: cash-out is built from NESO's actions, so NESO's
-   own demand and wind forecast errors move the price everyone settles
-   against. And because every position is ultimately priced against expected
-   cash-out, those same published forecasts echo backwards into intraday and
-   even day-ahead prices. Traders live on forecast revisions: wind, solar,
-   demand, outages, gas prices and interconnector flows between the
-   day-ahead auction and gate closure.
+   receives the **cash-out price** for the gap between contracts and
+   reality, under the Balancing and Settlement Code.
 
 <Callout icon="❓" title="So does GB have a day-ahead auction or not?">
   It has <strong>three, every day</strong>: EPEX SPOT runs an hourly auction
@@ -141,120 +134,67 @@ runs on one big day-ahead auction. GB works differently:
   EU market, the auction is where the market happens.
 </Callout>
 
-### One worked half-hour
+Two structural consequences: GB is **self-dispatch** (every plant decides
+its own schedule from its trades, there is no central optimiser like
+EUPHEMIA), and GB is **one single price zone**, so the wholesale price never
+tells you *where* power is scarce. Both show up in the numbers next.
 
-Numbers make the two mechanisms concrete (simplified, but the logic is
-exact):
+## 3. 💷 How prices form, with numbers
 
-**Cash-out.** In some settlement period the market as a whole is 300 MWh
-short: plans said more generation than actually showed up. NESO accepts
-offers to fill the gap: 200 MWh at £80/MWh, then 100 MWh at £120/MWh. The
-cash-out price is set by the *most expensive* action needed, so it lands at
-**£120/MWh** (formally it is the priciest 1 MWh of actions). Now every
-party's own gap is settled at that single price: a supplier who was 10 MWh
-short pays 10 × £120 = £1,200; a wind farm that was 10 MWh *long* helped the
-system and receives £1,200. One price, both directions, which is why
-forecasting your own imbalance, and the system's, is worth real money.
+### The day-ahead price: marginal pricing
 
-**A constraint.** A Scottish cable is full. NESO accepts a wind farm's bid
-to curtail 100 MWh at £70/MWh (wind bids are expensive to accept because a
-curtailed wind farm loses its subsidy income) and a gas plant's offer south
-of the bottleneck to produce 100 MWh at £95/MWh. That one action pair costs
-£7,000 + £9,500 = **£16,500 for a single half-hour**, and the wholesale
-price shows none of it. Scale that up and you get GB's constraint bill:
+The auctions clear like any marginal-price auction. Tiny example: sell
+orders of 100 MWh at £20 (wind), 60 MWh at £45 (gas A), 80 MWh at £70
+(gas B); buyers need 140 MWh. Wind clears in full, gas A covers the last
+40 MWh, gas B is out, and **everyone trades at £45**, the price of the
+marginal accepted order. (The chapter 2 post has the
+[[who-gets-the-rights-to-trade-across-borders|full mechanics]].) The
+subtlety in GB is what this price *means*: it is a benchmark of expectations
+at 10 in the morning, not a system plan.
+
+### Cash-out: the price of being wrong
+
+This is the price GB people obsess about, because every forecast error ends
+up settled at it. The logic: NESO fixes the system's net imbalance with
+Balancing Mechanism actions, the **marginal action sets one single price**,
+and everyone's individual gap (long or short) settles at that price. Play
+with it:
+
+<CashOutExplorer />
+
+Note the asymmetry of consequences: being short when the whole system is
+short is expensive exactly when it hurts the system most, and being long in
+a deeply long system can mean *paying* to dump your surplus at negative
+prices. Cash-out is built from NESO's own actions, so NESO's demand and
+wind forecast errors move the price everyone settles against; and because
+every position is ultimately priced against expected cash-out, those same
+published forecasts echo backwards into intraday and even day-ahead prices.
+Traders live on forecast revisions: wind, solar, demand, outages, gas
+prices and interconnector flows between the auction and gate closure.
+
+### Constraints: the invisible price of location
+
+One national price means congestion never shows in the wholesale market; it
+shows up as redispatch payments. Worked example: a Scottish cable is full.
+NESO accepts a wind farm's bid to curtail 100 MWh at £70/MWh (wind bids are
+expensive because a curtailed wind farm loses its subsidy income) and a gas
+plant's offer south of the bottleneck to produce 100 MWh at £95/MWh. That
+one action pair costs £7,000 + £9,500 = **£16,500 for a single half-hour**,
+invisible in the price. Scale it up and you get GB's constraint bill:
 **£1.9 billion in 2024/25**, 71% of all balancing costs, heading for a
 projected £4-8 billion a year by 2030 without major fixes.
 
-Two structural consequences of the design: GB is **self-dispatch** (every
-plant decides its own schedule from its trades, there is no central
-optimiser like EUPHEMIA), and GB is **one single price zone**, so the
-wholesale price never tells you *where* power is scarce, as the constraint
-example just showed.
-
 <Callout icon="⚡" title="Why the zonal pricing fight mattered">
   For three years REMA (the government's market design review) debated
-  splitting GB into price zones so that prices would reflect grid congestion,
-  Nordic-style. In July 2025 the government said no: one national price
-  stays, with "reformed national pricing" (better locational signals in
-  network charges and grid connections) instead. Your expert will have an
-  opinion on this. Everyone does.
+  splitting GB into price zones so that prices would reflect grid
+  congestion, Nordic-style, instead of accumulating constraint bills. In
+  July 2025 the government said no: one national price stays, with
+  "reformed national pricing" (better locational signals in network charges
+  and grid connections) instead. Your expert will have an opinion on this.
+  Everyone does.
 </Callout>
 
-## GB vs the Nordics, side by side
-
-Coming from a Nordic frame of reference, these are the contrasts that matter:
-
-<Table>
-  <TableCaption>Same physics, opposite design choices.</TableCaption>
-  <TableHeader>
-    <TableRow>
-      <TableHead></TableHead>
-      <TableHead>Great Britain</TableHead>
-      <TableHead>Nordics</TableHead>
-    </TableRow>
-  </TableHeader>
-  <TableBody>
-    <TableRow>
-      <TableCell>Price zones</TableCell>
-      <TableCell>One national zone</TableCell>
-      <TableCell>Twelve bidding zones (SE1-4, NO1-5, DK1-2, FI)</TableCell>
-    </TableRow>
-    <TableRow>
-      <TableCell>Day-ahead auction</TableCell>
-      <TableCell>Voluntary venue, produces the reference price</TableCell>
-      <TableCell>The market itself: part of EU-wide coupling (EUPHEMIA), sets every zone's price</TableCell>
-    </TableRow>
-    <TableRow>
-      <TableCell>Congestion</TableCell>
-      <TableCell>Invisible in the price; fixed afterwards by NESO in the Balancing Mechanism</TableCell>
-      <TableCell>Priced up-front: zones split exactly where the grid is tight</TableCell>
-    </TableRow>
-    <TableRow>
-      <TableCell>Settlement period</TableCell>
-      <TableCell>30 minutes</TableCell>
-      <TableCell>15 minutes</TableCell>
-    </TableRow>
-    <TableRow>
-      <TableCell>Low-carbon revenues</TableCell>
-      <TableCell>State-backed CfD strike prices plus a Capacity Market</TableCell>
-      <TableCell>Largely merchant market revenues, hedged with EPADs and PPAs</TableCell>
-    </TableRow>
-  </TableBody>
-</Table>
-
-The irony worth savouring: the Nordic design *is* market splitting, the thing
-GB decided against in the REMA review, and the Nordics run it inside the
-coupled European market that GB left.
-
-### Same roles, different names
-
-The Nordic role vocabulary (BRP, BSP) mostly has GB equivalents; the
-functions exist everywhere, the labels don't travel:
-
-- **BRP (balance responsible party).** In the Nordics, a distinct role:
-  every consumer and producer must have a BRP that answers financially for
-  imbalances, settled centrally by eSett. GB has no separate BRP layer:
-  every trading party under the Balancing and Settlement Code simply
-  carries its own imbalance exposure, settled by Elexon. Same function,
-  folded into the trading role itself.
-- **BSP (balancing service provider).** The Nordic term for whoever sells
-  balancing energy (mFRR, aFRR) to the TSOs. The GB equivalent is a
-  participant in the Balancing Mechanism: any BM Unit can submit bids and
-  offers, and since December 2019 independent aggregators can join as
-  **Virtual Lead Parties** without being suppliers. Frequency-response
-  products (Dynamic Containment and friends) are procured by NESO in
-  separate auctions, much like Nordic reserve markets.
-- **Imbalance settlement body**: eSett (jointly owned by the Nordic TSOs)
-  maps to Elexon.
-- **Imbalance pricing**: both ended up in the same place, a single price
-  for both directions per settlement period; GB got there in 2015, the
-  Nordics on 1 November 2021. The remaining gap is granularity: 30-minute
-  periods in GB versus 15-minute in the Nordics.
-- **IPP (independent power producer)** is informal industry language in
-  both markets, not a defined role: a generator that isn't part of a big
-  incumbent utility.
-
-## Who's who
+## 4. 🎭 The players
 
 <Table>
   <TableCaption>The cast, one line each.</TableCaption>
@@ -300,31 +240,119 @@ functions exist everywhere, the labels don't travel:
   </TableBody>
 </Table>
 
-## Where the money actually comes from
+### Same roles, different names (BRP, BSP, IPP)
+
+The Nordic role vocabulary mostly has GB equivalents; the functions exist
+everywhere, the labels don't travel:
+
+- **BRP (balance responsible party).** In the Nordics, a distinct role:
+  every consumer and producer must have a BRP that answers financially for
+  imbalances, settled centrally by eSett. GB has no separate BRP layer:
+  every trading party under the Balancing and Settlement Code simply
+  carries its own imbalance exposure, settled by Elexon. Same function,
+  folded into the trading role itself.
+- **BSP (balancing service provider).** The Nordic term for whoever sells
+  balancing energy (mFRR, aFRR) to the TSOs. The GB equivalent is a
+  participant in the Balancing Mechanism: any BM Unit can submit bids and
+  offers, and since December 2019 independent aggregators can join as
+  **Virtual Lead Parties** without being suppliers. Frequency-response
+  products (Dynamic Containment and friends) are procured by NESO in
+  separate auctions, much like Nordic reserve markets.
+- **Imbalance settlement body**: eSett (jointly owned by the Nordic TSOs)
+  maps to Elexon.
+- **IPP (independent power producer)** is informal industry language in
+  both markets, not a defined role: a generator that isn't part of a big
+  incumbent utility.
+
+## 5. 🆚 GB vs the Nordics, side by side
+
+<Table>
+  <TableCaption>Same physics, opposite design choices.</TableCaption>
+  <TableHeader>
+    <TableRow>
+      <TableHead></TableHead>
+      <TableHead>Great Britain</TableHead>
+      <TableHead>Nordics</TableHead>
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    <TableRow>
+      <TableCell>Price zones</TableCell>
+      <TableCell>One national zone</TableCell>
+      <TableCell>Twelve bidding zones (SE1-4, NO1-5, DK1-2, FI)</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>Day-ahead auction</TableCell>
+      <TableCell>Voluntary venue, produces the reference price</TableCell>
+      <TableCell>The market itself: part of EU-wide coupling (EUPHEMIA), sets every zone's price</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>Congestion</TableCell>
+      <TableCell>Invisible in the price; fixed afterwards by NESO in the Balancing Mechanism</TableCell>
+      <TableCell>Priced up-front: zones split exactly where the grid is tight</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>Settlement period</TableCell>
+      <TableCell>30 minutes</TableCell>
+      <TableCell>15 minutes</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>Imbalance pricing</TableCell>
+      <TableCell>Single price for both directions, since 2015</TableCell>
+      <TableCell>Single price for both directions, since November 2021</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>Low-carbon revenues</TableCell>
+      <TableCell>State-backed CfD strike prices plus a Capacity Market</TableCell>
+      <TableCell>Largely merchant market revenues, hedged with EPADs and PPAs</TableCell>
+    </TableRow>
+  </TableBody>
+</Table>
+
+The irony worth savouring: the Nordic design *is* market splitting, the thing
+GB decided against in the REMA review, and the Nordics run it inside the
+coupled European market that GB left.
+
+## 6. 💰 The money on top of the market
 
 The wholesale market is only part of a GB generator's income. The state
-instruments on top:
+instruments layered on top:
 
-- **Contracts for Difference (CfD)**: the main tool for new low-carbon
-  plants. Auctioned "strike price" per MWh; the generator sells in the
-  market and the contract tops up (or claws back) the difference. With a
-  strike of £75: if the day-ahead reference price is £60, the generator
-  gets a £15/MWh top-up; if the reference is £90, it pays £15/MWh back.
-  Either way it earns £75, which is the point: price risk gone, financing
-  cheap. The latest auction (AR7, results January and February 2026)
-  contracted a record 14.7 GW, including 8.4 GW of offshore wind.
+**Contracts for Difference (CfD)**, the main tool for new low-carbon plants:
+an auctioned "strike price" per MWh, settled against the day-ahead reference
+price. Drag the market around and watch the generator's revenue refuse to
+move:
+
+<CfdPayoff />
+
+The latest auction (AR7, results January and February 2026) contracted a
+record 14.7 GW, including 8.4 GW of offshore wind.
+
+Alongside the CfDs:
+
 - **Capacity Market**: yearly auctions paying plants and flexible demand
   just for being available during scarcity. Born from the fear that an
   energy-only market retires too much firm capacity.
 - **Balancing and constraint payments** from NESO, increasingly important
-  income for batteries and flexible plants.
+  income for batteries and flexible plants (recall the £1.9bn constraint
+  bill above: one party's system cost is another's revenue).
 - All of it in service of **Clean Power 2030**: at least 95% of generation
   from clean sources by 2030 (2024 actual mix: gas 30%, wind 29%, nuclear
   14%, solar 5%).
 
-## Who actually buys forecasts here
+## 7. 📡 Data, and who buys forecasts
 
-Three kinds of buyers, with different needs:
+One GB trait matters enormously for anyone in the forecasting business: **GB
+publishes physical and market data at a depth most European markets keep
+opaque**. Elexon's Insights platform exposes, per individual plant (per "BM
+Unit"): its declared production plan for every half-hour, its bids and
+offers into the Balancing Mechanism, what NESO accepted, and the resulting
+detailed system prices. NESO's data portal adds the system operator's own
+demand and wind forecasts and constraint-cost data. In the Nordics you
+mostly see zone-level aggregates; in GB you can watch a single battery's
+behaviour half-hour by half-hour.
+
+The buyers of forecasts split three ways:
 
 - **Trading desks** at utilities, funds and independents, positioning across
   day-ahead, intraday and cash-out. They want the forecast *revisions* and
@@ -337,28 +365,13 @@ Three kinds of buyers, with different needs:
 - **Asset owners and operators**: wind and solar portfolios managing
   imbalance exposure and CfD reference-price risk.
 
-A cultural note that follows from the open data below: GB buyers are
-unusually quantitative. Because everyone can measure everyone, a new
+That transparency is why GB has a crowded ecosystem of market analytics
+vendors (Modo Energy, EnAppSys, LCP Delta and others), and why GB buyers
+are unusually quantitative: because everyone can measure everyone, a new
 forecast provider gets benchmarked in a trial against incumbents rather
 than bought on a story.
 
-## The data angle: GB shows you everything
-
-One GB trait matters enormously for anyone in the forecasting business: **GB
-publishes physical and market data at a depth most European markets keep
-opaque**. Elexon's Insights platform exposes, per individual plant (per "BM
-Unit"): its declared production plan for every half-hour (the physical
-notification), its bids and offers into the Balancing Mechanism, what NESO
-accepted, and the resulting detailed system prices. NESO's data portal adds
-the system operator's own demand and wind forecasts and constraint-cost
-data. In the Nordics you mostly see zone-level aggregates; in GB you can
-watch a single battery's behaviour half-hour by half-hour.
-
-That transparency is why GB has a crowded ecosystem of market analytics
-vendors (Modo Energy, EnAppSys, LCP Delta and others) and highly quantified
-trading desks and battery optimisers as their customers.
-
-## Where the design is heading
+## 8. 🔭 Where the design is heading
 
 Three live reform tracks, each with a forecasting angle:
 
@@ -375,7 +388,7 @@ Three live reform tracks, each with a forecasting angle:
 - **The clean power buildout** itself: every AR7 wind farm that connects
   makes prices more weather-driven, and both balancing and hedging harder.
 
-## Questions worth asking tomorrow
+## ❓ Questions worth asking
 
 1. What will "reformed national pricing" actually change in practice, and
    does it do anything real about constraint costs?

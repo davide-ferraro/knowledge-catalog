@@ -1,0 +1,194 @@
+---
+/**
+ * Interactive cash-out (imbalance price) model for the GB primer.
+ * Fixed Balancing Mechanism stacks; the reader sets the system's net
+ * imbalance (NIV) and their own position. NESO accepts actions in merit
+ * order, the marginal action sets the single cash-out price, and the
+ * reader's own gap settles at that price.
+ * Illustrative numbers; the marginal-pricing logic is the real one.
+ */
+const OFFERS = [
+  { vol: 100, price: 70 },
+  { vol: 100, price: 85 },
+  { vol: 100, price: 110 },
+];
+const BIDS = [
+  { vol: 100, price: 40 },
+  { vol: 100, price: 15 },
+  { vol: 100, price: -20 },
+];
+---
+
+<figure class="not-prose border-border my-6 rounded-lg border p-4 sm:p-5" data-co>
+  <p class="text-sm font-medium">Set the half-hour, see the cash-out price</p>
+  <p class="text-muted-foreground mt-1 text-sm leading-relaxed">
+    NESO's menu for this half-hour: offers to produce more at £70, £85 and
+    £110/MWh (100 MWh each), and bids to turn down at £40, £15 and even
+    −£20/MWh (a wind farm that wants paying to curtail). Drag the system out
+    of balance and watch which actions get accepted:
+  </p>
+
+  <div class="mt-3 grid gap-3 sm:grid-cols-2">
+    <label class="text-muted-foreground block text-xs">
+      System imbalance: <span class="text-foreground font-mono" data-co-niv-label></span>
+      <input type="range" min="-300" max="300" step="25" value="150" data-co-niv class="accent-primary mt-1 w-full" />
+    </label>
+    <label class="text-muted-foreground block text-xs">
+      Your own imbalance: <span class="text-foreground font-mono" data-co-pos-label></span>
+      <input type="range" min="-20" max="20" step="5" value="-10" data-co-pos class="accent-primary mt-1 w-full" />
+    </label>
+  </div>
+
+  <svg viewBox="0 0 560 190" class="mt-2 w-full select-none" aria-label="Balancing Mechanism merit order stack">
+    <line x1="280" y1="18" x2="280" y2="140" stroke="var(--border)" stroke-width="1.5"></line>
+    <text x="280" y="158" text-anchor="middle" class="fill-muted-foreground" font-size="10">balanced</text>
+    <text x="536" y="158" text-anchor="end" class="fill-muted-foreground" font-size="10">system short → accept offers</text>
+    <text x="24" y="158" text-anchor="start" class="fill-muted-foreground" font-size="10">← system long: accept bids</text>
+
+    {
+      OFFERS.map((o, i) => (
+        <g>
+          <rect
+            data-co-offer={i}
+            x={280 + i * 80}
+            y={120 - (o.price / 150) * 95}
+            width="78"
+            height={(o.price / 150) * 95 + 20}
+            rx="3"
+            fill="var(--chart-2)"
+            opacity="0.25"
+          />
+          <text x={280 + i * 80 + 39} y={112 - (o.price / 150) * 95} text-anchor="middle" class="fill-foreground" font-size="11" font-weight="600">
+            £{o.price}
+          </text>
+        </g>
+      ))
+    }
+    {
+      BIDS.map((b, i) => (
+        <g>
+          <rect
+            data-co-bid={i}
+            x={280 - (i + 1) * 80 + 2}
+            y={120 - (Math.max(b.price, 5) / 150) * 95}
+            width="78"
+            height={(Math.max(b.price, 5) / 150) * 95 + 20}
+            rx="3"
+            fill="var(--chart-3)"
+            opacity="0.25"
+          />
+          <text x={280 - (i + 1) * 80 + 41} y={112 - (Math.max(b.price, 5) / 150) * 95} text-anchor="middle" class="fill-foreground" font-size="11" font-weight="600">
+            {b.price < 0 ? `−£${-b.price}` : `£${b.price}`}
+          </text>
+        </g>
+      ))
+    }
+    <line data-co-marker x1="280" x2="280" y1="12" y2="145" stroke="var(--chart-5)" stroke-width="2" stroke-dasharray="5 3"></line>
+    <text data-co-marker-label x="280" y="180" text-anchor="middle" class="fill-foreground" font-size="11" font-weight="600"></text>
+  </svg>
+
+  <div class="border-border mt-2 grid gap-3 rounded-md border p-3 sm:grid-cols-2">
+    <div>
+      <p class="text-muted-foreground text-xs tracking-wide uppercase">Cash-out price</p>
+      <p class="mt-0.5 font-mono text-2xl font-bold" data-co-price></p>
+      <p class="text-muted-foreground mt-1 text-xs leading-relaxed" data-co-price-why></p>
+    </div>
+    <div>
+      <p class="text-muted-foreground text-xs tracking-wide uppercase">Your settlement</p>
+      <p class="mt-0.5 font-mono text-2xl font-bold" data-co-you></p>
+      <p class="text-muted-foreground mt-1 text-xs leading-relaxed" data-co-you-why></p>
+    </div>
+  </div>
+
+  <figcaption class="text-muted-foreground mt-3 border-t pt-3 text-xs leading-relaxed">
+    Simplified: real cash-out takes the priciest 1 MWh of actions after
+    filtering out actions taken for constraints rather than energy balance,
+    and adds a scarcity adjustment in tight periods. The shape is what
+    matters: the marginal action sets one price, and everyone's errors
+    settle at it, in both directions.
+  </figcaption>
+</figure>
+
+<script>
+  const CO_OFFERS = [
+    { vol: 100, price: 70 },
+    { vol: 100, price: 85 },
+    { vol: 100, price: 110 },
+  ];
+  const CO_BIDS = [
+    { vol: 100, price: 40 },
+    { vol: 100, price: 15 },
+    { vol: 100, price: -20 },
+  ];
+  const MID_PRICE = 75;
+
+  document.querySelectorAll<HTMLElement>('[data-co]').forEach((root) => {
+    const q = (s: string) => root.querySelector<HTMLElement>(s)!;
+    const nivEl = root.querySelector<HTMLInputElement>('[data-co-niv]')!;
+    const posEl = root.querySelector<HTMLInputElement>('[data-co-pos]')!;
+    const eur = (v: number) =>
+      `${v < 0 ? '−' : ''}£${Math.abs(v).toLocaleString('en')}`;
+
+    function render() {
+      const niv = Number(nivEl.value);
+      const pos = Number(posEl.value);
+
+      let price = MID_PRICE;
+      let why = '';
+      if (niv > 0) {
+        const idx = Math.min(Math.ceil(niv / 100) - 1, 2);
+        price = CO_OFFERS[idx].price;
+        why = `The system is ${niv} MWh short. NESO accepts offers in merit order up to the shortfall; the marginal one (£${price}) sets the price.`;
+      } else if (niv < 0) {
+        const idx = Math.min(Math.ceil(-niv / 100) - 1, 2);
+        price = CO_BIDS[idx].price;
+        why = `The system is ${-niv} MWh long. NESO accepts bids to turn down, best first; the marginal one (£${price}) sets the price. Deep surpluses reach the negative bids.`;
+      } else {
+        why = `Balanced: no net actions needed, cash-out sits near the wholesale price (£${MID_PRICE} here).`;
+      }
+
+      // accepted-stack highlighting
+      CO_OFFERS.forEach((_, i) => {
+        const covered = niv > 0 ? Math.min(Math.max(niv - i * 100, 0), 100) / 100 : 0;
+        q(`[data-co-offer="${i}"]`).setAttribute('opacity', String(0.25 + covered * 0.6));
+      });
+      CO_BIDS.forEach((_, i) => {
+        const covered = niv < 0 ? Math.min(Math.max(-niv - i * 100, 0), 100) / 100 : 0;
+        q(`[data-co-bid="${i}"]`).setAttribute('opacity', String(0.25 + covered * 0.6));
+      });
+
+      const markerX = 280 + (niv / 300) * 238;
+      q('[data-co-marker]').setAttribute('x1', String(markerX));
+      q('[data-co-marker]').setAttribute('x2', String(markerX));
+      const label = q('[data-co-marker-label]');
+      label.setAttribute('x', String(Math.min(Math.max(markerX, 60), 500)));
+      label.textContent = niv === 0 ? 'system balanced' : `NIV: ${niv > 0 ? 'short' : 'long'} ${Math.abs(niv)} MWh`;
+
+      q('[data-co-niv-label]').textContent =
+        niv === 0 ? 'balanced' : `${Math.abs(niv)} MWh ${niv > 0 ? 'short' : 'long'}`;
+      q('[data-co-pos-label]').textContent =
+        pos === 0 ? 'in balance' : `${Math.abs(pos)} MWh ${pos > 0 ? 'long' : 'short'}`;
+
+      q('[data-co-price]').textContent = `${eur(price)}/MWh`;
+      q('[data-co-price-why]').textContent = why;
+
+      const settlement = pos * price; // positive: you receive
+      const you = q('[data-co-you]');
+      you.textContent = pos === 0 ? '£0' : `${settlement >= 0 ? 'receive ' : 'pay '}${eur(Math.abs(settlement))}`;
+      you.style.color = settlement > 0 ? 'var(--chart-2)' : settlement < 0 ? 'var(--chart-5)' : '';
+
+      q('[data-co-you-why]').textContent =
+        pos === 0
+          ? 'You matched your contracts exactly: cash-out does not touch you.'
+          : pos > 0
+            ? settlement >= 0
+              ? `You are ${pos} MWh long and sell the surplus at cash-out. ${niv > 0 ? 'The system was short, so your error helped and pays well.' : 'The system was long too, so your surplus fetches little (or costs you, at negative prices).'}`
+              : `You are ${pos} MWh long but cash-out is negative: you pay to offload your surplus. Being long in a long system hurts.`
+            : `You are ${-pos} MWh short and buy the gap at cash-out. ${niv > 0 ? 'The system was short too: you buy at the worst moment.' : 'The system was long, so your gap is cheap to fill.'}`;
+    }
+
+    nivEl.addEventListener('input', render);
+    posEl.addEventListener('input', render);
+    render();
+  });
+</script>
