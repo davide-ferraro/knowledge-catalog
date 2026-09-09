@@ -141,12 +141,35 @@ runs on one big day-ahead auction. GB works differently:
   EU market, the auction is where the market happens.
 </Callout>
 
-Two structural consequences: GB is **self-dispatch** (every plant decides its
-own schedule from its trades, there is no central optimiser like EUPHEMIA),
-and GB is **one single price zone**, so the wholesale price never tells you
-*where* power is scarce. Congestion is fixed after the fact by NESO, which is
-why constraint costs are a huge talking point: wind in Scotland regularly
-gets paid to switch off while gas in the south is paid to switch on.
+### One worked half-hour
+
+Numbers make the two mechanisms concrete (simplified, but the logic is
+exact):
+
+**Cash-out.** In some settlement period the market as a whole is 300 MWh
+short: plans said more generation than actually showed up. NESO accepts
+offers to fill the gap: 200 MWh at £80/MWh, then 100 MWh at £120/MWh. The
+cash-out price is set by the *most expensive* action needed, so it lands at
+**£120/MWh** (formally it is the priciest 1 MWh of actions). Now every
+party's own gap is settled at that single price: a supplier who was 10 MWh
+short pays 10 × £120 = £1,200; a wind farm that was 10 MWh *long* helped the
+system and receives £1,200. One price, both directions, which is why
+forecasting your own imbalance, and the system's, is worth real money.
+
+**A constraint.** A Scottish cable is full. NESO accepts a wind farm's bid
+to curtail 100 MWh at £70/MWh (wind bids are expensive to accept because a
+curtailed wind farm loses its subsidy income) and a gas plant's offer south
+of the bottleneck to produce 100 MWh at £95/MWh. That one action pair costs
+£7,000 + £9,500 = **£16,500 for a single half-hour**, and the wholesale
+price shows none of it. Scale that up and you get GB's constraint bill:
+**£1.9 billion in 2024/25**, 71% of all balancing costs, heading for a
+projected £4-8 billion a year by 2030 without major fixes.
+
+Two structural consequences of the design: GB is **self-dispatch** (every
+plant decides its own schedule from its trades, there is no central
+optimiser like EUPHEMIA), and GB is **one single price zone**, so the
+wholesale price never tells you *where* power is scarce, as the constraint
+example just showed.
 
 <Callout icon="⚡" title="Why the zonal pricing fight mattered">
   For three years REMA (the government's market design review) debated
@@ -203,6 +226,34 @@ The irony worth savouring: the Nordic design *is* market splitting, the thing
 GB decided against in the REMA review, and the Nordics run it inside the
 coupled European market that GB left.
 
+### Same roles, different names
+
+The Nordic role vocabulary (BRP, BSP) mostly has GB equivalents; the
+functions exist everywhere, the labels don't travel:
+
+- **BRP (balance responsible party).** In the Nordics, a distinct role:
+  every consumer and producer must have a BRP that answers financially for
+  imbalances, settled centrally by eSett. GB has no separate BRP layer:
+  every trading party under the Balancing and Settlement Code simply
+  carries its own imbalance exposure, settled by Elexon. Same function,
+  folded into the trading role itself.
+- **BSP (balancing service provider).** The Nordic term for whoever sells
+  balancing energy (mFRR, aFRR) to the TSOs. The GB equivalent is a
+  participant in the Balancing Mechanism: any BM Unit can submit bids and
+  offers, and since December 2019 independent aggregators can join as
+  **Virtual Lead Parties** without being suppliers. Frequency-response
+  products (Dynamic Containment and friends) are procured by NESO in
+  separate auctions, much like Nordic reserve markets.
+- **Imbalance settlement body**: eSett (jointly owned by the Nordic TSOs)
+  maps to Elexon.
+- **Imbalance pricing**: both ended up in the same place, a single price
+  for both directions per settlement period; GB got there in 2015, the
+  Nordics on 1 November 2021. The remaining gap is granularity: 30-minute
+  periods in GB versus 15-minute in the Nordics.
+- **IPP (independent power producer)** is informal industry language in
+  both markets, not a defined role: a generator that isn't part of a big
+  incumbent utility.
+
 ## Who's who
 
 <Table>
@@ -256,9 +307,12 @@ instruments on top:
 
 - **Contracts for Difference (CfD)**: the main tool for new low-carbon
   plants. Auctioned "strike price" per MWh; the generator sells in the
-  market and the contract tops up (or claws back) the difference. The latest
-  auction (AR7, results January and February 2026) contracted a record
-  14.7 GW, including 8.4 GW of offshore wind.
+  market and the contract tops up (or claws back) the difference. With a
+  strike of £75: if the day-ahead reference price is £60, the generator
+  gets a £15/MWh top-up; if the reference is £90, it pays £15/MWh back.
+  Either way it earns £75, which is the point: price risk gone, financing
+  cheap. The latest auction (AR7, results January and February 2026)
+  contracted a record 14.7 GW, including 8.4 GW of offshore wind.
 - **Capacity Market**: yearly auctions paying plants and flexible demand
   just for being available during scarcity. Born from the fear that an
   energy-only market retires too much firm capacity.
@@ -363,6 +417,16 @@ Three live reform tracks, each with a forecasting angle:
   (14.7 GW total, 8.4 GW offshore wind).
 - Cornwall Insight, [Octopus Energy becomes GB's largest household supplier](https://www.cornwall-insight.com/press-and-media/press-release/octopus-energy-becomes-gbs-largest-household-supplier/)
   (23.7% share, October 2024).
+- NESO, [Annual Balancing Costs Report 2025](https://www.neso.energy/document/362561/download)
+  and Modo Energy's
+  [constraints analysis](https://modoenergy.com/research/en/gb-great-britain-battery-energy-storage-curtailment-wind-constraint-scotland-costs)
+  (£1.9bn constraint costs in 2024/25, 71% of balancing costs, £4-8bn/yr
+  projected by 2030).
+- Elexon, [Virtual Lead Party guidance](https://bscdocs.elexon.co.uk/guidance-notes/virtual-lead-party)
+  (aggregator access to the Balancing Mechanism since December 2019) and
+  the Nordic Balancing Model's
+  [single price model](https://nordicbalancingmodel.net/roadmap-and-projects/single-price-model/)
+  (Nordic single imbalance pricing since 1 November 2021).
 - Low Carbon Contracts Company, [Market reference prices](https://www.lowcarboncontracts.uk/our-schemes/contracts-for-difference/market-reference-prices/)
   and [how the IMRP is calculated](https://www.lowcarboncontracts.uk/news/how-intermittent-market-reference-price-imrp-will-be-calculated-from-1-january-2021/):
   CfDs settle against the volume-weighted GB day-ahead auction prices.
