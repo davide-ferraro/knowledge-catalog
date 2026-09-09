@@ -1,0 +1,230 @@
+---
+title: "A crash course in the GB electricity market"
+date: 2026-09-09
+category: "energy-markets"
+tags: ["gb-market", "primer", "market-design"]
+description: "The story, the mechanics and the players of the British power market in a ten-minute read: what to know before talking to a GB market expert."
+---
+
+import Callout from '../../components/Callout.astro';
+import Timeline from '../../components/Timeline.astro';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+
+A deliberately short primer. The one thing to hold onto: **Great Britain
+invented electricity liberalisation, then chose a different market design
+than the rest of Europe**, and most GB-specific jargon follows from that
+choice. Everything here is verified and linked; ask me to go deeper on any
+section.
+
+## The story in one timeline
+
+<Timeline
+  kinds={{
+    era: "Market design era",
+    policy: "Policy intervention",
+  }}
+  items={[
+    {
+      year: "1990",
+      kind: "era",
+      title: "Privatisation and the Pool",
+      detail:
+        "The state monopoly (CEGB) is broken up and England and Wales get the world-famous Electricity Pool: a compulsory day-ahead auction, one clearing price, everyone must sell through it.",
+    },
+    {
+      year: "2001",
+      kind: "era",
+      title: "NETA replaces the Pool",
+      detail:
+        "The Pool is accused of being gameable by big generators. NETA flips the philosophy: no central auction at all, just bilateral trading plus a balancing mechanism at the end.",
+    },
+    {
+      year: "2005",
+      kind: "era",
+      title: "BETTA: Scotland joins",
+      detail:
+        "The same arrangements extend to Scotland. One GB-wide market, one system operator, one price zone. This is still today's framework.",
+    },
+    {
+      year: "2013",
+      kind: "policy",
+      title: "Electricity Market Reform",
+      detail:
+        "The energy-only market no longer finances low-carbon investment, so the state steps back in: Contracts for Difference for renewables and nuclear, a Capacity Market for security of supply.",
+    },
+    {
+      year: "2021",
+      kind: "era",
+      title: "Brexit decoupling",
+      detail:
+        "GB leaves the EU internal market; interconnector trading falls back to inefficient separate capacity auctions.",
+    },
+    {
+      year: "2024",
+      kind: "policy",
+      title: "NESO created",
+      detail:
+        "The government buys the system operator out of National Grid for £630m. Balancing GB is now done by a publicly owned body that also plans the gas system.",
+    },
+    {
+      year: "2025",
+      kind: "policy",
+      title: "REMA verdict: no zonal pricing",
+      detail:
+        "After three years of reviewing the market design, the government rejects splitting GB into price zones and opts for 'reformed national pricing' instead.",
+    },
+    {
+      year: "2026",
+      kind: "policy",
+      title: "Record CfD round (AR7)",
+      detail:
+        "14.7 GW of new clean capacity wins contracts, including a record 8.4 GW of offshore wind, in the push towards Clean Power 2030.",
+    },
+  ]}
+  caption="Thirty-five years in eight steps: pool, then bilateral market, then ever more state instruments layered on top."
+/>
+
+## How a MWh gets traded (and why it's not like the EU)
+
+The [[who-gets-the-rights-to-trade-across-borders|European coupled market]]
+runs on one big day-ahead auction. GB works differently:
+
+1. **Trade whenever you like.** Generators and suppliers trade bilaterally,
+   over the counter and on exchanges (EPEX SPOT and Nord Pool's N2EX run GB
+   auctions and continuous markets), from years ahead to shortly before
+   delivery. There is no single compulsory auction that "sets" the price.
+2. **Notify your position.** For every half-hour settlement period, parties
+   tell the system operator what they plan to produce or consume, up to
+   **gate closure**, one hour before delivery.
+3. **NESO balances the rest** in the **Balancing Mechanism**: generators and
+   flexible consumers submit bids and offers to deviate from their plans,
+   and NESO accepts them in real time to keep the system stable. This is
+   also where it pays to resolve congestion ("constraints").
+4. **Elexon settles the differences.** Whoever was out of balance pays or
+   receives the **cash-out price** (imbalance price) for the gap between
+   contracts and reality, under the Balancing and Settlement Code.
+
+Two structural consequences: GB is **self-dispatch** (every plant decides its
+own schedule from its trades, there is no central optimiser like EUPHEMIA),
+and GB is **one single price zone**, so the wholesale price never tells you
+*where* power is scarce. Congestion is fixed after the fact by NESO, which is
+why constraint costs are a huge talking point: wind in Scotland regularly
+gets paid to switch off while gas in the south is paid to switch on.
+
+<Callout icon="⚡" title="Why the zonal pricing fight mattered">
+  For three years REMA (the government's market design review) debated
+  splitting GB into price zones so that prices would reflect grid congestion,
+  Nordic-style. In July 2025 the government said no: one national price
+  stays, with "reformed national pricing" (better locational signals in
+  network charges and grid connections) instead. Your expert will have an
+  opinion on this. Everyone does.
+</Callout>
+
+## Who's who
+
+<Table>
+  <TableCaption>The cast, one line each.</TableCaption>
+  <TableHeader>
+    <TableRow>
+      <TableHead>Who</TableHead>
+      <TableHead>Role</TableHead>
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    <TableRow>
+      <TableCell>DESNZ</TableCell>
+      <TableCell>The ministry. Owns policy: CfDs, Capacity Market, REMA, Clean Power 2030.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>Ofgem</TableCell>
+      <TableCell>The regulator: licences, network price controls, the retail price cap.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>NESO</TableCell>
+      <TableCell>System operator since October 2024, publicly owned. Balances electricity, plans both electricity and gas systems.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>National Grid, SSEN, SPEN</TableCell>
+      <TableCell>Own the transmission wires (England and Wales; north and south Scotland). Regulated monopolies.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>Elexon</TableCell>
+      <TableCell>Runs imbalance settlement under the Balancing and Settlement Code.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>EPEX SPOT, N2EX</TableCell>
+      <TableCell>The two power exchanges running GB day-ahead auctions and intraday trading.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>Suppliers</TableCell>
+      <TableCell>Octopus is now the biggest household supplier (~24%), the first change at the top since liberalisation. Then British Gas (Centrica), E.ON, EDF, OVO, ScottishPower.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>Generators</TableCell>
+      <TableCell>SSE, RWE and EDF (all the nuclear) among the big thermal and hydro owners; Ørsted, ScottishPower/Iberdrola, Equinor and SSE big in offshore wind.</TableCell>
+    </TableRow>
+  </TableBody>
+</Table>
+
+## Where the money actually comes from
+
+The wholesale market is only part of a GB generator's income. The state
+instruments on top:
+
+- **Contracts for Difference (CfD)**: the main tool for new low-carbon
+  plants. Auctioned "strike price" per MWh; the generator sells in the
+  market and the contract tops up (or claws back) the difference. The latest
+  auction (AR7, results January and February 2026) contracted a record
+  14.7 GW, including 8.4 GW of offshore wind.
+- **Capacity Market**: yearly auctions paying plants and flexible demand
+  just for being available during scarcity. Born from the fear that an
+  energy-only market retires too much firm capacity.
+- **Balancing and constraint payments** from NESO, increasingly important
+  income for batteries and flexible plants.
+- All of it in service of **Clean Power 2030**: at least 95% of generation
+  from clean sources by 2030 (2024 actual mix: gas 30%, wind 29%, nuclear
+  14%, solar 5%).
+
+## Questions worth asking tomorrow
+
+1. What will "reformed national pricing" actually change in practice, and
+   does it do anything real about constraint costs?
+2. AR7 contracted a record pipeline. Where is the delivery risk: grid
+   connections, supply chains, or the CfD terms themselves?
+3. Is the Balancing Mechanism genuinely open to batteries and aggregators
+   now, and how are imbalance prices behaving as wind share grows?
+4. Post-Brexit interconnector trading is still running on the old separate
+   auctions. Does anyone in GB seriously expect recoupling with the EU
+   market, and who would gain?
+5. NESO is one year old as a public body. Has anything actually changed in
+   how the system is planned and balanced?
+
+## 📚 Sources
+
+- Elexon, [History of the BSC](https://www.elexon.co.uk/knowledgebase/bsc-history/):
+  the Pool, NETA (27 March 2001) and BETTA (April 2005) in one page.
+- GOV.UK, [Clean Power 2030 Action Plan](https://www.gov.uk/government/publications/clean-power-2030-action-plan/clean-power-2030-action-plan-a-new-era-of-clean-electricity-main-report)
+  (December 2024): the 95% clean generation target and buildout ranges.
+- NESO, [National Energy System Operator launches today](https://www.neso.energy/news/national-energy-system-operator-launches-today)
+  (1 October 2024) and the Institute for Government's
+  [NESO explainer](https://www.instituteforgovernment.org.uk/explainer/national-energy-system-operator)
+  (the £630m acquisition from National Grid).
+- Norton Rose Fulbright, [REMA summer update: no to zonal pricing, yes to reformed national pricing](https://www.nortonrosefulbright.com/en/knowledge/publications/4399413b/rema-summer-update-no-to-zonal-pricing-yes-to-reformed-national-pricing)
+  (10 July 2025 decision); background in
+  [Energy UK's REMA explainer](https://www.energy-uk.org.uk/publications/energy-uk-explains-the-review-of-electricity-market-arrangements/).
+- Energy UK, [Allocation Round 7 results explained](https://www.energy-uk.org.uk/publications/energy-uk-explains-allocation-round-7-results/)
+  and the [official AR7 results](https://assets.publishing.service.gov.uk/media/6966861de8c04eb2919f773a/contracts-for-difference-allocation-round-7-results-.pdf)
+  (14.7 GW total, 8.4 GW offshore wind).
+- Cornwall Insight, [Octopus Energy becomes GB's largest household supplier](https://www.cornwall-insight.com/press-and-media/press-release/octopus-energy-becomes-gbs-largest-household-supplier/)
+  (23.7% share, October 2024).
+- 2024 generation mix: own calculation from
+  [Ember data via Our World in Data](https://ourworldindata.org/grapher/electricity-prod-source-stacked),
+  same dataset as the [[why-we-started-with-electricity-markets-in-europe|chapter 1 post]].
