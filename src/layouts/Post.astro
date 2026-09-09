@@ -14,14 +14,19 @@ interface Props {
 
 const { post, backlinks } = Astro.props;
 const base = import.meta.env.BASE_URL;
-const { title, date, category, tags, description, series, chapter } = post.data;
+const { title, date, category, tags, description, series, chapter, icon } =
+  post.data;
 const displayDate = date.toISOString().slice(0, 10);
 ---
 
 <Base title={title} description={description}>
   <article class="prose prose-neutral dark:prose-invert max-w-none">
     <header class="not-prose mb-10">
-      {series === 'eeme' && <SeriesIcon chapter={chapter} size={56} class="mb-5" />}
+      {
+        (series === 'eeme' || icon) && (
+          <SeriesIcon chapter={chapter} icon={icon} size={56} class="mb-5" />
+        )
+      }
       <h1 class="text-[2.5rem] leading-[1.15] font-bold tracking-[-0.02em]">
         {title}
       </h1>

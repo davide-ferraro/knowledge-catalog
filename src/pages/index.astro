@@ -29,8 +29,13 @@ const base = import.meta.env.BASE_URL;
             class="hover:bg-accent/60 -mx-3 block rounded-lg px-3 py-3 transition-colors"
           >
             <div class="flex items-center gap-3">
-              {post.data.series === 'eeme' && (
-                <SeriesIcon chapter={post.data.chapter} size={32} class="shrink-0" />
+              {(post.data.series === 'eeme' || post.data.icon) && (
+                <SeriesIcon
+                  chapter={post.data.chapter}
+                  icon={post.data.icon}
+                  size={32}
+                  class="shrink-0"
+                />
               )}
               <span class="font-medium">{post.data.title}</span>
               <time

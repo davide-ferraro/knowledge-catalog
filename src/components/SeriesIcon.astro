@@ -10,16 +10,21 @@
  * between two shores, drawn in three segments (two broken attempts, one that
  * works) with a light pulse travelling along it. The pulse is hidden when
  * the user prefers reduced motion.
+ *
+ * An explicit `icon` overrides the series logic: "gb" renders the island of
+ * Great Britain as a constellation on a teal night, London in amber.
  */
 interface Props {
   chapter?: number;
+  /** Explicit variant override, e.g. "gb". */
+  icon?: string;
   /** Rendered size in px. */
   size?: number;
   class?: string;
 }
 
-const { chapter, size = 40, class: className } = Astro.props;
-const variant = chapter ? 'grid' : 'cable';
+const { chapter, icon, size = 40, class: className } = Astro.props;
+const variant = icon ?? (chapter ? 'grid' : 'cable');
 
 const nodes: Array<[number, number]> = [
   [26, 66],
@@ -52,6 +57,29 @@ const cableCss = `
 .${uid}-end { stop-color: #dcc5ae; }
 html.dark .${uid}-end { stop-color: #120b06; }
 `;
+const gbCss = `
+@media (prefers-reduced-motion: reduce) { .${uid}-anim { display: none; } }
+.${uid}-end { stop-color: #c2d4cd; }
+html.dark .${uid}-end { stop-color: #071010; }
+`;
+
+/* The island of Great Britain as a constellation, traced coast-wise:
+   Cornwall → Wales → NW England → W Scotland → N Scotland → E Scotland →
+   NE England → East Anglia → London → back to Cornwall. */
+const gbNodes: Array<[number, number]> = [
+  [30, 78], // Cornwall
+  [34, 58], // Wales
+  [42, 46], // NW England
+  [38, 32], // W Scotland
+  [48, 14], // N Scotland
+  [56, 26], // E Scotland
+  [58, 42], // NE England
+  [64, 62], // East Anglia
+  [58, 72], // London
+];
+const gbLinks: Array<[number, number]> = [
+  [0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8], [8, 0],
+];
 ---
 
 {
@@ -175,6 +203,60 @@ html.dark .${uid}-end { stop-color: #120b06; }
           path="M20 42 Q 33 55 48 55.5 Q 63 55 76 42"
         />
       </circle>
+    </svg>
+  )
+}
+
+{
+  variant === 'gb' && (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 96 96"
+      width={size}
+      height={size}
+      class={className}
+      role="img"
+      aria-label="GB electricity market post icon"
+    >
+      <defs>
+        <radialGradient id={`${uid}-bg`} cx="0.45" cy="0.25" r="1.1">
+          <stop offset="0" stop-color="#0f4a44" />
+          <stop offset="0.55" stop-color="#0a2622" />
+          <stop class={`${uid}-end`} offset="1" stop-color="#071010" />
+        </radialGradient>
+        <linearGradient id={`${uid}-line`} x1="0" y1="1" x2="1" y2="0">
+          <stop offset="0" stop-color="#6fb644" />
+          <stop offset="1" stop-color="#d9f27e" />
+        </linearGradient>
+      </defs>
+      <style is:inline set:html={gbCss} />
+      <rect width="96" height="96" rx="22" fill={`url(#${uid}-bg)`} />
+      {gbLinks.map(([a, b]) => (
+        <line
+          x1={gbNodes[a][0]}
+          y1={gbNodes[a][1]}
+          x2={gbNodes[b][0]}
+          y2={gbNodes[b][1]}
+          stroke={`url(#${uid}-line)`}
+          stroke-width="1.4"
+          opacity="0.55"
+        />
+      ))}
+      {gbNodes.map(([x, y], i) => (
+        <>
+          <circle cx={x} cy={y} r="4.5" fill="#d9f27e" opacity="0.16" />
+          <circle class={`${uid}-anim`} cx={x} cy={y} r="4.5" fill="#d9f27e" opacity="0">
+            <animate
+              attributeName="opacity"
+              values="0;0.3;0"
+              dur={`${2.4 + (i % 3) * 0.8}s`}
+              begin={`-${i * 0.5}s`}
+              repeatCount="indefinite"
+            />
+          </circle>
+          <circle cx={x} cy={y} r="2.2" fill={i === 8 ? '#ffb347' : '#d9f27e'} />
+        </>
+      ))}
     </svg>
   )
 }

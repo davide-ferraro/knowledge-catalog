@@ -14,6 +14,8 @@ const posts = defineCollection({
     series: z.string().optional(),
     /** Chapter number shown on the series icon. */
     chapter: z.number().int().positive().optional(),
+    /** Explicit icon variant for posts outside the series (e.g. "gb"). */
+    icon: z.string().optional(),
   }),
 });
 
