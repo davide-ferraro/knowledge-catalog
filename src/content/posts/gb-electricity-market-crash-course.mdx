@@ -120,9 +120,11 @@ runs on one big day-ahead auction. GB works differently:
    between contracts and reality, under the Balancing and Settlement Code.
    Note what this implies: cash-out is built from NESO's actions, so NESO's
    own demand and wind forecast errors move the price everyone settles
-   against. Traders live on forecast revisions: wind, solar, demand,
-   outages, gas prices and interconnector flows between the day-ahead
-   auction and gate closure.
+   against. And because every position is ultimately priced against expected
+   cash-out, those same published forecasts echo backwards into intraday and
+   even day-ahead prices. Traders live on forecast revisions: wind, solar,
+   demand, outages, gas prices and interconnector flows between the
+   day-ahead auction and gate closure.
 
 Two structural consequences: GB is **self-dispatch** (every plant decides its
 own schedule from its trades, there is no central optimiser like EUPHEMIA),
@@ -251,6 +253,26 @@ instruments on top:
   from clean sources by 2030 (2024 actual mix: gas 30%, wind 29%, nuclear
   14%, solar 5%).
 
+## Who actually buys forecasts here
+
+Three kinds of buyers, with different needs:
+
+- **Trading desks** at utilities, funds and independents, positioning across
+  day-ahead, intraday and cash-out. They want the forecast *revisions* and
+  the system-imbalance view, fast.
+- **Battery optimisers and route-to-market providers** (Octopus's Kraken
+  platform and dedicated optimisers like Flexitricity are the classic
+  names). GB has one of the world's biggest grid battery fleets, and its
+  revenue stack (wholesale arbitrage, Balancing Mechanism, frequency
+  response) is decided by short-horizon price and dispatch forecasts.
+- **Asset owners and operators**: wind and solar portfolios managing
+  imbalance exposure and CfD reference-price risk.
+
+A cultural note that follows from the open data below: GB buyers are
+unusually quantitative. Because everyone can measure everyone, a new
+forecast provider gets benchmarked in a trial against incumbents rather
+than bought on a story.
+
 ## The data angle: GB shows you everything
 
 One GB trait matters enormously for anyone in the forecasting business: **GB
@@ -266,6 +288,23 @@ watch a single battery's behaviour half-hour by half-hour.
 That transparency is why GB has a crowded ecosystem of market analytics
 vendors (Modo Energy, EnAppSys, LCP Delta and others) and highly quantified
 trading desks and battery optimisers as their customers.
+
+## Where the design is heading
+
+Three live reform tracks, each with a forecasting angle:
+
+- **Reformed national pricing** (the REMA outcome): no zonal prices, but
+  stronger locational signals through network charges and connections.
+  Constraint costs stay a Balancing Mechanism story, which keeps BM
+  forecasting valuable.
+- **Market-wide half-hourly settlement (MHHS)**: today only large sites
+  (above 100 kW) are settled on actual half-hourly data; every other
+  consumer is settled on standard profiles. MHHS moves *all* consumers onto
+  real smart-meter data, with supplier migration finishing by May 2027. For
+  demand forecasting this is a step change: actual half-hourly behaviour of
+  the whole retail market, and supplier incentives to shift it.
+- **The clean power buildout** itself: every AR7 wind farm that connects
+  makes prices more weather-driven, and both balancing and hedging harder.
 
 ## Questions worth asking tomorrow
 
@@ -285,7 +324,8 @@ trading desks and battery optimisers as their customers.
    Mechanism and cash-out prices?
 7. Who are the established forecast and analytics vendors serving GB traders
    (Modo Energy, EnAppSys, LCP Delta...), why are they popular, and what do
-   they consistently get wrong or not cover?
+   they consistently get wrong or not cover? How does a GB desk actually
+   trial and evaluate a new provider?
 8. How exactly do intraday prices and the cash-out price form, and how much
    of cash-out is really predictable from NESO's published forecasts and the
    Balancing Mechanism data?
@@ -308,6 +348,10 @@ trading desks and battery optimisers as their customers.
   (14.7 GW total, 8.4 GW offshore wind).
 - Cornwall Insight, [Octopus Energy becomes GB's largest household supplier](https://www.cornwall-insight.com/press-and-media/press-release/octopus-energy-becomes-gbs-largest-household-supplier/)
   (23.7% share, October 2024).
+- [MHHS Programme](https://www.mhhsprogramme.co.uk/), the market-wide
+  half-hourly settlement reform and its
+  [milestones](https://www.mhhsprogramme.co.uk/programme-information/key-programme-milestones)
+  (migration completing May 2027).
 - Elexon, [Insights Solution](https://bmrs.elexon.co.uk/) (per-BM-Unit
   [physical and bid-offer data](https://bmrs.elexon.co.uk/balancing-mechanism-market-view),
   [detailed system prices](https://bmrs.elexon.co.uk/detailed-system-prices))
