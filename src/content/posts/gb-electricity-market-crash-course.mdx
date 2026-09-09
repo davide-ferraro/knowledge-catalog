@@ -100,11 +100,9 @@ runs on one big day-ahead auction. GB works differently:
 
 1. **Trade whenever you like.** Generators and suppliers trade bilaterally,
    over the counter and on exchanges, from years ahead to shortly before
-   delivery. Day-ahead auctions exist (EPEX SPOT and Nord Pool's N2EX each
-   run one), but they are voluntary venues, not the market mechanism: nobody
-   has to trade there, and they allocate nothing. Their main role is
-   producing the reference price everyone quotes, which CfD payouts are
-   settled against.
+   delivery. Day-ahead auctions are part of this landscape (see the box
+   below), but as venues you may use, not as a mechanism you must pass
+   through.
 2. **Notify your position.** For every half-hour settlement period, parties
    tell the system operator what they plan to produce or consume, up to
    **gate closure**, one hour before delivery.
@@ -125,6 +123,23 @@ runs on one big day-ahead auction. GB works differently:
    even day-ahead prices. Traders live on forecast revisions: wind, solar,
    demand, outages, gas prices and interconnector flows between the
    day-ahead auction and gate closure.
+
+<Callout icon="❓" title="So does GB have a day-ahead auction or not?">
+  It has <strong>three, every day</strong>: EPEX SPOT runs an hourly auction
+  at 09:20 and a half-hourly one at 15:30, and Nord Pool's N2EX runs its
+  hourly auction at 09:50. They are popular and liquid, a lot of GB power
+  changes hands in them, and they are institutionally important: the hourly
+  results of the EPEX and N2EX auctions are volume-weighted into the
+  official reference price that every wind and solar CfD settles against.
+  What GB does <em>not</em> have is the EU arrangement, where the day-ahead
+  auction is the backbone of the whole market: one auction, clearing every
+  zone at once, allocating the cross-border cables, unavoidable in practice.
+  In GB the auctions are ordinary commercial products offered by two
+  competing exchanges (two of them partly because they used to feed two
+  different EU coupling projects before Brexit). You could trade a GB
+  portfolio for years without ever bidding into an auction; in the coupled
+  EU market, the auction is where the market happens.
+</Callout>
 
 Two structural consequences: GB is **self-dispatch** (every plant decides its
 own schedule from its trades, there is no central optimiser like EUPHEMIA),
@@ -348,6 +363,11 @@ Three live reform tracks, each with a forecasting angle:
   (14.7 GW total, 8.4 GW offshore wind).
 - Cornwall Insight, [Octopus Energy becomes GB's largest household supplier](https://www.cornwall-insight.com/press-and-media/press-release/octopus-energy-becomes-gbs-largest-household-supplier/)
   (23.7% share, October 2024).
+- Low Carbon Contracts Company, [Market reference prices](https://www.lowcarboncontracts.uk/our-schemes/contracts-for-difference/market-reference-prices/)
+  and [how the IMRP is calculated](https://www.lowcarboncontracts.uk/news/how-intermittent-market-reference-price-imrp-will-be-calculated-from-1-january-2021/):
+  CfDs settle against the volume-weighted GB day-ahead auction prices.
+  Auction times from Modo Energy's
+  [GB wholesale markets explainer](https://modoenergy.com/research/en/wholesale-trading-markets-explainer-gb-n2ex-epex-dayahead-intraday).
 - [MHHS Programme](https://www.mhhsprogramme.co.uk/), the market-wide
   half-hourly settlement reform and its
   [milestones](https://www.mhhsprogramme.co.uk/programme-information/key-programme-milestones)
