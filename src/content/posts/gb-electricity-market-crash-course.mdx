@@ -313,7 +313,48 @@ The irony worth savouring: the Nordic design *is* market splitting, the thing
 GB decided against in the REMA review, and the Nordics run it inside the
 coupled European market that GB left.
 
-## 6. 💰 The money on top of the market
+## 6. 🔌 The borders: how GB trades with its neighbours
+
+Inside the EU, EUPHEMIA allocates the cross-border cables as part of the
+day-ahead clearing. GB left that system on 1 January 2021, so every one of
+its interconnectors (nine cables, 9.2 GW, reaching France, Belgium, the
+Netherlands, Norway, Denmark and Ireland at the 2024 count) needs its own
+allocation arrangement. Three different answers coexist:
+
+- **The default: explicit auctions, cable by cable.** On most links
+  (IFA and IFA2 and ElecLink to France, Nemo Link to Belgium, BritNed to the
+  Netherlands, Viking Link to Denmark), traders buy capacity rights in
+  auctions running from long-term products (annual, seasonal, monthly) down
+  to day-ahead and intraday. This is the very method whose inefficiencies
+  the [[who-gets-the-rights-to-trade-across-borders|chapter 2 notes]]
+  documented: buying the cable separately from the energy means guessing
+  tomorrow's price spread, and wrong-way flows are back on GB's borders.
+- **Norway: a private, single-cable market coupling.** North Sea Link
+  (1,400 MW to the NO2 zone) got regulatory approval for **implicit
+  day-ahead allocation**: since October 2021, Nord Pool's N2EX auction in GB
+  and its NO2 auction in Norway are cleared together with the cable's
+  capacity inside the algorithm. It works because one exchange sits on both
+  sides, which is essentially the trick from the
+  [[third-time-lucky-on-the-kontek-cable|first Kontek implementation]],
+  done properly this time. The arrangement continues from autumn 2026
+  (Nord Pool won the next contract, up to ten years), but after competition
+  pressure from EPEX, other exchanges must then be allowed into the
+  Norwegian side of the auction.
+- **Ireland: implicit, but in intraday.** Capacity to the island of
+  Ireland's single market (SEM) is allocated implicitly through two
+  simultaneous intraday auctions run on EPEX in GB and SEMOpx in Ireland,
+  a leftover of the design built when both were heading into EU coupling.
+
+The timeframe picture, in one line: long-term hedging products exist on the
+explicit cables; the day-ahead moment is where the three designs diverge
+(explicit rights, the NSL implicit auction, nothing special for Ireland);
+and intraday is explicit except for Ireland, where it is the main event.
+The Brexit trade agreement's promised replacement, "multi-region loose
+volume coupling", remains unimplemented years on (the
+[[why-we-started-with-electricity-markets-in-europe|chapter 1 notes]] cover
+that saga), so this patchwork is the status quo for the foreseeable future.
+
+## 7. 💰 The money on top of the market
 
 The wholesale market is only part of a GB generator's income. The state
 instruments layered on top:
@@ -340,7 +381,7 @@ Alongside the CfDs:
   from clean sources by 2030 (2024 actual mix: gas 30%, wind 29%, nuclear
   14%, solar 5%).
 
-## 7. 📡 Data, and who buys forecasts
+## 8. 📡 Data, and who buys forecasts
 
 One GB trait matters enormously for anyone in the forecasting business: **GB
 publishes physical and market data at a depth most European markets keep
@@ -371,7 +412,7 @@ are unusually quantitative: because everyone can measure everyone, a new
 forecast provider gets benchmarked in a trial against incumbents rather
 than bought on a story.
 
-## 8. 🔭 Where the design is heading
+## 9. 🔭 Where the design is heading
 
 Three live reform tracks, each with a forecasting angle:
 
@@ -440,6 +481,14 @@ Three live reform tracks, each with a forecasting angle:
   the Nordic Balancing Model's
   [single price model](https://nordicbalancingmodel.net/roadmap-and-projects/single-price-model/)
   (Nordic single imbalance pricing since 1 November 2021).
+- Modo Energy, [Interconnectors in GB: how do they operate?](https://modoenergy.com/research/march-24-interconnector-explainer-europe-capacity-allocation-battery-energy-storage-implicit-explicit)
+  (9.2 GW across nine cables; explicit allocation as the default; implicit
+  exceptions for Norway and Ireland).
+- Nord Pool, [North Sea Link: get ready to trade](https://www.nordpoolgroup.com/en/message-center-container/newsroom/newsletter/2021/08/nord-pool-connection/)
+  (the implicit N2EX/NO2 day-ahead auction, live October 2021) and Statnett,
+  [Agreement on new trading arrangements on the NSL interconnector from 2026](https://www.statnett.no/en/for-stakeholders-in-the-power-industry/news-for-the-power-industry/agreement-on-new-trading-arrangements-on-the-nsl-interconnector-from-2026/)
+  (implicit auction continues; other exchanges gain access on the Norwegian
+  side).
 - Low Carbon Contracts Company, [Market reference prices](https://www.lowcarboncontracts.uk/our-schemes/contracts-for-difference/market-reference-prices/)
   and [how the IMRP is calculated](https://www.lowcarboncontracts.uk/news/how-intermittent-market-reference-price-imrp-will-be-calculated-from-1-january-2021/):
   CfDs settle against the volume-weighted GB day-ahead auction prices.
