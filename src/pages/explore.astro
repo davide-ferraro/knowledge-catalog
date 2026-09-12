@@ -1,7 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import { postHref } from '../lib/paths.mjs';
+import { joinBase, postHref } from '../lib/paths.mjs';
 import { visiblePosts } from '../lib/visibility.mjs';
 
 const base = import.meta.env.BASE_URL;
@@ -30,103 +30,91 @@ const town = posts
   }))
   .sort((a, b) => a.sort - b.sort)
   .map(({ sort, ...rest }) => rest);
+
+const homeHref = joinBase(base, '');
 ---
 
 <Base title="Catalog Town" description="Walk around the knowledge catalog. Every house is a post.">
-  <div class="not-prose">
-    <h1 class="text-[2rem] leading-tight font-bold tracking-[-0.02em]">
-      Catalog Town
-    </h1>
-    <p class="text-muted-foreground mt-2 text-sm">
-      Every house is a post. Walk to a door and press Enter to read it.
-      Arrow keys or WASD to move; on touch screens use the pad.
-    </p>
+  <div id="game" class="fixed inset-0 z-50 bg-[#07120b]">
+    <canvas id="town" class="block" style="image-rendering: pixelated;"></canvas>
 
-    <div id="town-frame" class="border-border relative mt-6 overflow-hidden rounded-xl border bg-[#0d1b12]">
-      <canvas id="town" width="480" height="320" class="block w-full" style="image-rendering: pixelated;"></canvas>
+    <a
+      href={homeHref}
+      class="absolute top-3 left-3 rounded-md border border-white/25 bg-black/55 px-3 py-1.5 font-mono text-xs text-white/90 backdrop-blur-sm hover:bg-black/75"
+    >
+      ← catalog
+    </a>
 
-      <div id="fade" class="pointer-events-none absolute inset-0 bg-black opacity-0 transition-opacity duration-300"></div>
-
-      <div id="pad" class="absolute bottom-3 left-3 hidden select-none" aria-hidden="true">
-        <div class="grid grid-cols-3 gap-1 opacity-80">
-          <span></span>
-          <button data-dir="up" class="pad-btn">▲</button>
-          <span></span>
-          <button data-dir="left" class="pad-btn">◀</button>
-          <span></span>
-          <button data-dir="right" class="pad-btn">▶</button>
-          <span></span>
-          <button data-dir="down" class="pad-btn">▼</button>
-          <span></span>
-        </div>
-      </div>
-      <button id="abtn" class="pad-btn absolute right-3 bottom-3 hidden h-12 w-12 rounded-full text-sm font-bold" aria-hidden="true">
-        A
-      </button>
+    <div class="absolute top-3 right-3 rounded-md border border-white/25 bg-black/55 px-3 py-2 font-mono text-[11px] leading-relaxed text-white/85 backdrop-blur-sm max-sm:hidden">
+      <span class="flex items-center gap-1.5"><span class="inline-block size-2 rounded-[2px]" style="background:#2b4d7e"></span> book chapters</span>
+      <span class="flex items-center gap-1.5"><span class="inline-block size-2 rounded-[2px]" style="background:#c65a1e"></span> companions</span>
+      <span class="flex items-center gap-1.5"><span class="inline-block size-2 rounded-[2px]" style="background:#0f6b5e"></span> GB market</span>
+      <span class="flex items-center gap-1.5"><span class="inline-block size-2 rounded-[2px]" style="background:#8a4a68"></span> other notes</span>
     </div>
 
     <div
       id="dialog"
-      class="mt-3 min-h-[3.5rem] rounded-lg border-2 border-[#384048] bg-[#f8f8f0] px-4 py-2.5 font-mono text-sm leading-snug text-[#22282e] dark:border-[#c8ccd0]"
+      class="pointer-events-none absolute bottom-4 left-1/2 w-[min(92vw,38rem)] -translate-x-1/2 rounded-lg border-[3px] border-[#2c3038] bg-[#f8f8ec] px-4 py-2.5 font-mono text-sm leading-snug text-[#22282e] shadow-[0_4px_0_rgba(0,0,0,0.35)]"
     >
     </div>
 
-    <div class="text-muted-foreground mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs">
-      <span class="flex items-center gap-1.5"><span class="inline-block size-2.5 rounded-sm" style="background:#2b4d7e"></span> Book chapters</span>
-      <span class="flex items-center gap-1.5"><span class="inline-block size-2.5 rounded-sm" style="background:#b4531f"></span> Companion posts</span>
-      <span class="flex items-center gap-1.5"><span class="inline-block size-2.5 rounded-sm" style="background:#0f6b5e"></span> GB market</span>
-      <span class="flex items-center gap-1.5"><span class="inline-block size-2.5 rounded-sm" style="background:#8a4a68"></span> Other notes</span>
+    <div id="pad" class="absolute bottom-24 left-4 hidden touch-none select-none" aria-hidden="true">
+      <div class="grid grid-cols-3 gap-1 opacity-85">
+        <span></span><button data-dir="up" class="pad-btn">▲</button><span></span>
+        <button data-dir="left" class="pad-btn">◀</button><span></span><button data-dir="right" class="pad-btn">▶</button>
+        <span></span><button data-dir="down" class="pad-btn">▼</button><span></span>
+      </div>
     </div>
+    <button id="abtn" class="pad-btn absolute right-4 bottom-28 hidden h-14 w-14 rounded-full text-base font-bold" aria-hidden="true">A</button>
+
+    <div id="fade" class="pointer-events-none absolute inset-0 bg-black opacity-0 transition-opacity duration-300"></div>
   </div>
 
   <script type="application/json" id="town-data" set:html={JSON.stringify(town)} />
 
+  <style is:global>
+    html:has(#game),
+    html:has(#game) body {
+      overflow: hidden;
+      height: 100%;
+    }
+  </style>
   <style>
     .pad-btn {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 2.6rem;
-      height: 2.6rem;
-      border-radius: 0.5rem;
-      background: rgba(20, 28, 24, 0.72);
+      width: 3rem;
+      height: 3rem;
+      border-radius: 0.6rem;
+      background: rgba(14, 20, 16, 0.72);
       color: #f0f4ee;
       border: 1px solid rgba(240, 244, 238, 0.35);
       touch-action: none;
     }
     @media (pointer: coarse) {
-      #pad,
-      #abtn {
-        display: grid;
-      }
-      #abtn {
-        display: flex;
-      }
+      #pad { display: grid; }
+      #abtn { display: flex; }
     }
   </style>
 
   <script>
     type Post = { title: string; href: string; kind: string; tag: string };
-    const POSTS: Post[] = JSON.parse(
-      document.getElementById('town-data')!.textContent!,
-    );
+    const POSTS: Post[] = JSON.parse(document.getElementById('town-data')!.textContent!);
 
-    /* ---------- world generation ---------- */
+    /* ================= world ================= */
     const T = 16;
     const PER_ROW = 3;
     const bRows = Math.ceil(POSTS.length / PER_ROW);
     const COLS = 4 + PER_ROW * 10;
     const ROWS = 6 + bRows * 9 + 6;
 
-    // tile ids
-    const G = 0, PATH = 1, TREE = 2, WATER = 3, FLOWER = 4, SOLID = 5, DOOR = 7, SIGN = 8;
+    const G = 0, PATH = 1, TREE = 2, WATER = 3, FLOWER = 4, SOLID = 5, DOOR = 7, SIGN = 8, TUFT = 9, FENCE = 10;
 
-    const grid: number[][] = Array.from({ length: ROWS }, () =>
-      Array(COLS).fill(G),
-    );
+    const grid: number[][] = Array.from({ length: ROWS }, () => Array(COLS).fill(G));
     const doorAt = new Map<string, number>();
     const signAt = new Map<string, number>();
-    type Building = { x: number; y: number; kind: string };
+    type Building = { x: number; y: number; kind: string; idx: number };
     const buildings: Building[] = [];
 
     function rng(seed: number) {
@@ -140,218 +128,349 @@ const town = posts
     }
     const rand = rng(20260912);
 
-    // tree border, two rings
     for (let y = 0; y < ROWS; y++)
       for (let x = 0; x < COLS; x++)
         if (y < 2 || y >= ROWS - 2 || x < 2 || x >= COLS - 2) grid[y][x] = TREE;
 
-    // buildings + their path rows
     POSTS.forEach((p, i) => {
-      const r = Math.floor(i / PER_ROW);
-      const c = i % PER_ROW;
-      const bx = 4 + c * 10;
-      const by = 4 + r * 9;
-      buildings.push({ x: bx, y: by, kind: p.kind });
+      const r = Math.floor(i / PER_ROW), c = i % PER_ROW;
+      const bx = 4 + c * 10, by = 4 + r * 9;
+      buildings.push({ x: bx, y: by, kind: p.kind, idx: i });
       for (let yy = by; yy < by + 4; yy++)
         for (let xx = bx; xx < bx + 5; xx++) grid[yy][xx] = SOLID;
       grid[by + 3][bx + 2] = DOOR;
       doorAt.set(`${bx + 2},${by + 3}`, i);
       const py = by + 4;
       for (let xx = 3; xx < COLS - 3; xx++) grid[py][xx] = PATH;
-      // sign on the grass beside the door, not blocking the path
       grid[by + 3][bx - 1] = SIGN;
       signAt.set(`${bx - 1},${by + 3}`, i);
+      // little yard fence to the right of each house
+      if (grid[by + 3][bx + 5] === G) grid[by + 3][bx + 5] = FENCE;
+      if (grid[by + 3][bx + 6] === G) grid[by + 3][bx + 6] = FENCE;
     });
 
-    // main vertical path + plaza at the bottom
     const cx = Math.floor(COLS / 2);
     for (let yy = 4; yy < ROWS - 3; yy++)
       if (grid[yy][cx] === G || grid[yy][cx] === FLOWER) grid[yy][cx] = PATH;
     for (let yy = ROWS - 5; yy < ROWS - 2; yy++)
       for (let xx = cx - 2; xx <= cx + 2; xx++)
         if (grid[yy][xx] === G) grid[yy][xx] = PATH;
-
-    // pond, bottom left
     for (let yy = ROWS - 6; yy < ROWS - 3; yy++)
       for (let xx = 4; xx < 9; xx++)
         if (grid[yy][xx] === G) grid[yy][xx] = WATER;
 
-    // flowers and loose trees on remaining grass
+    // fenced flower garden east of the plaza
+    {
+      const gx = cx + 5, gy = ROWS - 7;
+      for (let yy = gy; yy < gy + 4; yy++)
+        for (let xx = gx; xx < gx + 6; xx++) {
+          if (xx >= COLS - 2 || grid[yy][xx] !== G) continue;
+          const edge = yy === gy || yy === gy + 3 || xx === gx || xx === gx + 5;
+          grid[yy][xx] = edge ? FENCE : FLOWER;
+        }
+      if (grid[gy + 1]?.[gx] === FENCE) grid[gy + 1][gx] = G; // gate gap
+    }
+
     for (let y = 2; y < ROWS - 2; y++)
       for (let x = 2; x < COLS - 2; x++) {
         if (grid[y][x] !== G) continue;
         const v = rand();
         if (v < 0.05) grid[y][x] = FLOWER;
-        else if (v < 0.075 && y > 5) grid[y][x] = TREE;
+        else if (v < 0.11) grid[y][x] = TUFT;
+        else if (v < 0.135 && y > 5) grid[y][x] = TREE;
       }
 
     const blocked = (x: number, y: number) => {
       if (x < 0 || y < 0 || x >= COLS || y >= ROWS) return true;
       const t = grid[y][x];
-      return t === TREE || t === WATER || t === SOLID || t === SIGN;
+      return t === TREE || t === WATER || t === SOLID || t === SIGN || t === FENCE;
     };
 
-    /* ---------- rendering ---------- */
+    /* ================= sprite factory ================= */
+    function sheet(w: number, h: number) {
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      const g = c.getContext('2d')!;
+      g.imageSmoothingEnabled = false;
+      return [c, g] as const;
+    }
+    /** dark outline around every opaque region */
+    function outline(c: HTMLCanvasElement, color = '#20180f') {
+      const g = c.getContext('2d')!;
+      const { width: w, height: h } = c;
+      const src = g.getImageData(0, 0, w, h);
+      const out = g.createImageData(w, h);
+      out.data.set(src.data);
+      const a = (x: number, y: number) =>
+        x >= 0 && y >= 0 && x < w && y < h && src.data[(y * w + x) * 4 + 3] > 40;
+      const [r, gg, b] = [
+        parseInt(color.slice(1, 3), 16),
+        parseInt(color.slice(3, 5), 16),
+        parseInt(color.slice(5, 7), 16),
+      ];
+      for (let y = 0; y < h; y++)
+        for (let x = 0; x < w; x++) {
+          const i = (y * w + x) * 4;
+          if (src.data[i + 3] > 40) continue;
+          if (a(x - 1, y) || a(x + 1, y) || a(x, y - 1) || a(x, y + 1)) {
+            out.data[i] = r; out.data[i + 1] = gg; out.data[i + 2] = b; out.data[i + 3] = 255;
+          }
+        }
+      g.putImageData(out, 0, 0);
+      return c;
+    }
+    const px = (g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, c: string) => {
+      g.fillStyle = c; g.fillRect(x, y, w, h);
+    };
+
+    /* --- terrain tiles (warm Stardew-ish palette) --- */
+    const tileRand = rng(77);
+    function grassTile(_v: number) {
+      const [c, g] = sheet(T, T);
+      px(g, 0, 0, T, T, '#7daf4e');
+      for (let i = 0; i < 26; i++) {
+        const x = Math.floor(tileRand() * T), y = Math.floor(tileRand() * T);
+        const r = tileRand();
+        px(g, x, y, 1, 1, r < 0.4 ? '#86ba57' : r < 0.7 ? '#74a446' : '#8fc262');
+      }
+      for (let i = 0; i < 3; i++) {
+        const x = Math.floor(tileRand() * 13), y = Math.floor(tileRand() * 12);
+        px(g, x, y, 1, 2, '#68983f'); px(g, x + 1, y + 1, 1, 1, '#68983f');
+      }
+      return c;
+    }
+    function tuftTile() {
+      const c = grassTile(0), g = c.getContext('2d')!;
+      for (const [x, y] of [[3, 8], [8, 5], [11, 10]] as const) {
+        px(g, x, y, 1, 4, '#55913c');
+        px(g, x - 1, y + 1, 1, 3, '#68a94a'); px(g, x + 1, y + 1, 1, 3, '#68a94a');
+        px(g, x, y, 1, 1, '#7fbf5c');
+      }
+      return c;
+    }
+    function flowerTile(alt: boolean) {
+      const c = grassTile(0), g = c.getContext('2d')!;
+      const plot = (x: number, y: number, col: string) => {
+        px(g, x, y + 2, 1, 3, '#457a30');
+        px(g, x - 1, y + 3, 1, 1, '#457a30');
+        px(g, x, y - 1, 1, 1, col); px(g, x, y + 1, 1, 1, col);
+        px(g, x - 1, y, 1, 1, col); px(g, x + 1, y, 1, 1, col);
+        px(g, x, y, 1, 1, '#fff3c4');
+      };
+      plot(4, 4, alt ? '#e0563e' : '#f0cf46');
+      plot(11, 8, alt ? '#f0cf46' : '#df8fc4');
+      if (alt) plot(7, 12, '#e9e6f0');
+      return c;
+    }
+    function pathTile() {
+      const [c, g] = sheet(T, T);
+      px(g, 0, 0, T, T, '#bb9059');
+      for (let i = 0; i < 14; i++) {
+        const x = Math.floor(tileRand() * T), y = Math.floor(tileRand() * T);
+        const r = tileRand();
+        px(g, x, y, 2, 1, r < 0.45 ? '#ad8450' : r < 0.75 ? '#c79c64' : '#a1794a');
+      }
+      const nPebbles = Math.floor(tileRand() * 3); // 0 to 2 per variant
+      for (let i = 0; i < nPebbles; i++) {
+        const x = 2 + Math.floor(tileRand() * 12), y = 2 + Math.floor(tileRand() * 12);
+        px(g, x, y, 2, 2, tileRand() < 0.5 ? '#93a08c' : '#a8b3a0');
+        px(g, x, y, 2, 1, '#b8c2b0');
+      }
+      return c;
+    }
+    function waterTile(f: number) {
+      const [c, g] = sheet(T, T);
+      px(g, 0, 0, T, T, '#2e7ba8');
+      px(g, 0, 0, T, 3, '#296e98');
+      const o = f ? 3 : 0;
+      px(g, 2 + o, 5, 5, 1, '#5fa7cc'); px(g, 9 - o, 10, 5, 1, '#5fa7cc');
+      px(g, 5 + o, 13, 3, 1, '#3f8ab4');
+      px(g, 12, 3 + o, 2, 1, '#8ec6de');
+      return c;
+    }
+    function lilyTile(f: number) {
+      const c = waterTile(f), g = c.getContext('2d')!;
+      px(g, 4, 6 + (f ? 1 : 0), 5, 4, '#3f8f3f');
+      px(g, 5, 7 + (f ? 1 : 0), 3, 2, '#54a94c');
+      px(g, 8, 6 + (f ? 1 : 0), 2, 2, '#2e7ba8'); // notch
+      return c;
+    }
+    /* --- objects --- */
+    function treeSprite() {
+      const [c, g] = sheet(20, 30);
+      px(g, 8, 22, 4, 7, '#6e4a2c'); px(g, 8, 22, 1, 7, '#573a22');
+      px(g, 11, 24, 2, 1, '#8a6238');
+      // lush layered canopy
+      px(g, 3, 8, 14, 13, '#2c7a3c');
+      px(g, 2, 10, 16, 8, '#2c7a3c');
+      px(g, 4, 4, 12, 8, '#3c9450');
+      px(g, 6, 2, 8, 4, '#4aa65c');
+      px(g, 5, 4, 5, 3, '#63bd72'); px(g, 12, 7, 4, 3, '#63bd72');
+      px(g, 3, 14, 4, 4, '#1f5e2d'); px(g, 12, 15, 5, 4, '#1f5e2d');
+      px(g, 8, 18, 4, 3, '#1f5e2d');
+      px(g, 7, 3, 3, 1, '#8fd69b');
+      return outline(c);
+    }
+    function pineSprite() {
+      const [c, g] = sheet(18, 30);
+      px(g, 7, 24, 4, 5, '#6e4a2c'); px(g, 7, 24, 1, 5, '#573a22');
+      px(g, 2, 16, 14, 8, '#1d6230');
+      px(g, 4, 10, 10, 8, '#2a7a3e');
+      px(g, 6, 5, 6, 7, '#38904c');
+      px(g, 8, 2, 2, 5, '#48a45a');
+      px(g, 6, 10, 2, 2, '#5cb96c'); px(g, 4, 17, 2, 2, '#5cb96c');
+      return outline(c);
+    }
+    function fenceSprite() {
+      const [c, g] = sheet(16, 18);
+      px(g, 2, 4, 3, 12, '#a0693a'); px(g, 2, 4, 3, 2, '#c08a50');
+      px(g, 11, 4, 3, 12, '#a0693a'); px(g, 11, 4, 3, 2, '#c08a50');
+      px(g, 0, 7, 16, 2, '#b3794a');
+      px(g, 0, 12, 16, 2, '#b3794a');
+      return outline(c);
+    }
+    function signSprite() {
+      const [c, g] = sheet(16, 18);
+      px(g, 7, 9, 2, 7, '#6b4a2f');
+      px(g, 2, 2, 12, 8, '#b3854f');
+      px(g, 2, 2, 12, 1, '#c9a06a'); px(g, 2, 9, 12, 1, '#8a6238');
+      px(g, 4, 4, 8, 1, '#7a5636'); px(g, 4, 6, 6, 1, '#7a5636');
+      return outline(c);
+    }
+    const ROOF: Record<string, [string, string, string]> = {
+      chapter: ['#2b4d7e', '#223d64', '#3d639c'],
+      companion: ['#c65a1e', '#9c4414', '#e07a35'],
+      gb: ['#0f6b5e', '#0a4c43', '#1d8a79'],
+      other: ['#8a4a68', '#6b3750', '#a5627f'],
+    };
+    function houseSprite(kind: string) {
+      const W = 88, H = 76; // building wall bottom sits at y=70
+      const [c, g] = sheet(W, H);
+      const [roof, dark, light] = ROOF[kind] ?? ROOF.other;
+      // shadow on the ground
+      px(g, 6, 70, 76, 4, 'rgba(30,24,12,0.30)');
+      // plank walls (80 wide, x=4..84, y=38..64)
+      px(g, 4, 38, 80, 26, '#d9a866');
+      for (let x = 12; x < 84; x += 8) px(g, x, 38, 1, 26, '#c3924f');
+      px(g, 4, 44, 80, 1, '#c3924f');
+      px(g, 4, 38, 80, 3, 'rgba(60,36,12,0.35)'); // eaves shadow
+      // stone foundation
+      px(g, 4, 64, 80, 6, '#9b968a');
+      px(g, 4, 64, 80, 1, '#b3ada0');
+      for (let x = 8; x < 84; x += 10) px(g, x, 66, 4, 3, '#847f74');
+      // windows with shutters
+      for (const wx of [12, 62]) {
+        px(g, wx - 3, 46, 3, 12, '#8a5a30'); px(g, wx + 14, 46, 3, 12, '#8a5a30');
+        px(g, wx, 46, 14, 12, '#5d3d22');
+        px(g, wx + 1, 47, 12, 10, '#a8dcf5');
+        px(g, wx + 1, 47, 12, 4, '#d6f0fb');
+        px(g, wx + 6, 47, 1, 10, '#5d3d22'); px(g, wx + 1, 52, 12, 1, '#5d3d22');
+        px(g, wx - 1, 58, 16, 2, '#b3794a'); // sill
+        px(g, wx, 60, 14, 3, '#3d7a2f'); // flower box
+        px(g, wx + 2, 60, 2, 2, '#e0563e'); px(g, wx + 8, 60, 2, 2, '#f0cf46');
+      }
+      // door with little awning
+      px(g, 34, 48, 20, 22, '#4c3018');
+      px(g, 36, 50, 16, 20, '#7a5230');
+      px(g, 43, 50, 2, 20, '#5d3d22');
+      px(g, 36, 50, 16, 2, '#8f6339');
+      px(g, 49, 59, 2, 2, '#e8c96a');
+      px(g, 31, 45, 26, 3, dark); px(g, 31, 44, 26, 1, light); // awning
+      px(g, 30, 70, 28, 3, '#a8a294'); // stone step
+      // roof (overhangs walls by 4px each side)
+      px(g, 0, 14, 88, 24, roof);
+      px(g, 4, 8, 80, 8, roof);
+      px(g, 10, 5, 68, 5, roof);
+      px(g, 10, 5, 68, 2, light);
+      for (let y = 16; y < 36; y += 5) px(g, 0, y, 88, 1, dark);
+      for (let x = 8; x < 88; x += 12) px(g, x, 20, 1, 14, `${dark}88`);
+      px(g, 0, 34, 88, 4, dark);
+      px(g, 0, 14, 3, 24, dark); px(g, 85, 14, 3, 24, dark);
+      // chimney with cap
+      px(g, 64, 0, 10, 12, '#9a5b43');
+      px(g, 66, 3, 2, 2, '#7c4634'); px(g, 70, 7, 2, 2, '#7c4634');
+      px(g, 62, 0, 14, 3, '#6e3f2e');
+      return outline(c);
+    }
+    /* --- player, auto-outlined pixel villager --- */
+    function playerSprite(dir: string, frame: number) {
+      const [c, g] = sheet(16, 20);
+      const S = '#f2c896', Sd = '#dca878', H = '#6b4226', Hl = '#8a5a34',
+        C = '#2b4d7e', Cl = '#3d639c', L = '#3a3f47', B = '#5d3d22';
+      const ox = 2, oy = 2;
+      const P = (x: number, y: number, w: number, h: number, col: string) => px(g, ox + x, oy + y, w, h, col);
+      // legs and boots (walk cycle)
+      const lu = frame === 1 ? 1 : 0, ru = frame === 2 ? 1 : 0;
+      P(3, 12 - lu, 2, 3, L); P(7, 12 - ru, 2, 3, L);
+      P(3, 15 - lu, 2, 1, B); P(7, 15 - ru, 2, 1, B);
+      // body
+      P(2, 7, 8, 5, C);
+      P(5, 7, 2, 5, Cl);
+      // arms
+      const swing = frame === 0 ? 0 : frame === 1 ? 1 : -1;
+      P(1, 8 + swing, 1, 3, C); P(10, 8 - swing, 1, 3, C);
+      P(1, 11 + swing, 1, 1, S); P(10, 11 - swing, 1, 1, S);
+      // head
+      P(2, 1, 8, 6, S);
+      P(2, 5, 8, 1, Sd);
+      // hair
+      P(1, 0, 10, 2, H); P(2, -1, 8, 1, H);
+      P(1, 2, 1, 3, H); P(10, 2, 1, 3, H);
+      P(3, 0, 3, 1, Hl);
+      if (dir === 'up') { P(2, 1, 8, 5, H); P(3, 1, 3, 2, Hl); }
+      if (dir === 'down') { P(4, 3, 1, 2, '#22282e'); P(7, 3, 1, 2, '#22282e'); }
+      if (dir === 'side') { P(2, 1, 3, 5, H); P(7, 3, 1, 2, '#22282e'); P(9, 4, 1, 1, Sd); }
+      return outline(c, '#1d1812');
+    }
+
+    const SPR = {
+      grass: [grassTile(0), grassTile(1), grassTile(2), grassTile(3)],
+      tuft: tuftTile(),
+      flower: [flowerTile(false), flowerTile(true)],
+      path: [pathTile(), pathTile(), pathTile()],
+      water: [waterTile(0), waterTile(1)],
+      lily: [lilyTile(0), lilyTile(1)],
+      tree: treeSprite(),
+      pine: pineSprite(),
+      fence: fenceSprite(),
+      sign: signSprite(),
+      house: Object.fromEntries(Object.keys(ROOF).map((k) => [k, houseSprite(k)])) as Record<string, HTMLCanvasElement>,
+      player: {
+        down: [0, 1, 2].map((f) => playerSprite('down', f)),
+        up: [0, 1, 2].map((f) => playerSprite('up', f)),
+        side: [0, 1, 2].map((f) => playerSprite('side', f)),
+      },
+    };
+    const hash = (x: number, y: number) => ((x * 73856093) ^ (y * 19349663)) >>> 0;
+
+    /* ================= canvas & camera ================= */
     const canvas = document.getElementById('town') as HTMLCanvasElement;
     const ctx = canvas.getContext('2d')!;
-    ctx.imageSmoothingEnabled = false;
-    const VW = canvas.width, VH = canvas.height;
-
-    const ROOF: Record<string, [string, string]> = {
-      chapter: ['#2b4d7e', '#1d3557'],
-      companion: ['#b4531f', '#8a3c12'],
-      gb: ['#0f6b5e', '#0a4c43'],
-      other: ['#8a4a68', '#66344c'],
-    };
-
-    function drawTile(x: number, y: number, sx: number, sy: number, t: number, time: number) {
-      // grass base everywhere
-      ctx.fillStyle = (x + y) % 2 ? '#7ec850' : '#86ce58';
-      ctx.fillRect(sx, sy, T, T);
-      if (t === G || t === SOLID) {
-        if ((x * 7 + y * 13) % 5 === 0) {
-          ctx.fillStyle = '#74bd48';
-          ctx.fillRect(sx + 4, sy + 6, 2, 2);
-          ctx.fillRect(sx + 10, sy + 11, 2, 2);
-        }
-      } else if (t === PATH) {
-        ctx.fillStyle = '#e8d5a3';
-        ctx.fillRect(sx, sy, T, T);
-        ctx.fillStyle = '#d9c48d';
-        ctx.fillRect(sx, sy + T - 2, T, 2);
-        if ((x * 3 + y * 5) % 4 === 0) {
-          ctx.fillStyle = '#cfba82';
-          ctx.fillRect(sx + 5, sy + 5, 3, 2);
-        }
-      } else if (t === TREE) {
-        ctx.fillStyle = '#5d4030';
-        ctx.fillRect(sx + 6, sy + 10, 4, 5);
-        ctx.fillStyle = '#1d6a2e';
-        ctx.fillRect(sx + 2, sy + 2, 12, 9);
-        ctx.fillStyle = '#2e8b40';
-        ctx.fillRect(sx + 3, sy + 1, 7, 6);
-        ctx.fillStyle = '#17542a';
-        ctx.fillRect(sx + 10, sy + 7, 4, 4);
-      } else if (t === WATER) {
-        ctx.fillStyle = '#4aa3df';
-        ctx.fillRect(sx, sy, T, T);
-        const ph = Math.floor(time / 500 + (x + y)) % 3;
-        ctx.fillStyle = '#7cc0ea';
-        ctx.fillRect(sx + 2 + ph * 3, sy + 4, 4, 1);
-        ctx.fillRect(sx + 8 - ph * 2, sy + 11, 4, 1);
-      } else if (t === FLOWER) {
-        const red = (x * 11 + y * 17) % 3 === 0;
-        ctx.fillStyle = red ? '#e5533f' : '#f2d24b';
-        ctx.fillRect(sx + 5, sy + 5, 3, 3);
-        ctx.fillRect(sx + 10, sy + 9, 3, 3);
-        ctx.fillStyle = '#f8f8f0';
-        ctx.fillRect(sx + 6, sy + 6, 1, 1);
-        ctx.fillRect(sx + 11, sy + 10, 1, 1);
-      }
+    let SCALE = 3;
+    function resize() {
+      const w = window.innerWidth, h = window.innerHeight;
+      SCALE = w < 640 ? 2 : w > 1900 ? 4 : 3;
+      canvas.width = Math.ceil(w / SCALE);
+      canvas.height = Math.ceil(h / SCALE);
+      canvas.style.width = `${canvas.width * SCALE}px`;
+      canvas.style.height = `${canvas.height * SCALE}px`;
+      ctx.imageSmoothingEnabled = false;
     }
+    resize();
+    window.addEventListener('resize', resize);
 
-    function drawBuilding(b: Building, camX: number, camY: number, active: boolean) {
-      const sx = b.x * T - camX, sy = b.y * T - camY;
-      const w = 5 * T, roofH = 2 * T, wallH = 2 * T;
-      if (sx + w < 0 || sx > VW || sy + roofH + wallH < 0 || sy > VH) return;
-      const [roof, trim] = ROOF[b.kind] ?? ROOF.other;
-      // wall
-      ctx.fillStyle = '#f2e3c2';
-      ctx.fillRect(sx, sy + roofH, w, wallH);
-      ctx.fillStyle = '#d9c49b';
-      ctx.fillRect(sx, sy + roofH + wallH - 3, w, 3);
-      // windows
-      ctx.fillStyle = '#8fc7e8';
-      ctx.fillRect(sx + 8, sy + roofH + 6, 10, 9);
-      ctx.fillRect(sx + w - 18, sy + roofH + 6, 10, 9);
-      ctx.strokeStyle = '#7a5a3a';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(sx + 8.5, sy + roofH + 6.5, 9, 8);
-      ctx.strokeRect(sx + w - 17.5, sy + roofH + 6.5, 9, 8);
-      // door
-      const dx = sx + 2 * T, dy = sy + roofH + wallH - T - 2;
-      ctx.fillStyle = '#6b4326';
-      ctx.fillRect(dx + 2, dy, T - 4, T + 2);
-      ctx.fillStyle = '#4c2e18';
-      ctx.fillRect(dx + 2, dy, T - 4, 2);
-      if (active) {
-        ctx.fillStyle = '#fff3b0';
-        ctx.fillRect(dx + 4, dy + 3, T - 8, 4);
-      }
-      // roof
-      ctx.fillStyle = roof;
-      ctx.fillRect(sx - 2, sy + 6, w + 4, roofH - 6);
-      ctx.fillStyle = trim;
-      ctx.fillRect(sx - 2, sy + roofH - 4, w + 4, 4);
-      ctx.fillStyle = roof;
-      ctx.fillRect(sx + 6, sy, w - 12, 8);
-      ctx.fillStyle = '#ffffff22';
-      ctx.fillRect(sx - 2, sy + 6, w + 4, 2);
-    }
-
-    function drawSign(x: number, y: number, camX: number, camY: number) {
-      const sx = x * T - camX, sy = y * T - camY;
-      ctx.fillStyle = '#5d4030';
-      ctx.fillRect(sx + 7, sy + 8, 3, 7);
-      ctx.fillStyle = '#a87c4f';
-      ctx.fillRect(sx + 2, sy + 2, 12, 7);
-      ctx.fillStyle = '#7a5a3a';
-      ctx.fillRect(sx + 4, sy + 4, 8, 1);
-      ctx.fillRect(sx + 4, sy + 6, 6, 1);
-    }
-
-    /* ---------- player ---------- */
-    const SKIN = '#f0c8a0', HAIR = '#5a3a24', COAT = '#2b4d7e', LEGS = '#3a3f47';
-    function drawPlayer(px: number, py: number, dir: string, step: number) {
-      const x = Math.round(px), y = Math.round(py);
-      ctx.fillStyle = 'rgba(0,0,0,0.25)';
-      ctx.fillRect(x + 3, y + 13, 10, 3);
-      const legL = step === 1 ? 2 : 0, legR = step === 1 ? 0 : 2;
-      ctx.fillStyle = LEGS;
-      ctx.fillRect(x + 4, y + 9 + legL / 2, 3, 5 - legL / 2);
-      ctx.fillRect(x + 9, y + 9 + legR / 2, 3, 5 - legR / 2);
-      ctx.fillStyle = COAT;
-      ctx.fillRect(x + 3, y + 5, 10, 5);
-      if (dir === 'left') ctx.fillRect(x + 2, y + 6, 2, 3);
-      if (dir === 'right') ctx.fillRect(x + 12, y + 6, 2, 3);
-      ctx.fillStyle = SKIN;
-      ctx.fillRect(x + 4, y, 8, 6);
-      ctx.fillStyle = HAIR;
-      ctx.fillRect(x + 3, y - 1, 10, 3);
-      if (dir === 'up') ctx.fillRect(x + 4, y, 8, 5);
-      if (dir === 'left') ctx.fillRect(x + 3, y, 3, 5);
-      if (dir === 'right') ctx.fillRect(x + 10, y, 3, 5);
-      if (dir === 'down') {
-        ctx.fillStyle = '#22282e';
-        ctx.fillRect(x + 6, y + 3, 1, 2);
-        ctx.fillRect(x + 9, y + 3, 1, 2);
-      }
-      if (dir === 'left') {
-        ctx.fillStyle = '#22282e';
-        ctx.fillRect(x + 4, y + 3, 1, 2);
-      }
-      if (dir === 'right') {
-        ctx.fillStyle = '#22282e';
-        ctx.fillRect(x + 11, y + 3, 1, 2);
-      }
-    }
-
-    /* ---------- game state ---------- */
+    /* ================= state ================= */
     const player = {
       tx: cx, ty: ROWS - 4,
       x: cx * T, y: (ROWS - 4) * T,
-      dir: 'up' as string,
-      moving: false, from: [0, 0], to: [0, 0], t0: 0,
+      dir: 'up', moving: false, from: [0, 0], to: [0, 0], t0: 0,
     };
-    const SPEED = 170; // ms per tile
+    const SPEED = 170;
     const held = new Set<string>();
     const dialog = document.getElementById('dialog')!;
     const fade = document.getElementById('fade')!;
     let leaving = false;
-
-    const DIRS: Record<string, [number, number]> = {
-      up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0],
-    };
+    const DIRS: Record<string, [number, number]> = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 
     function tryMove(dir: string) {
       if (player.moving || leaving) return;
@@ -365,17 +484,13 @@ const town = posts
       player.tx = nx; player.ty = ny;
       player.t0 = performance.now();
     }
-
     function currentPost(): Post | null {
-      const onDoor = doorAt.get(`${player.tx},${player.ty}`);
-      if (onDoor !== undefined) return POSTS[onDoor];
-      // facing a sign?
+      const d = doorAt.get(`${player.tx},${player.ty}`);
+      if (d !== undefined) return POSTS[d];
       const [dx, dy] = DIRS[player.dir];
       const s = signAt.get(`${player.tx + dx},${player.ty + dy}`);
-      if (s !== undefined) return POSTS[s];
-      return null;
+      return s !== undefined ? POSTS[s] : null;
     }
-
     function enter() {
       const p = currentPost();
       if (!p || leaving) return;
@@ -383,43 +498,32 @@ const town = posts
       fade.style.opacity = '1';
       setTimeout(() => (window.location.href = p.href), 320);
     }
-
     function updateDialog() {
       const p = currentPost();
-      if (p) {
-        dialog.innerHTML = `<span style="opacity:.6">${p.tag}</span><br><strong>${p.title}</strong> · press <kbd>Enter</kbd> (or A) to read`;
-      } else {
-        dialog.innerHTML =
-          'Welcome to Catalog Town. Walk up to a door and press <kbd>Enter</kbd> to read that post.';
-      }
+      dialog.innerHTML = p
+        ? `<span style="opacity:.55">${p.tag}</span><br><strong>${p.title}</strong> · press <kbd>Enter</kbd> (or A) to read`
+        : 'Welcome to Catalog Town. Every house is a post: walk to a door and press <kbd>Enter</kbd> to read it.';
     }
 
-    /* ---------- input ---------- */
     const KEYMAP: Record<string, string> = {
       ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
-      w: 'up', s: 'down', a: 'left', d: 'right',
-      W: 'up', S: 'down', A: 'left', D: 'right',
+      w: 'up', s: 'down', a: 'left', d: 'right', W: 'up', S: 'down', A: 'left', D: 'right',
     };
     window.addEventListener('keydown', (e) => {
       const d = KEYMAP[e.key];
       if (d) { held.add(d); tryMove(d); e.preventDefault(); }
       if (e.key === 'Enter' || e.key === ' ') { enter(); e.preventDefault(); }
     });
-    window.addEventListener('keyup', (e) => {
-      const d = KEYMAP[e.key];
-      if (d) held.delete(d);
-    });
+    window.addEventListener('keyup', (e) => { const d = KEYMAP[e.key]; if (d) held.delete(d); });
     document.querySelectorAll<HTMLButtonElement>('[data-dir]').forEach((b) => {
       const d = b.dataset.dir!;
-      b.addEventListener('pointerdown', (e) => { e.preventDefault(); held.add(d); });
+      b.addEventListener('pointerdown', (e) => { e.preventDefault(); held.add(d); tryMove(d); });
       for (const ev of ['pointerup', 'pointerleave', 'pointercancel'])
         b.addEventListener(ev, () => held.delete(d));
     });
-    document.getElementById('abtn')!.addEventListener('pointerdown', (e) => {
-      e.preventDefault(); enter();
-    });
+    document.getElementById('abtn')!.addEventListener('pointerdown', (e) => { e.preventDefault(); enter(); });
 
-    /* ---------- main loop ---------- */
+    /* ================= render loop ================= */
     function frame(time: number) {
       if (player.moving) {
         const k = Math.min((time - player.t0) / SPEED, 1);
@@ -427,34 +531,121 @@ const town = posts
         player.y = player.from[1] + (player.to[1] - player.from[1]) * k;
         if (k >= 1) { player.moving = false; updateDialog(); }
       }
-      if (!player.moving) {
-        for (const d of ['up', 'down', 'left', 'right'])
-          if (held.has(d)) { tryMove(d); break; }
-      }
+      if (!player.moving)
+        for (const d of ['up', 'down', 'left', 'right']) if (held.has(d)) { tryMove(d); break; }
 
-      const camX = Math.max(0, Math.min(player.x - VW / 2 + T / 2, COLS * T - VW));
-      const camY = Math.max(0, Math.min(player.y - VH / 2 + T / 2, ROWS * T - VH));
+      const VW = canvas.width, VH = canvas.height;
+      const worldW = COLS * T, worldH = ROWS * T;
+      const camX = Math.round(Math.max(0, Math.min(player.x - VW / 2 + T / 2, Math.max(worldW - VW, 0))));
+      const camY = Math.round(Math.max(0, Math.min(player.y - VH / 2 + T / 2, Math.max(worldH - VH, 0))));
 
-      const x0 = Math.floor(camX / T), y0 = Math.floor(camY / T);
-      for (let y = y0; y <= y0 + VH / T; y++)
-        for (let x = x0; x <= x0 + VW / T; x++) {
-          if (x < 0 || y < 0 || x >= COLS || y >= ROWS) continue;
-          drawTile(x, y, x * T - camX, y * T - camY, grid[y][x], time);
+      ctx.fillStyle = '#0c3b1e';
+      ctx.fillRect(0, 0, VW, VH);
+
+      const x0 = Math.max(0, Math.floor(camX / T)), y0 = Math.max(0, Math.floor(camY / T));
+      const x1 = Math.min(COLS - 1, Math.ceil((camX + VW) / T)), y1 = Math.min(ROWS - 1, Math.ceil((camY + VH) / T));
+
+      const waterF = Math.floor(time / 550) % 2;
+      // base pass
+      for (let y = y0; y <= y1; y++)
+        for (let x = x0; x <= x1; x++) {
+          const t = grid[y][x];
+          const sx = x * T - camX, sy = y * T - camY;
+          const isPath = (v: number | undefined) => v === PATH || v === DOOR;
+          if (t === PATH || t === DOOR) {
+            ctx.drawImage(SPR.path[hash(x, y) % 3], sx, sy);
+            ctx.fillStyle = '#8f6a3d';
+            if (!isPath(grid[y - 1]?.[x]) && grid[y - 1]?.[x] !== SOLID) ctx.fillRect(sx, sy, T, 1);
+            if (!isPath(grid[y + 1]?.[x])) ctx.fillRect(sx, sy + T - 1, T, 1);
+            if (!isPath(grid[y][x - 1])) ctx.fillRect(sx, sy, 1, T);
+            if (!isPath(grid[y][x + 1])) ctx.fillRect(sx + T - 1, sy, 1, T);
+            // grass creeping over the edge
+            ctx.fillStyle = '#7daf4e';
+            if (!isPath(grid[y][x - 1]) && hash(x, y) % 4 === 0) ctx.fillRect(sx, sy + 4, 1, 3);
+            if (!isPath(grid[y][x + 1]) && hash(x, y) % 4 === 1) ctx.fillRect(sx + T - 1, sy + 8, 1, 3);
+          } else if (t === WATER) {
+            const lily = hash(x, y) % 7 === 0;
+            ctx.drawImage((lily ? SPR.lily : SPR.water)[waterF], sx, sy);
+            // dark earth banks
+            ctx.fillStyle = '#5e4a33';
+            if (grid[y - 1]?.[x] !== WATER) ctx.fillRect(sx, sy, T, 2);
+            if (grid[y + 1]?.[x] !== WATER) ctx.fillRect(sx, sy + T - 2, T, 2);
+            if (grid[y][x - 1] !== WATER) ctx.fillRect(sx, sy, 2, T);
+            if (grid[y][x + 1] !== WATER) ctx.fillRect(sx + T - 2, sy, 2, T);
+          } else if (t === FLOWER) ctx.drawImage(SPR.flower[(x + y) % 2], sx, sy);
+          else if (t === TUFT) ctx.drawImage(SPR.tuft, sx, sy);
+          else ctx.drawImage(SPR.grass[hash(x, y) % 4], sx, sy);
         }
 
+      // object pass, y-sorted for occlusion
+      type Obj = { y: number; draw: () => void };
+      const objs: Obj[] = [];
       const active = currentPost();
-      buildings.forEach((b, i) => {
-        const isActive = !!active && POSTS.indexOf(active) === i;
-        drawBuilding(b, camX, camY, isActive);
-      });
+      for (const b of buildings) {
+        objs.push({
+          y: (b.y + 4) * T,
+          draw: () => {
+            const sx = b.x * T - 4 - camX, sy = b.y * T - 6 - camY;
+            ctx.drawImage(SPR.house[b.kind] ?? SPR.house.other, sx, sy);
+            if (active && POSTS[b.idx] === active) {
+              ctx.fillStyle = 'rgba(255,238,150,0.85)';
+              ctx.fillRect(b.x * T + 2 * T + 3 - camX, b.y * T + 3 * T + 2 - camY, T - 6, 5);
+            }
+            // chimney smoke
+            const ph = (time / 900 + b.idx) % 2;
+            ctx.fillStyle = 'rgba(235,235,225,0.45)';
+            ctx.fillRect(sx + 68, sy - 4 - ph * 3, 3, 3);
+            ctx.fillRect(sx + 71, sy - 9 - ph * 3, 2, 2);
+          },
+        });
+      }
       signAt.forEach((_, key) => {
         const [x, y] = key.split(',').map(Number);
-        drawSign(x, y, camX, camY);
+        objs.push({ y: (y + 1) * T, draw: () => ctx.drawImage(SPR.sign, x * T - camX, y * T - 2 - camY) });
+      });
+      for (let y = y0; y <= Math.min(ROWS - 1, y1 + 1); y++)
+        for (let x = x0; x <= x1; x++) {
+          const t = grid[y][x];
+          if (t === TREE) {
+            const border = x < 2 || y < 2 || x >= COLS - 2 || y >= ROWS - 2;
+            const pine = border ? hash(x, y) % 3 !== 0 : hash(x, y) % 4 === 0;
+            objs.push({
+              y: (y + 1) * T,
+              draw: () =>
+                pine
+                  ? ctx.drawImage(SPR.pine, x * T - 1 - camX, y * T - 13 - camY)
+                  : ctx.drawImage(SPR.tree, x * T - 2 - camX, y * T - 13 - camY),
+            });
+          } else if (t === FENCE)
+            objs.push({ y: (y + 1) * T, draw: () => ctx.drawImage(SPR.fence, x * T - camX, y * T - 2 - camY) });
+        }
+
+      const step = player.moving ? 1 + (Math.floor((time - player.t0) / (SPEED / 2)) % 2) : 0;
+      objs.push({
+        y: player.y + T,
+        draw: () => {
+          const sx = Math.round(player.x - camX), sy = Math.round(player.y - camY);
+          ctx.fillStyle = 'rgba(0,0,0,0.25)';
+          ctx.fillRect(sx + 3, sy + 12, 10, 3);
+          const set = player.dir === 'left' || player.dir === 'right' ? SPR.player.side : SPR.player[player.dir as 'up' | 'down'];
+          const img = set[step];
+          if (player.dir === 'right') {
+            ctx.save(); ctx.translate(sx + T, sy - 6); ctx.scale(-1, 1);
+            ctx.drawImage(img, 0, 0); ctx.restore();
+          } else ctx.drawImage(img, sx, sy - 6);
+        },
       });
 
-      const step = player.moving ? (Math.floor((time - player.t0) / (SPEED / 2)) % 2) : 0;
-      drawPlayer(player.x - camX + 0, player.y - camY - 2, player.dir, step);
+      objs.sort((a, b) => a.y - b.y).forEach((o) => o.draw());
 
+      // warm light + vignette, Stardew-afternoon mood
+      ctx.fillStyle = 'rgba(255,214,140,0.06)';
+      ctx.fillRect(0, 0, VW, VH);
+      const vg = ctx.createRadialGradient(VW / 2, VH / 2, Math.min(VW, VH) * 0.45, VW / 2, VH / 2, Math.max(VW, VH) * 0.75);
+      vg.addColorStop(0, 'rgba(0,0,0,0)');
+      vg.addColorStop(1, 'rgba(24,14,4,0.32)');
+      ctx.fillStyle = vg;
+      ctx.fillRect(0, 0, VW, VH);
       requestAnimationFrame(frame);
     }
     updateDialog();
