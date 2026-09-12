@@ -18,6 +18,7 @@ const town = posts
     title: p.data.title,
     href: postHref(p.id, base),
     kind: kindOf(p),
+    num: p.data.chapter ?? null,
     tag:
       kindOf(p) === 'chapter'
         ? `Book, chapter ${p.data.chapter}`
@@ -67,7 +68,22 @@ const homeHref = joinBase(base, '');
     </div>
     <button id="abtn" class="pad-btn absolute right-4 bottom-28 hidden h-14 w-14 rounded-full text-base font-bold" aria-hidden="true">A</button>
 
-    <div id="fade" class="pointer-events-none absolute inset-0 bg-black opacity-0 transition-opacity duration-300"></div>
+    <div id="book" class="absolute inset-0 z-10 hidden items-center justify-center">
+      <div class="absolute inset-0 bg-black/60" data-book-close></div>
+      <div id="book-panel" class="relative flex h-[90vh] w-[min(95vw,64rem)] scale-95 flex-col rounded-xl border-4 border-[#4c3018] bg-[#8a5a34] p-2 opacity-0 shadow-2xl transition-all duration-200 max-sm:h-[94vh]">
+        <div class="flex items-center gap-3 px-2 py-2 font-mono text-xs text-[#f6ecd4] sm:text-sm">
+          <span id="book-tag" class="shrink-0 rounded bg-[#5d3d22] px-2 py-0.5 opacity-90"></span>
+          <strong id="book-title" class="truncate"></strong>
+          <a id="book-open" target="_blank" class="ml-auto shrink-0 underline opacity-80 hover:opacity-100">full page ↗</a>
+          <button id="book-close" class="shrink-0 rounded bg-[#5d3d22] px-2.5 py-1 hover:bg-[#4c3018]">✕ Esc</button>
+        </div>
+        <div class="relative flex-1 overflow-hidden rounded-lg bg-[#f6ecd4]">
+          <div class="pointer-events-none absolute top-0 bottom-0 left-6 z-10 w-px bg-[#d9c7a2]"></div>
+          <div class="pointer-events-none absolute top-0 right-10 z-10 h-9 w-4 bg-[#c0392b]" style="clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%)"></div>
+          <iframe id="book-frame" class="h-full w-full" style="background: transparent" title="Post"></iframe>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script type="application/json" id="town-data" set:html={JSON.stringify(town)} />
@@ -99,7 +115,7 @@ const homeHref = joinBase(base, '');
   </style>
 
   <script>
-    type Post = { title: string; href: string; kind: string; tag: string };
+    type Post = { title: string; href: string; kind: string; tag: string; num: number | null };
     const POSTS: Post[] = JSON.parse(document.getElementById('town-data')!.textContent!);
 
     /* ================= world ================= */
@@ -343,54 +359,171 @@ const homeHref = joinBase(base, '');
       gb: ['#0f6b5e', '#0a4c43', '#1d8a79'],
       other: ['#8a4a68', '#6b3750', '#a5627f'],
     };
-    function houseSprite(kind: string) {
-      const W = 88, H = 76; // building wall bottom sits at y=70
-      const [c, g] = sheet(W, H);
-      const [roof, dark, light] = ROOF[kind] ?? ROOF.other;
-      // shadow on the ground
+    /* tiny 3x5 pixel digits for plaques */
+    const DIG = [
+      '111101101101111', '010110010010111', '111001111100111', '111001111001111',
+      '101101111001001', '111100111001111', '111100111101111', '111001010010010',
+      '111101111101111', '111101111001111',
+    ];
+    function drawNum(g: CanvasRenderingContext2D, n: number, x: number, y: number, col: string) {
+      String(n).split('').forEach((ch, i) => {
+        const d = DIG[+ch];
+        for (let r = 0; r < 5; r++)
+          for (let cc = 0; cc < 3; cc++)
+            if (d[r * 3 + cc] === '1') px(g, x + i * 4 + cc, y + r, 1, 1, col);
+      });
+    }
+
+    type Built = { img: HTMLCanvasElement; anchor: number; smoke: [number, number] | null };
+
+    /* shared pieces: door spans sprite x 34..54 so it sits on the door tile */
+    function doorAt34(g: CanvasRenderingContext2D, top: number, bottom: number) {
+      px(g, 34, top, 20, bottom - top, '#4c3018');
+      px(g, 36, top + 2, 16, bottom - top - 2, '#7a5230');
+      px(g, 43, top + 2, 2, bottom - top - 2, '#5d3d22');
+      px(g, 36, top + 2, 16, 2, '#8f6339');
+      px(g, 49, top + 11, 2, 2, '#e8c96a');
+      px(g, 30, bottom, 28, 3, '#a8a294');
+    }
+    function windowBox(g: CanvasRenderingContext2D, wx: number, wy: number, flowers = true) {
+      px(g, wx - 3, wy, 3, 12, '#8a5a30'); px(g, wx + 14, wy, 3, 12, '#8a5a30');
+      px(g, wx, wy, 14, 12, '#5d3d22');
+      px(g, wx + 1, wy + 1, 12, 10, '#a8dcf5');
+      px(g, wx + 1, wy + 1, 12, 4, '#d6f0fb');
+      px(g, wx + 6, wy + 1, 1, 10, '#5d3d22'); px(g, wx + 1, wy + 6, 12, 1, '#5d3d22');
+      px(g, wx - 1, wy + 12, 16, 2, '#b3794a');
+      if (flowers) {
+        px(g, wx, wy + 14, 14, 3, '#3d7a2f');
+        px(g, wx + 2, wy + 14, 2, 2, '#e0563e'); px(g, wx + 8, wy + 14, 2, 2, '#f0cf46');
+      }
+    }
+    function foundation(g: CanvasRenderingContext2D, y: number) {
+      px(g, 4, y, 80, 6, '#9b968a');
+      px(g, 4, y, 80, 1, '#b3ada0');
+      for (let x = 8; x < 84; x += 10) px(g, x, y + 2, 4, 3, '#847f74');
+    }
+    function gableRoof(g: CanvasRenderingContext2D, roof: string, dark: string, light: string, top: number, h: number) {
+      px(g, 0, top + 8, 88, h - 8, roof);
+      px(g, 4, top + 3, 80, 7, roof);
+      px(g, 10, top, 68, 5, roof);
+      px(g, 10, top, 68, 2, light);
+      for (let y = top + 10; y < top + h - 2; y += 5) px(g, 0, y, 88, 1, dark);
+      px(g, 0, top + h - 4, 88, 4, dark);
+      px(g, 0, top + 8, 3, h - 8, dark); px(g, 85, top + 8, 3, h - 8, dark);
+    }
+
+    /** chapter posts: the town library, two floors, plaque with the chapter number */
+    function librarySprite(num: number | null): Built {
+      const H = 92, [c, g] = sheet(88, H);
+      const [roof, dark, light] = ROOF.chapter;
+      px(g, 6, 86, 76, 4, 'rgba(30,24,12,0.30)');
+      // upper floor
+      px(g, 8, 30, 72, 16, '#e6d3a8');
+      for (let x = 16, i = 0; x < 80; x += 8, i++) px(g, x, 30, 1, 16, '#d3bd8c');
+      px(g, 8, 30, 72, 2, 'rgba(60,36,12,0.35)');
+      windowBox(g, 22, 32, false); windowBox(g, 52, 32, false);
+      // lower floor
+      px(g, 4, 46, 80, 34, '#d9a866');
+      for (let x = 12; x < 84; x += 8) px(g, x, 46, 1, 34, '#c3924f');
+      px(g, 4, 46, 80, 3, 'rgba(60,36,12,0.30)');
+      foundation(g, 80);
+      windowBox(g, 12, 56); windowBox(g, 62, 56);
+      doorAt34(g, 58, 86);
+      // open-book emblem over the door
+      px(g, 38, 50, 12, 6, '#f6ecd4'); px(g, 43, 50, 2, 6, '#c9b183');
+      px(g, 38, 55, 12, 1, '#8a5a30');
+      // plaque with chapter number
+      if (num !== null) {
+        px(g, 56, 60, 12, 9, '#3a2c1a'); px(g, 57, 61, 10, 7, '#e8c96a');
+        drawNum(g, num, num > 9 ? 58 : 60, 62, '#3a2c1a');
+      }
+      gableRoof(g, roof, dark, light, 6, 24);
+      px(g, 64, 0, 10, 10, '#9a5b43'); px(g, 62, 0, 14, 3, '#6e3f2e');
+      return { img: outline(c), anchor: 86, smoke: [68, -4] };
+    }
+
+    /** companion posts: the workshop, ember roof, stack pipe, barrel */
+    function workshopSprite(): Built {
+      const H = 76, [c, g] = sheet(88, H);
+      const [roof, dark, light] = ROOF.companion;
       px(g, 6, 70, 76, 4, 'rgba(30,24,12,0.30)');
-      // plank walls (80 wide, x=4..84, y=38..64)
+      px(g, 4, 38, 80, 26, '#c89858');
+      for (let x = 12; x < 84; x += 8) px(g, x, 38, 1, 26, '#b28448');
+      px(g, 4, 38, 80, 3, 'rgba(60,36,12,0.35)');
+      foundation(g, 64);
+      // round vent window
+      px(g, 14, 44, 10, 10, '#5d3d22'); px(g, 16, 46, 6, 6, '#a8dcf5');
+      px(g, 18, 46, 2, 6, '#d6f0fb');
+      // tool sign: crossed hammer
+      px(g, 60, 44, 14, 12, '#8a5a30'); px(g, 61, 45, 12, 10, '#e6d3a8');
+      px(g, 63, 47, 8, 2, '#5d3d22'); px(g, 66, 47, 2, 7, '#5d3d22');
+      doorAt34(g, 48, 70);
+      px(g, 31, 45, 26, 3, dark); px(g, 31, 44, 26, 1, light);
+      gableRoof(g, roof, dark, light, 14, 24);
+      // metal stack pipe
+      px(g, 66, 2, 8, 14, '#7d8288'); px(g, 64, 2, 12, 3, '#5a5f66');
+      px(g, 66, 8, 8, 2, '#6b7076');
+      // barrel by the wall
+      px(g, 6, 54, 12, 16, '#8a5a34'); px(g, 6, 54, 12, 2, '#6e4426');
+      px(g, 6, 60, 12, 2, '#5d3d22'); px(g, 6, 66, 12, 2, '#5d3d22');
+      px(g, 8, 56, 3, 3, '#a87c4f');
+      return { img: outline(c), anchor: 70, smoke: [70, -4] };
+    }
+
+    /** the GB post: a proper pub, half-timbered, hanging sign, lantern */
+    function pubSprite(): Built {
+      const H = 76, [c, g] = sheet(88, H);
+      const [roof, dark, light] = ROOF.gb;
+      px(g, 6, 70, 76, 4, 'rgba(30,24,12,0.30)');
+      // cream plaster with dark timber frame
+      px(g, 4, 38, 80, 26, '#efe3c4');
+      px(g, 4, 38, 80, 2, '#4c3a26'); px(g, 4, 62, 80, 2, '#4c3a26');
+      for (const x of [4, 28, 58, 82]) px(g, x, 38, 2, 26, '#4c3a26');
+      // diagonal braces
+      for (let i = 0; i < 8; i++) { px(g, 8 + i * 2, 58 - i * 2, 2, 2, '#4c3a26'); px(g, 80 - i * 2, 58 - i * 2, 2, 2, '#4c3a26'); }
+      px(g, 4, 38, 80, 3, 'rgba(60,36,12,0.30)');
+      foundation(g, 64);
+      windowBox(g, 12, 46); windowBox(g, 64, 46);
+      // warm lit windows
+      px(g, 13, 47, 12, 10, '#f5c86a'); px(g, 65, 47, 12, 10, '#f5c86a');
+      px(g, 19, 47, 1, 10, '#5d3d22'); px(g, 13, 52, 12, 1, '#5d3d22');
+      px(g, 71, 47, 1, 10, '#5d3d22'); px(g, 65, 52, 12, 1, '#5d3d22');
+      doorAt34(g, 48, 70);
+      // hanging pub sign
+      px(g, 55, 44, 10, 1, '#4c3a26'); px(g, 59, 45, 1, 3, '#4c3a26');
+      px(g, 55, 48, 10, 8, '#0f6b5e'); px(g, 56, 49, 8, 6, '#1d8a79');
+      px(g, 58, 50, 4, 4, '#f0cf46'); // pint
+      // lantern
+      px(g, 28, 50, 4, 5, '#f5c86a'); px(g, 28, 48, 4, 2, '#4c3a26'); px(g, 29, 55, 2, 1, '#4c3a26');
+      gableRoof(g, roof, dark, light, 14, 24);
+      px(g, 16, 2, 10, 14, '#9a5b43'); px(g, 14, 2, 14, 3, '#6e3f2e');
+      return { img: outline(c), anchor: 70, smoke: [20, -4] };
+    }
+
+    /** everything else: the cottage */
+    function cottageSprite(): Built {
+      const H = 76, [c, g] = sheet(88, H);
+      const [roof, dark, light] = ROOF.other;
+      px(g, 6, 70, 76, 4, 'rgba(30,24,12,0.30)');
       px(g, 4, 38, 80, 26, '#d9a866');
       for (let x = 12; x < 84; x += 8) px(g, x, 38, 1, 26, '#c3924f');
       px(g, 4, 44, 80, 1, '#c3924f');
-      px(g, 4, 38, 80, 3, 'rgba(60,36,12,0.35)'); // eaves shadow
-      // stone foundation
-      px(g, 4, 64, 80, 6, '#9b968a');
-      px(g, 4, 64, 80, 1, '#b3ada0');
-      for (let x = 8; x < 84; x += 10) px(g, x, 66, 4, 3, '#847f74');
-      // windows with shutters
-      for (const wx of [12, 62]) {
-        px(g, wx - 3, 46, 3, 12, '#8a5a30'); px(g, wx + 14, 46, 3, 12, '#8a5a30');
-        px(g, wx, 46, 14, 12, '#5d3d22');
-        px(g, wx + 1, 47, 12, 10, '#a8dcf5');
-        px(g, wx + 1, 47, 12, 4, '#d6f0fb');
-        px(g, wx + 6, 47, 1, 10, '#5d3d22'); px(g, wx + 1, 52, 12, 1, '#5d3d22');
-        px(g, wx - 1, 58, 16, 2, '#b3794a'); // sill
-        px(g, wx, 60, 14, 3, '#3d7a2f'); // flower box
-        px(g, wx + 2, 60, 2, 2, '#e0563e'); px(g, wx + 8, 60, 2, 2, '#f0cf46');
-      }
-      // door with little awning
-      px(g, 34, 48, 20, 22, '#4c3018');
-      px(g, 36, 50, 16, 20, '#7a5230');
-      px(g, 43, 50, 2, 20, '#5d3d22');
-      px(g, 36, 50, 16, 2, '#8f6339');
-      px(g, 49, 59, 2, 2, '#e8c96a');
-      px(g, 31, 45, 26, 3, dark); px(g, 31, 44, 26, 1, light); // awning
-      px(g, 30, 70, 28, 3, '#a8a294'); // stone step
-      // roof (overhangs walls by 4px each side)
-      px(g, 0, 14, 88, 24, roof);
-      px(g, 4, 8, 80, 8, roof);
-      px(g, 10, 5, 68, 5, roof);
-      px(g, 10, 5, 68, 2, light);
-      for (let y = 16; y < 36; y += 5) px(g, 0, y, 88, 1, dark);
-      for (let x = 8; x < 88; x += 12) px(g, x, 20, 1, 14, `${dark}88`);
-      px(g, 0, 34, 88, 4, dark);
-      px(g, 0, 14, 3, 24, dark); px(g, 85, 14, 3, 24, dark);
-      // chimney with cap
-      px(g, 64, 0, 10, 12, '#9a5b43');
-      px(g, 66, 3, 2, 2, '#7c4634'); px(g, 70, 7, 2, 2, '#7c4634');
+      px(g, 4, 38, 80, 3, 'rgba(60,36,12,0.35)');
+      foundation(g, 64);
+      windowBox(g, 12, 46); windowBox(g, 62, 46);
+      doorAt34(g, 48, 70);
+      px(g, 31, 45, 26, 3, dark); px(g, 31, 44, 26, 1, light);
+      gableRoof(g, roof, dark, light, 14, 24);
+      px(g, 64, 0, 10, 12, '#9a5b43'); px(g, 66, 3, 2, 2, '#7c4634');
       px(g, 62, 0, 14, 3, '#6e3f2e');
-      return outline(c);
+      return { img: outline(c), anchor: 70, smoke: [68, -4] };
+    }
+
+    function buildFor(kind: string, num: number | null): Built {
+      if (kind === 'chapter') return librarySprite(num);
+      if (kind === 'companion') return workshopSprite();
+      if (kind === 'gb') return pubSprite();
+      return cottageSprite();
     }
     /* --- player, auto-outlined pixel villager --- */
     function playerSprite(dir: string, frame: number) {
@@ -434,7 +567,6 @@ const homeHref = joinBase(base, '');
       pine: pineSprite(),
       fence: fenceSprite(),
       sign: signSprite(),
-      house: Object.fromEntries(Object.keys(ROOF).map((k) => [k, houseSprite(k)])) as Record<string, HTMLCanvasElement>,
       player: {
         down: [0, 1, 2].map((f) => playerSprite('down', f)),
         up: [0, 1, 2].map((f) => playerSprite('up', f)),
@@ -442,6 +574,7 @@ const homeHref = joinBase(base, '');
       },
     };
     const hash = (x: number, y: number) => ((x * 73856093) ^ (y * 19349663)) >>> 0;
+    const HOUSES: Built[] = buildings.map((b) => buildFor(b.kind, POSTS[b.idx].num));
 
     /* ================= canvas & camera ================= */
     const canvas = document.getElementById('town') as HTMLCanvasElement;
@@ -468,12 +601,10 @@ const homeHref = joinBase(base, '');
     const SPEED = 170;
     const held = new Set<string>();
     const dialog = document.getElementById('dialog')!;
-    const fade = document.getElementById('fade')!;
-    let leaving = false;
     const DIRS: Record<string, [number, number]> = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 
     function tryMove(dir: string) {
-      if (player.moving || leaving) return;
+      if (player.moving || bookOpen) return;
       player.dir = dir;
       const [dx, dy] = DIRS[dir];
       const nx = player.tx + dx, ny = player.ty + dy;
@@ -491,13 +622,57 @@ const homeHref = joinBase(base, '');
       const s = signAt.get(`${player.tx + dx},${player.ty + dy}`);
       return s !== undefined ? POSTS[s] : null;
     }
+    /* ---------- the notebook ---------- */
+    const book = document.getElementById('book')!;
+    const bookPanel = document.getElementById('book-panel')!;
+    const bookFrame = document.getElementById('book-frame') as HTMLIFrameElement;
+    let bookOpen = false;
+
+    bookFrame.addEventListener('load', () => {
+      const doc = bookFrame.contentDocument;
+      if (!doc || !doc.head) return;
+      doc.documentElement.classList.remove('dark'); // ink on paper, always
+      const s = doc.createElement('style');
+      s.textContent = `
+        header { display: none !important; }
+        html, body { background: transparent !important; }
+        main { padding-top: 1.5rem !important; padding-bottom: 3rem !important; }
+        article, main { color: #38301f; }
+        h1, h2, h3, h4, figcaption { color: #2c2413 !important; }
+      `;
+      doc.head.appendChild(s);
+    });
+
     function enter() {
       const p = currentPost();
-      if (!p || leaving) return;
-      leaving = true;
-      fade.style.opacity = '1';
-      setTimeout(() => (window.location.href = p.href), 320);
+      if (!p || bookOpen) return;
+      bookOpen = true;
+      held.clear();
+      dialog.style.visibility = 'hidden';
+      document.getElementById('book-tag')!.textContent = p.tag;
+      document.getElementById('book-title')!.textContent = p.title;
+      (document.getElementById('book-open') as HTMLAnchorElement).href = p.href;
+      bookFrame.src = p.href;
+      book.style.display = 'flex';
+      requestAnimationFrame(() => {
+        bookPanel.style.opacity = '1';
+        bookPanel.style.transform = 'scale(1)';
+      });
     }
+    function closeBook() {
+      if (!bookOpen) return;
+      bookOpen = false;
+      bookPanel.style.opacity = '0';
+      bookPanel.style.transform = 'scale(0.95)';
+      setTimeout(() => {
+        book.style.display = 'none';
+        bookFrame.src = 'about:blank';
+      }, 200);
+      dialog.style.visibility = '';
+      updateDialog();
+    }
+    document.getElementById('book-close')!.addEventListener('click', closeBook);
+    document.querySelector('[data-book-close]')!.addEventListener('click', closeBook);
     function updateDialog() {
       const p = currentPost();
       dialog.innerHTML = p
@@ -510,6 +685,10 @@ const homeHref = joinBase(base, '');
       w: 'up', s: 'down', a: 'left', d: 'right', W: 'up', S: 'down', A: 'left', D: 'right',
     };
     window.addEventListener('keydown', (e) => {
+      if (bookOpen) {
+        if (e.key === 'Escape') { closeBook(); e.preventDefault(); }
+        return;
+      }
       const d = KEYMAP[e.key];
       if (d) { held.add(d); tryMove(d); e.preventDefault(); }
       if (e.key === 'Enter' || e.key === ' ') { enter(); e.preventDefault(); }
@@ -582,20 +761,23 @@ const homeHref = joinBase(base, '');
       const objs: Obj[] = [];
       const active = currentPost();
       for (const b of buildings) {
+        const built = HOUSES[b.idx];
         objs.push({
           y: (b.y + 4) * T,
           draw: () => {
-            const sx = b.x * T - 4 - camX, sy = b.y * T - 6 - camY;
-            ctx.drawImage(SPR.house[b.kind] ?? SPR.house.other, sx, sy);
+            const sx = b.x * T - 4 - camX;
+            const sy = (b.y + 4) * T - built.anchor - camY;
+            ctx.drawImage(built.img, sx, sy);
             if (active && POSTS[b.idx] === active) {
               ctx.fillStyle = 'rgba(255,238,150,0.85)';
               ctx.fillRect(b.x * T + 2 * T + 3 - camX, b.y * T + 3 * T + 2 - camY, T - 6, 5);
             }
-            // chimney smoke
-            const ph = (time / 900 + b.idx) % 2;
-            ctx.fillStyle = 'rgba(235,235,225,0.45)';
-            ctx.fillRect(sx + 68, sy - 4 - ph * 3, 3, 3);
-            ctx.fillRect(sx + 71, sy - 9 - ph * 3, 2, 2);
+            if (built.smoke) {
+              const ph = (time / 900 + b.idx) % 2;
+              ctx.fillStyle = 'rgba(235,235,225,0.45)';
+              ctx.fillRect(sx + built.smoke[0], sy + built.smoke[1] - ph * 3, 3, 3);
+              ctx.fillRect(sx + built.smoke[0] + 3, sy + built.smoke[1] - 5 - ph * 3, 2, 2);
+            }
           },
         });
       }
