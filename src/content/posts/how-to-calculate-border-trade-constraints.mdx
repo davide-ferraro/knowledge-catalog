@@ -1,0 +1,315 @@
+---
+title: "How to calculate border trade constraints?"
+date: 2026-09-13
+category: "energy-markets"
+tags: ["book-notes", "market-design", "flow-based", "bidding-zones"]
+series: "eeme"
+chapter: 3
+description: "Notes on chapter 3 of Meeus, The Evolution of Electricity Markets in Europe: where the capacity numbers fed into EUPHEMIA actually come from, why the borders are virtual, and the flows that quietly eat them."
+---
+
+import Callout from '../../components/Callout.astro';
+import Toggle from '../../components/Toggle.astro';
+import Timeline from '../../components/Timeline.astro';
+import LoopFlowExplorer from '../../components/LoopFlowExplorer.astro';
+import FlowDomain from '../../components/FlowDomain.astro';
+
+These are my notes on chapter 3 of *The Evolution of Electricity Markets in
+Europe* by Leonardo Meeus (2020, written with Tim Schittekatte).
+[[who-gets-the-rights-to-trade-across-borders|Chapter 2]] explained how
+Europe allocates cross-border capacity through one coupled auction. This
+chapter is about the number that auction consumes: **how many MW can safely
+cross each border?** Someone has to compute that, every day, for every
+border, and the computation is nowhere near as innocent as it sounds,
+because the borders are commercial fictions while electricity follows
+physics.
+
+<Timeline
+  kinds={{
+    event: "What happened",
+    rule: "Rules and rulings",
+  }}
+  items={[
+    {
+      year: "2003",
+      kind: "event",
+      title: "The Italian blackout",
+      detail: "One tripped line on the Swiss border cascades into 56 million people losing power. The case for coordinating grid operation across borders stops being theoretical.",
+    },
+    {
+      year: "2008",
+      kind: "event",
+      title: "TSOs start coordinating voluntarily",
+      detail: "Coreso (Brussels) and TSCNET (Munich) are founded: shared service centres watching the grid across borders.",
+    },
+    {
+      year: "2011",
+      kind: "rule",
+      title: "Sweden splits into four zones",
+      detail: "After a competition case (a TSO was curbing exports to protect its internal grid), Sweden redraws its bidding zones on 1 November 2011.",
+    },
+    {
+      year: "2015",
+      kind: "event",
+      title: "Flow-based coupling goes live in CWE",
+      detail: "Central Western Europe abandons fixed border values in May 2015; the CACM guideline makes flow-based the EU's primary method the same year.",
+    },
+    {
+      year: "2018",
+      kind: "rule",
+      title: "Germany-Austria split; first zone review fizzles",
+      detail: "Congestion management starts on the DE-AT border on 1 October 2018. The first EU-wide bidding zone review recommends... keeping everything as is.",
+    },
+    {
+      year: "2019",
+      kind: "rule",
+      title: "The 70% rule",
+      detail: "The Clean Energy Package orders every country to make at least 70% of critical grid capacity available to cross-zonal trade, with full compliance by the end of 2025.",
+    },
+    {
+      year: "2022",
+      kind: "event",
+      title: "Core flow-based go-live",
+      detail: "On 8 June 2022 flow-based coupling extends to thirteen countries, from France to Romania.",
+    },
+    {
+      year: "2024",
+      kind: "event",
+      title: "Nordic flow-based go-live",
+      detail: "The Nordics switch on 29 October 2024. Flow-based is now the day-ahead norm for most of the continent.",
+    },
+  ]}
+  caption="The chapter's arc, extended past the book's 2020 publication with what happened since."
+/>
+
+## 1. ⚡ Why constraints rule everything
+
+Three facts set the stage. Transmission lines are currently the only
+economically viable way to move electricity, and the network is a planned,
+regulated monopoly, so it is imperfect by construction. Planning is slow:
+wind and solar parks get built faster than the lines to carry them, so the
+cheapest generation often cannot reach the willing buyers. And operating
+near the limits is dangerous: overload a line and it trips, dumping its flow
+onto neighbours, which can cascade. Grids therefore run on the **N−1
+principle**: the system must survive the loss of any single element.
+
+<Callout icon="🇮🇹" title="What a cascade looks like: Italy, 28 September 2003">
+  At 03:01 a Swiss 380 kV line sagged into a tree and tripped. Italy was
+  importing 6,400 MW on its northern border; the Swiss TSO asked for a
+  300 MW reduction, which was not enough. At 03:25 a second Swiss line
+  tripped, the remaining lines to Italy failed almost simultaneously, and
+  twelve seconds later Italy was electrically an island. Frequency fell to
+  47.5 Hz and the whole country blacked out within two and a half minutes,
+  affecting 56 million people; 30,000 were stranded on trains, and Sicily
+  waited until 21:40 for full power. One tree, one country dark: this is why
+  border capacity is calculated cautiously, and why the coordination bodies
+  in section 4 exist.
+</Callout>
+
+## 2. 🗺️ The borders are virtual
+
+Prices in Europe are **zonal**: inside a bidding zone the wholesale price is
+one number and trade is unlimited; scarcity of wires only appears *between*
+zones. Zones mostly equal countries (Sweden, Norway, Denmark and Italy are
+split; Luxembourg shares Germany's zone). Everyone always knew these borders
+were virtual: a "border" is just an aggregation of physical lines, and the
+binding constraint is often a line deep inside a country.
+
+That makes the classic method, publishing a fixed **net transfer capacity
+(NTC)** per border, an almost impossible task. How much a border can take
+depends on how flows distribute over many parallel paths, which depends on
+production and consumption patterns that are only known *after* trading. And
+each border's capacity depends on what happens on every other border. TSOs
+guessed conservatively, because they pay penalties when they promise
+capacity they cannot deliver.
+
+The successor is **flow-based market coupling (FBMC)**: instead of one
+number per border, the TSOs hand the market algorithm the actual constraint
+structure. Each TSO nominates its **critical network elements (CNEs)**, the
+lines that cross-zonal trade can overload. For each CNE, two parameters go
+to EUPHEMIA: **zonal PTDFs** (power transfer distribution factors: how many
+MW flow over this line per MW of net export from each zone) and the **RAM**
+(remaining available margin: the line's capacity minus the flow already
+there from other transactions, minus a reliability margin, minus a
+TSO-specific adjustment). The market then clears *inside* the space those
+constraints allow. Play with that space:
+
+<FlowDomain />
+
+The two preset corners are the whole argument for FBMC: fixed border values
+both waste trade the grid could carry and permit combinations it cannot.
+Flow-based went live in Central Western Europe in May 2015, the CACM
+guideline made it the EU's primary approach, and after the book it spread:
+the Core region (thirteen countries) on 8 June 2022 and the Nordics on
+29 October 2024.
+
+## 3. 🌀 The flows that eat borders (annex 3A.2)
+
+Two kinds of flow consume cross-zonal capacity without being the trade the
+capacity was meant for. Both exist because electricity spreads over all
+parallel paths, but they differ in the one way that matters for market
+design: whether the cause is *visible* to the capacity calculation.
+
+<LoopFlowExplorer />
+
+- A **transit flow** comes from a scheduled trade between two *other* zones.
+  It is unscheduled from the victim's point of view, but the causing trade
+  is cross-zonal, so a coordinated, flow-based calculation can account for
+  it and arbitrate: exactly what FBMC does.
+- A **loop flow** comes from a transaction *inside* one zone. Within a zone
+  trade is unlimited and invisible, so no capacity calculation can price it.
+  The book's verdict is blunt: loop flows "can only be addressed by revising
+  the bidding zone configuration".
+
+Loop flows are not a footnote; they are the chapter's real open issue. The
+worst constraints in today's network are no longer at the borders but inside
+the zones, and countries have answered in two opposite ways, each shaped by
+a European competition case:
+
+- **The Swedish way: redraw the zones.** Sweden's TSO used to curb exports
+  to Denmark to relieve its own internal congestion. After DG COMP found
+  this discriminatory (an abuse of dominance favouring internal flows),
+  Sweden split into four bidding zones on 1 November 2011. Internal scarcity
+  became visible in prices, and cross-border traders compete on equal
+  footing.
+- **The German way: keep the zone, pay the difference.** Germany keeps one
+  zone despite massive north-south congestion, exporting loop flows to its
+  neighbours. After its own DG COMP case (opened 2018), the TSO guaranteed
+  minimum capacity on the Danish border rather than split the zone. The
+  internal congestion is then managed by **redispatch**: paying plants on
+  both sides of the bottleneck to deviate. ACER put EU redispatch costs at
+  about €2 billion already in 2017, and the book's dry remark stands: those
+  who caused the problem get paid to solve it. The one zone change that did
+  happen in the region was Germany-Austria: that border got congestion
+  management on 1 October 2018.
+
+## 4. 📏 The 70% rule (annex 3A.3, the part with teeth)
+
+The Clean Energy Package's answer to zones that hoard their grid is
+Regulation 2019/943, Article 16(8): **at least 70% of the capacity of every
+transmission element that limits cross-zonal trade must be made available to
+that trade.** The remaining 30% is all a TSO may use for reliability
+margins, loop flows and internal flows combined. In flow-domain language:
+the rule puts a floor under the RAM you just dragged around. It applies
+since January 2020, with full compliance due by 31 December 2025.
+
+<Toggle title="The fine print worth knowing before someone quizzes you">
+  **Three escape routes exist.** (a) A Member State with identified
+  **structural congestion** (congestion that is unambiguous, predictable,
+  geographically stable and frequently recurring, per Article 2) may adopt
+  an **action plan** with a linear trajectory reaching 70% by the 2025
+  deadline. (b) Regulators may grant **derogations** on foreseeable
+  operational security grounds, one year at a time, renewable once, with a
+  shrinking scope. (c) As a last resort, regional coordination centres may
+  order coordinated capacity reductions for security.
+
+  **And one threat.** A country that neither complies nor adopts an action
+  plan, or adopts one and misses its trajectory, can face a **bidding zone
+  reconfiguration** through the review process. The rule is, in effect,
+  the regulator's answer to the Swedish-or-German choice: keep your single
+  zone if you insist, but you no longer get to fund it with your
+  neighbours' borders.
+</Toggle>
+
+## 5. 🛰️ Who calculates, and with what data
+
+Capacity calculation started as TSO volunteering and hardened into
+institutions. Service centres like Coreso (Brussels) and TSCNET (Munich)
+appeared in 2008; the System Operation guideline (2017) formalised them as
+**regional security coordinators (RSCs)**, one covering every control area;
+the Clean Energy Package upgraded them into **regional coordination centres
+(RCCs)** with more tasks and stronger governance. For market purposes,
+Europe is divided into **capacity calculation regions (CCRs)**; ACER, acting
+because regulators could not agree, merged central western and central
+eastern Europe into one giant **Core** region. In each CCR the RCC acts as
+the coordinated capacity calculator, though TSOs keep final responsibility
+for security and may reject an RCC's coordinated action on security grounds
+(only; not for economics).
+
+The data pipeline underneath, in one breath: grid users above 220 kV must
+provide generation and load data (the GLDPM methodologies); each TSO builds
+an **individual grid model (IGM)** of its area per timeframe; the RCCs merge
+the IGMs into a **common grid model (CGM)**, the shared forecast of the
+whole European system on which capacities are computed; ENTSO-E stores it
+all in a common data environment, and a dedicated physical network carries
+the exchange. The days when every TSO computed capacity on its own private
+grid model are over.
+
+## 6. 🔭 Where this is heading
+
+FBMC solved the border arithmetic but not the geography. The bidding zone
+map is the outdated layer: the first EU-wide review (2018) assessed
+alternative configurations and recommended the status quo, to most
+observers' disappointment, including the authors'. The Clean Energy Package
+rebuilt the review process (TSOs analyse configurations with an agreed
+methodology; Member States decide; the Commission decides as last resort if
+they cannot), and the 70% rule adds the deadline pressure.
+
+The radical endpoint the chapter sketches is the US answer: **nodal
+pricing**. Abolish zones, price every node in the grid, and the market
+coupling algorithm sees the real network instead of virtual borders. Prices
+would form a "weather map" across the continent, changing with wind, sun
+and temperature. Studies the book cites put the operating-cost savings of
+nodal over zonal for Europe in the order of €0.8-2 billion per year, with
+better investment signals but politically sensitive redistribution. Europe
+would be the first to try it at continental scale. The
+[[gb-electricity-market-crash-course|GB post]] shows the same debate ending
+differently: one national zone, kept in 2025, with constraint costs to
+match.
+
+<Toggle title="Acronym cheat sheet for this chapter">
+  **NTC**: net transfer capacity, one fixed MW value per border, the old
+  method.
+
+  **FBMC**: flow-based market coupling, capacity and flow factors calculated
+  jointly and handed to the market algorithm as constraints.
+
+  **CNE**: critical network element, a line (cross-border or internal) that
+  cross-zonal trade can overload.
+
+  **PTDF**: power transfer distribution factor, MW of flow on a CNE per MW
+  of a zone's net export.
+
+  **RAM**: remaining available margin, what day-ahead trade may still put on
+  a CNE after pre-existing flows, a reliability margin (FRM) and a TSO
+  adjustment (FAV) are subtracted.
+
+  **GSK**: generation shift key, the assumption translating a zone's net
+  position into nodal injections to approximate zonal PTDFs.
+
+  **RSC / RCC**: regional security coordinator, renamed and upgraded to
+  regional coordination centre by the Clean Energy Package.
+
+  **CCR**: capacity calculation region; Core is the big merged one.
+
+  **IGM / CGM**: individual and common grid model, the per-TSO forecasts
+  and their pan-European merge.
+
+  **GLDPM / KORRR**: the methodologies obliging grid users to provide data
+  and organising who exchanges what with whom.
+
+  **N−1**: the security principle that the grid must survive losing any
+  single element.
+</Toggle>
+
+## 📚 Sources
+
+- Meeus, L. (2020), [*The Evolution of Electricity Markets in Europe*](https://doi.org/10.4337/9781789905472),
+  ch. 3, "How to calculate border trade constraints?" (with Tim
+  Schittekatte), including annexes 3A.1 (FBMC), 3A.2 (transit and loop
+  flows) and 3A.3 (regulatory guide). All unattributed claims above,
+  including the blackout account (Box 3.1) and the €2bn redispatch and
+  nodal-savings estimates it cites, come from this chapter.
+- EPEX SPOT, [Core flow-based market coupling go-live set for 8 June 2022](https://www.epexspot.com/en/news/core-flow-based-market-coupling-project-go-live-set-08-june-2022)
+  and JAO's [go-live press release](https://www.jao.eu/sites/default/files/2022-06/Core%20DA%20FB%20MC%20go-live%20press%20release.pdf)
+  (also the source for CWE flow-based running since 20 May 2015).
+- Statnett, [Successful go-live of the Nordic flow-based market coupling project](https://www.statnett.no/en/about-statnett/news-and-press-releases/news-archive-2024/successful-go-live-of-the-nordic-flow-based-market-coupling-project/)
+  (29 October 2024).
+- Nord Pool, [Svenska Kraftnät's commitment to establish bidding areas in Sweden](https://www.nordpoolgroup.com/en/message-center-container/newsroom/tso-news/2009/12/No-1132009-CORRECTION---Svenska-Kraftnats-commitment-to-establish-Bidding-Areas-in-Sweden-/)
+  and the Florence School of Regulation's
+  [case study on the Swedish zones](https://cadmus.eui.eu/handle/1814/20098)
+  (split in force 1 November 2011).
+- TenneT, [Go-live of congestion management on the German-Austrian bidding zone border on 1 October 2018](https://www.tennet.eu/tinyurl-storage/detail/go-live-of-congestion-management-on-the-german-austrian-bidding-zone-border-de-at-bzb-on-1st-of-oc/)
+  and SMARD's [explainer](https://www.smard.de/page/en/topic-article/5892/9846).
+- [Regulation (EU) 2019/943](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=celex%3A32019R0943),
+  Article 16(8): the 70% rule and its exceptions.

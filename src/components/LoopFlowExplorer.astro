@@ -1,0 +1,174 @@
+---
+/**
+ * Interactive for annex 3A.2 of EEME chapter 3: transit flows vs loop flows.
+ * Two modes on a three-node network with equal impedances, so any exchange
+ * splits 2/3 over the direct path and 1/3 over the detour:
+ *  - transit: a scheduled trade DE -> FR partly flows through BE;
+ *  - loop: a trade INSIDE Germany (north -> south) partly flows through PL.
+ * A slider sets the causing trade; the victim border's remaining capacity
+ * updates live. Illustrative numbers; the 2/3 / 1/3 split is exact for a
+ * symmetric triangle.
+ */
+const CAP = 400;
+---
+
+<figure class="not-prose border-border my-6 rounded-lg border p-4 sm:p-5" data-lf>
+  <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+    <p class="text-sm font-medium">Whose border does your trade use?</p>
+    <div class="border-border flex rounded-md border p-0.5 text-xs" role="group">
+      <button type="button" data-lf-mode="transit" class="rounded px-2.5 py-1 font-medium transition-colors">Transit flow</button>
+      <button type="button" data-lf-mode="loop" class="rounded px-2.5 py-1 font-medium transition-colors">Loop flow</button>
+    </div>
+  </div>
+  <p class="text-muted-foreground text-sm leading-relaxed" data-lf-intro></p>
+
+  <svg viewBox="0 0 560 290" class="mt-2 w-full select-none" aria-label="Three-zone network with flow split">
+    <!-- transit layout: DE top-left, FR bottom-left, BE right -->
+    <g data-lf-view="transit">
+      <line x1="120" y1="105" x2="120" y2="185" stroke="var(--chart-2)" data-lf-l1></line>
+      <line x1="185" y1="80" x2="380" y2="130" stroke="var(--chart-3)" data-lf-l2></line>
+      <line x1="380" y1="160" x2="185" y2="210" stroke="var(--chart-3)" data-lf-l3></line>
+      <rect x="40" y="35" width="160" height="70" rx="10" fill="var(--chart-1)" opacity="0.12"></rect>
+      <rect x="40" y="35" width="160" height="70" rx="10" fill="none" stroke="var(--border)" stroke-width="1.5"></rect>
+      <text x="120" y="65" text-anchor="middle" class="fill-foreground" font-size="13" font-weight="700">Germany</text>
+      <text x="120" y="83" text-anchor="middle" class="fill-muted-foreground" font-size="10">sells</text>
+      <rect x="40" y="185" width="160" height="70" rx="10" fill="var(--chart-2)" opacity="0.12"></rect>
+      <rect x="40" y="185" width="160" height="70" rx="10" fill="none" stroke="var(--border)" stroke-width="1.5"></rect>
+      <text x="120" y="215" text-anchor="middle" class="fill-foreground" font-size="13" font-weight="700">France</text>
+      <text x="120" y="233" text-anchor="middle" class="fill-muted-foreground" font-size="10">buys</text>
+      <rect x="380" y="105" width="140" height="80" rx="10" fill="var(--chart-5)" opacity="0.10"></rect>
+      <rect x="380" y="105" width="140" height="80" rx="10" fill="none" stroke="var(--chart-5)" stroke-width="2"></rect>
+      <text x="450" y="140" text-anchor="middle" class="fill-foreground" font-size="13" font-weight="700">Belgium</text>
+      <text x="450" y="158" text-anchor="middle" class="fill-muted-foreground" font-size="10">not part of the deal</text>
+      <text x="98" y="150" text-anchor="end" class="fill-foreground" font-size="11" font-weight="600" data-lf-t1></text>
+      <text x="300" y="88" text-anchor="middle" class="fill-foreground" font-size="11" font-weight="600" data-lf-t2></text>
+      <text x="300" y="205" text-anchor="middle" class="fill-foreground" font-size="11" font-weight="600" data-lf-t3></text>
+    </g>
+
+    <!-- loop layout: Germany (north+south nodes) left, Poland right -->
+    <g data-lf-view="loop" style="display:none">
+      <line x1="130" y1="105" x2="130" y2="185" stroke="var(--chart-2)" data-lf-m1></line>
+      <line x1="195" y1="75" x2="395" y2="125" stroke="var(--chart-3)" data-lf-m2></line>
+      <line x1="395" y1="165" x2="195" y2="215" stroke="var(--chart-3)" data-lf-m3></line>
+      <rect x="30" y="30" width="220" height="230" rx="12" fill="var(--chart-1)" opacity="0.10"></rect>
+      <rect x="30" y="30" width="220" height="230" rx="12" fill="none" stroke="var(--border)" stroke-width="1.5"></rect>
+      <text x="140" y="24" text-anchor="middle" class="fill-muted-foreground" font-size="10">one bidding zone: Germany</text>
+      <circle cx="130" cy="85" r="22" fill="var(--chart-2)" opacity="0.25"></circle>
+      <circle cx="130" cy="85" r="22" fill="none" stroke="var(--border)"></circle>
+      <text x="130" y="82" text-anchor="middle" class="fill-foreground" font-size="10" font-weight="700">North</text>
+      <text x="130" y="94" text-anchor="middle" class="fill-muted-foreground" font-size="9">wind sells</text>
+      <circle cx="130" cy="205" r="22" fill="var(--chart-2)" opacity="0.25"></circle>
+      <circle cx="130" cy="205" r="22" fill="none" stroke="var(--border)"></circle>
+      <text x="130" y="202" text-anchor="middle" class="fill-foreground" font-size="10" font-weight="700">South</text>
+      <text x="130" y="214" text-anchor="middle" class="fill-muted-foreground" font-size="9">industry buys</text>
+      <rect x="395" y="105" width="130" height="80" rx="10" fill="var(--chart-5)" opacity="0.10"></rect>
+      <rect x="395" y="105" width="130" height="80" rx="10" fill="none" stroke="var(--chart-5)" stroke-width="2"></rect>
+      <text x="460" y="140" text-anchor="middle" class="fill-foreground" font-size="13" font-weight="700">Poland</text>
+      <text x="460" y="158" text-anchor="middle" class="fill-muted-foreground" font-size="10">not part of the deal</text>
+      <text x="108" y="150" text-anchor="end" class="fill-foreground" font-size="11" font-weight="600" data-lf-u1></text>
+      <text x="310" y="84" text-anchor="middle" class="fill-foreground" font-size="11" font-weight="600" data-lf-u2></text>
+      <text x="310" y="210" text-anchor="middle" class="fill-foreground" font-size="11" font-weight="600" data-lf-u3></text>
+    </g>
+  </svg>
+
+  <label class="text-muted-foreground mt-1 block text-xs">
+    <span data-lf-slider-label></span>
+    <span class="text-foreground ml-1 font-mono" data-lf-trade-label></span>
+    <input type="range" min="0" max="900" step="30" value="600" data-lf-trade class="accent-primary mt-1 w-full" />
+  </label>
+
+  <div class="border-border mt-2 rounded-md border p-3">
+    <div class="flex items-baseline justify-between font-mono text-xs">
+      <span class="text-muted-foreground" data-lf-victim></span>
+      <span data-lf-remaining></span>
+    </div>
+    <div class="bg-muted mt-1.5 h-3 w-full overflow-hidden rounded">
+      <div class="h-full transition-all" data-lf-bar></div>
+    </div>
+  </div>
+  <p class="mt-2 min-h-[3.5rem] text-sm leading-relaxed" data-lf-note></p>
+
+  <figcaption class="text-muted-foreground mt-2 border-t pt-3 text-xs leading-relaxed">
+    With equal line impedances, physics sends 2/3 of any exchange down the
+    direct path and 1/3 around the detour, whatever the contracts say. The
+    victim border here has {CAP} MW of capacity.
+  </figcaption>
+</figure>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-lf]').forEach((root) => {
+    const q = (s: string) => root.querySelector<HTMLElement>(s)!;
+    const tradeEl = root.querySelector<HTMLInputElement>('[data-lf-trade]')!;
+    const buttons = root.querySelectorAll<HTMLButtonElement>('[data-lf-mode]');
+    const CAP = 400;
+    let mode = 'transit';
+
+    const W = (f: number) => String(2 + f / 60);
+
+    function render() {
+      const T = Number(tradeEl.value);
+      const direct = Math.round((2 * T) / 3);
+      const detour = Math.round(T / 3);
+      const left = CAP - detour;
+
+      root.querySelectorAll<HTMLElement>('[data-lf-view]').forEach((g) => {
+        g.style.display = g.dataset.lfView === mode ? '' : 'none';
+      });
+
+      if (mode === 'transit') {
+        q('[data-lf-intro]').textContent =
+          'Germany sells to France: a scheduled cross-zonal trade. But electrons ignore the contract and a third of the flow takes the detour through Belgium.';
+        q('[data-lf-slider-label]').textContent = 'Scheduled trade, Germany to France:';
+        q('[data-lf-l1]').setAttribute('stroke-width', W(direct));
+        q('[data-lf-l2]').setAttribute('stroke-width', W(detour));
+        q('[data-lf-l3]').setAttribute('stroke-width', W(detour));
+        q('[data-lf-t1]').textContent = `${direct} MW direct`;
+        q('[data-lf-t2]').textContent = `${detour} MW transit`;
+        q('[data-lf-t3]').textContent = `${detour} MW transit`;
+        q('[data-lf-victim]').textContent = `Belgium's borders: ${CAP} MW capacity, ${detour} MW eaten by transit`;
+        q('[data-lf-note]').textContent =
+          left >= 0
+            ? `Belgium loses ${detour} MW of tradable capacity to a deal it is not part of. But the trade causing it is scheduled between two zones, so a coordinated calculation (flow-based coupling) can see it coming and price the trade-off inside the algorithm.`
+            : `The transit alone exceeds Belgium's border capacity. In a coordinated calculation, the algorithm would have limited the German-French trade to keep Belgium's lines safe.`;
+      } else {
+        q('[data-lf-intro]').textContent =
+          'Wind in northern Germany sells to industry in southern Germany: one bidding zone, so for the market this trade does not even exist. A third of it still flows through Poland.';
+        q('[data-lf-slider-label]').textContent = 'Internal trade, north to south Germany:';
+        q('[data-lf-m1]').setAttribute('stroke-width', W(direct));
+        q('[data-lf-m2]').setAttribute('stroke-width', W(detour));
+        q('[data-lf-m3]').setAttribute('stroke-width', W(detour));
+        q('[data-lf-u1]').textContent = `${direct} MW internal`;
+        q('[data-lf-u2]').textContent = `${detour} MW loop`;
+        q('[data-lf-u3]').textContent = `${detour} MW loop`;
+        q('[data-lf-victim]').textContent = `Poland's border with Germany: ${CAP} MW capacity, ${detour} MW eaten by loop flow`;
+        q('[data-lf-note]').textContent =
+          left >= 0
+            ? `Poland loses ${detour} MW of tradable capacity to a purely German transaction. Because the cause is inside one zone, it is unscheduled by definition: no capacity calculation can price it. Loop flows can only be fixed by redrawing the bidding zones themselves.`
+            : `The loop flow alone exceeds Poland's border capacity: Polish trade would have to be curtailed and TSOs would redispatch, all caused by a transaction the market never saw.`;
+      }
+
+      q('[data-lf-trade-label]').textContent = `${T} MW`;
+      const rem = q('[data-lf-remaining]');
+      rem.textContent = left >= 0 ? `${left} MW left for its own trade` : `${-left} MW over the limit`;
+      rem.style.color = left >= 0 ? '' : 'var(--chart-5)';
+      const bar = q('[data-lf-bar]');
+      bar.style.width = `${Math.min(100, (detour / CAP) * 100)}%`;
+      bar.style.background = left >= 0 ? 'var(--chart-3)' : 'var(--chart-5)';
+
+      buttons.forEach((b) => {
+        const active = b.dataset.lfMode === mode;
+        b.classList.toggle('bg-muted', active);
+        b.classList.toggle('text-muted-foreground', !active);
+      });
+    }
+
+    buttons.forEach((b) =>
+      b.addEventListener('click', () => {
+        mode = b.dataset.lfMode!;
+        render();
+      }),
+    );
+    tradeEl.addEventListener('input', render);
+    render();
+  });
+</script>

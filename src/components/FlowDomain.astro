@@ -1,0 +1,173 @@
+---
+/**
+ * Interactive for annex 3A.1 of EEME chapter 3: the flow-based domain
+ * versus the NTC box. Two zones' net positions (a third zone balances);
+ * each critical network element (CNE) contributes a linear constraint
+ * PTDF_A * A + PTDF_B * B <= RAM. The reader moves the market outcome
+ * around the plane and shrinks the margin on the critical line.
+ * Illustrative PTDFs and margins; the geometry is the real mechanism.
+ */
+---
+
+<figure class="not-prose border-border my-6 rounded-lg border p-4 sm:p-5" data-fd>
+  <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+    <p class="text-sm font-medium">NTC box vs flow-based domain</p>
+    <div class="border-border flex rounded-md border p-0.5 text-xs" role="group">
+      <button type="button" data-fd-set="1150,-100" class="rounded px-2.5 py-1 font-medium transition-colors">FB allows, NTC forbids</button>
+      <button type="button" data-fd-set="950,950" class="rounded px-2.5 py-1 font-medium transition-colors">NTC allows, unsafe</button>
+      <button type="button" data-fd-set="500,300" class="rounded px-2.5 py-1 font-medium transition-colors">Fine for both</button>
+    </div>
+  </div>
+  <p class="text-muted-foreground text-sm leading-relaxed">
+    Each axis is a zone's net position (exports minus imports; a third zone
+    balances the system). The dashed rectangle is what fixed NTC values
+    allow. The green area is the flow-based domain: every edge is one
+    critical network element's limit, written as
+    PTDF<sub>A</sub>·A + PTDF<sub>B</sub>·B ≤ RAM.
+  </p>
+
+  <svg viewBox="0 0 560 420" class="mt-2 w-full select-none" aria-label="Flow-based domain and NTC box in the plane of two zonal net positions">
+    <line x1="280" y1="20" x2="280" y2="400" stroke="var(--border)" stroke-width="1"></line>
+    <line x1="50" y1="210" x2="510" y2="210" stroke="var(--border)" stroke-width="1"></line>
+    <text x="506" y="202" text-anchor="end" class="fill-muted-foreground" font-size="10">zone A net position →</text>
+    <text x="288" y="30" class="fill-muted-foreground" font-size="10">zone B net position ↑</text>
+
+    <polygon data-fd-poly fill="var(--chart-2)" opacity="0.18" stroke="var(--chart-2)" stroke-width="2"></polygon>
+    <rect data-fd-ntc fill="var(--chart-1)" opacity="0.07" stroke="var(--chart-1)" stroke-width="1.5" stroke-dasharray="6 4"></rect>
+    <text data-fd-ntc-label class="fill-foreground" font-size="10" font-weight="600">NTC box</text>
+    <text data-fd-fb-label class="fill-foreground" font-size="10" font-weight="600">flow-based domain</text>
+
+    <circle data-fd-pt r="6" stroke="#fff" stroke-width="1.5"></circle>
+  </svg>
+
+  <div class="mt-1 grid gap-3 sm:grid-cols-3">
+    <label class="text-muted-foreground block text-xs">
+      Zone A net position: <span class="text-foreground font-mono" data-fd-a-label></span>
+      <input type="range" min="-1400" max="1400" step="50" value="1150" data-fd-a class="accent-primary mt-1 w-full" />
+    </label>
+    <label class="text-muted-foreground block text-xs">
+      Zone B net position: <span class="text-foreground font-mono" data-fd-b-label></span>
+      <input type="range" min="-1400" max="1400" step="50" value="-100" data-fd-b class="accent-primary mt-1 w-full" />
+    </label>
+    <label class="text-muted-foreground block text-xs">
+      Margin on the critical line (RAM): <span class="text-foreground font-mono" data-fd-ram-label></span>
+      <input type="range" min="300" max="700" step="25" value="600" data-fd-ram class="accent-primary mt-1 w-full" />
+    </label>
+  </div>
+
+  <p class="mt-2 min-h-[3.5rem] text-sm leading-relaxed" data-fd-verdict></p>
+
+  <figcaption class="text-muted-foreground mt-2 border-t pt-3 text-xs leading-relaxed">
+    Drag the RAM down and watch the domain shrink: that margin is what is
+    left of the line after reliability margins, internal flows and loop
+    flows are subtracted. This is exactly the quantity the 70% rule puts a
+    floor under.
+  </figcaption>
+</figure>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-fd]').forEach((root) => {
+    const q = (s: string) => root.querySelector<HTMLElement>(s)!;
+    const aEl = root.querySelector<HTMLInputElement>('[data-fd-a]')!;
+    const bEl = root.querySelector<HTMLInputElement>('[data-fd-b]')!;
+    const ramEl = root.querySelector<HTMLInputElement>('[data-fd-ram]')!;
+    const buttons = root.querySelectorAll<HTMLButtonElement>('[data-fd-set]');
+
+    const NTC = 1000;
+    const X = (a: number) => 280 + (a * 230) / 1500;
+    const Y = (b: number) => 210 - (b * 190) / 1500;
+
+    type C = { pa: number; pb: number; lim: number; name: string; ram?: boolean };
+    const cons: C[] = [
+      { pa: 0.5, pb: 0.2, lim: 600, name: 'CNE 1 (the critical line)', ram: true },
+      { pa: -0.5, pb: -0.2, lim: 600, name: 'CNE 1, opposite direction', ram: true },
+      { pa: 0.2, pb: 0.5, lim: 600, name: 'CNE 2' },
+      { pa: -0.2, pb: -0.5, lim: 600, name: 'CNE 2, opposite direction' },
+      { pa: 0.3, pb: -0.3, lim: 450, name: 'CNE 3' },
+      { pa: -0.3, pb: 0.3, lim: 450, name: 'CNE 3, opposite direction' },
+    ];
+    const limOf = (c: C, ram: number) => (c.ram ? ram : c.lim);
+
+    /* clip a big square by each halfplane pa*x + pb*y <= lim */
+    function polygon(ram: number) {
+      let pts: [number, number][] = [
+        [-1500, -1500], [1500, -1500], [1500, 1500], [-1500, 1500],
+      ];
+      for (const c of cons) {
+        const lim = limOf(c, ram);
+        const out: [number, number][] = [];
+        for (let i = 0; i < pts.length; i++) {
+          const p = pts[i], s = pts[(i + 1) % pts.length];
+          const fp = c.pa * p[0] + c.pb * p[1] - lim;
+          const fs = c.pa * s[0] + c.pb * s[1] - lim;
+          if (fp <= 0) out.push(p);
+          if ((fp <= 0) !== (fs <= 0)) {
+            const t = fp / (fp - fs);
+            out.push([p[0] + t * (s[0] - p[0]), p[1] + t * (s[1] - p[1])]);
+          }
+        }
+        pts = out;
+      }
+      return pts;
+    }
+
+    // static NTC box
+    const ntc = q('[data-fd-ntc]');
+    ntc.setAttribute('x', String(X(-NTC)));
+    ntc.setAttribute('y', String(Y(NTC)));
+    ntc.setAttribute('width', String(X(NTC) - X(-NTC)));
+    ntc.setAttribute('height', String(Y(-NTC) - Y(NTC)));
+    q('[data-fd-ntc-label]').setAttribute('x', String(X(-NTC) + 6));
+    q('[data-fd-ntc-label]').setAttribute('y', String(Y(NTC) + 14));
+    q('[data-fd-fb-label]').setAttribute('x', String(X(700)));
+    q('[data-fd-fb-label]').setAttribute('y', String(Y(-1120)));
+
+    function render() {
+      const a = Number(aEl.value), b = Number(bEl.value), ram = Number(ramEl.value);
+      q('[data-fd-poly]').setAttribute(
+        'points',
+        polygon(ram).map(([x, y]) => `${X(x).toFixed(1)},${Y(y).toFixed(1)}`).join(' '),
+      );
+
+      const pt = q('[data-fd-pt]');
+      pt.setAttribute('cx', String(X(a)));
+      pt.setAttribute('cy', String(Y(b)));
+
+      const violated = cons.find((c) => c.pa * a + c.pb * b > limOf(c, ram));
+      const fbOk = !violated;
+      const ntcOk = Math.abs(a) <= NTC && Math.abs(b) <= NTC;
+      pt.setAttribute('fill', fbOk ? 'var(--chart-2)' : 'var(--chart-5)');
+
+      q('[data-fd-a-label]').textContent = `${a} MW`;
+      q('[data-fd-b-label]').textContent = `${b} MW`;
+      q('[data-fd-ram-label]').textContent = `${ram} MW`;
+
+      q('[data-fd-verdict]').textContent =
+        fbOk && !ntcOk
+          ? 'Physically fine, commercially forbidden under NTC: the flow-based domain accepts this outcome, but fixed border limits would have blocked it. This is the trade NTC leaves on the table.'
+          : !fbOk && ntcOk
+            ? `Inside the NTC box, yet ${violated!.name} would be overloaded: fixed border values cannot see that different borders load the same line. NTC was not even always safe.`
+            : fbOk
+              ? 'Feasible under both. Well inside the grid limits, nothing binds.'
+              : `Outside both: ${violated!.name} would be overloaded, and the NTC box refuses it too.`;
+
+      buttons.forEach((btn) => {
+        const [pa, pb] = btn.dataset.fdSet!.split(',').map(Number);
+        const active = pa === a && pb === b;
+        btn.classList.toggle('bg-muted', active);
+        btn.classList.toggle('text-muted-foreground', !active);
+      });
+    }
+
+    for (const el of [aEl, bEl, ramEl]) el.addEventListener('input', render);
+    buttons.forEach((btn) =>
+      btn.addEventListener('click', () => {
+        const [pa, pb] = btn.dataset.fdSet!.split(',').map(Number);
+        aEl.value = String(pa);
+        bEl.value = String(pb);
+        render();
+      }),
+    );
+    render();
+  });
+</script>
