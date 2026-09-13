@@ -28,3 +28,19 @@ same work is the open access one linked above; prefer that version when quoting
 page numbers.
 
 Notes drawn from this source: `src/content/posts/why-we-started-with-electricity-markets-in-europe.mdx`
+
+### `implicit-auctioning-on-the-kontek-cable-meeus-2010.pdf` (local only, not committed)
+
+Meeus, Leonardo (2010). *Implicit auctioning on the Kontek Cable: third time
+lucky?* EUI Working Paper RSCAS 2010/49, Florence School of Regulation.
+Published version: *Energy Economics* 33(3), 413-418.
+
+- Canonical open-access copy: <https://cadmus.eui.eu/server/api/core/bitstreams/ffa8512a-93b8-5a5f-817e-5b927d7d0206/content>
+- DOI (journal version): <https://doi.org/10.1016/j.eneco.2010.10.008>
+- Licence: **not openly licensed.** The working paper states it "may be
+  downloaded only for personal research purposes" and that additional
+  electronic reproduction requires the author's consent, so per this repo's
+  policy the file is git-ignored and lives only on the local machine.
+  Download it from the Cadmus link above.
+
+Notes drawn from this source: `src/content/posts/third-time-lucky-on-the-kontek-cable.mdx`
