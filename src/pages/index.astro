@@ -38,6 +38,14 @@ const base = import.meta.env.BASE_URL;
                 />
               )}
               <span class="font-medium">{post.data.title}</span>
+              {post.data.draft && (
+                <Badge
+                  variant="outline"
+                  className="shrink-0 border-amber-500/50 bg-amber-500/10 font-normal text-amber-600 dark:text-amber-400"
+                >
+                  draft
+                </Badge>
+              )}
               <time
                 datetime={post.data.date.toISOString()}
                 class="text-muted-foreground ml-auto shrink-0 text-xs tabular-nums"

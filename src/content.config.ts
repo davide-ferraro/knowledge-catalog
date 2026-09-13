@@ -16,6 +16,8 @@ const posts = defineCollection({
     chapter: z.number().int().positive().optional(),
     /** Explicit icon variant for posts outside the series (e.g. "gb"). */
     icon: z.string().optional(),
+    /** Work in progress: shows a draft badge next to the title. */
+    draft: z.boolean().default(false),
   }),
 });
 

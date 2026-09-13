@@ -14,7 +14,7 @@ interface Props {
 
 const { post, backlinks } = Astro.props;
 const base = import.meta.env.BASE_URL;
-const { title, date, category, tags, description, series, chapter, icon } =
+const { title, date, category, tags, description, series, chapter, icon, draft } =
   post.data;
 const displayDate = date.toISOString().slice(0, 10);
 ---
@@ -29,6 +29,16 @@ const displayDate = date.toISOString().slice(0, 10);
       }
       <h1 class="text-[2.5rem] leading-[1.15] font-bold tracking-[-0.02em]">
         {title}
+        {
+          draft && (
+            <Badge
+              variant="outline"
+              className="ml-2 -translate-y-2 border-amber-500/50 bg-amber-500/10 align-middle text-sm font-medium text-amber-600 dark:text-amber-400"
+            >
+              draft
+            </Badge>
+          )
+        }
       </h1>
       {
         description && (
