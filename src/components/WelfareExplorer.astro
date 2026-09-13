@@ -1,0 +1,185 @@
+---
+/**
+ * Interactive version of Figure 1 of Meeus (2010), "Implicit auctioning on
+ * the Kontek Cable": welfare implications of how a cable is used.
+ * Two linear curves meet as exchange grows: the exporter's net export curve
+ * (price rises as it exports more) and the importer's net import curve
+ * (price falls as it imports more). The reader sets the actual flow;
+ * the welfare areas and the loss against best use update live.
+ *
+ * Model: pExp(q) = 20 + 0.05 q, pImp(q) = 80 - 0.07 q, capacity K = 300 MW.
+ * Prices meet at q* = 500 MW, beyond the cable, so full use leaves a spread.
+ */
+const K = 300;
+---
+
+<figure class="not-prose border-border my-6 rounded-lg border p-4 sm:p-5" data-we>
+  <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+    <p class="text-sm font-medium">The paper's Figure 1, made draggable</p>
+    <div class="border-border flex rounded-md border p-0.5 text-xs" role="group">
+      <button type="button" data-we-set="300" class="rounded px-2.5 py-1 font-medium transition-colors">Full use</button>
+      <button type="button" data-we-set="150" class="rounded px-2.5 py-1 font-medium transition-colors">Underused</button>
+      <button type="button" data-we-set="-150" class="rounded px-2.5 py-1 font-medium transition-colors">Counter flow</button>
+    </div>
+  </div>
+  <p class="text-muted-foreground text-sm leading-relaxed">
+    The rising line is the cheap zone's export price, the falling line the
+    expensive zone's import price. Every MW moved captures the gap between
+    them. The cable fits {K} MW; the lines would only meet at 500 MW.
+  </p>
+
+  <svg viewBox="0 0 560 300" class="mt-2 w-full select-none" aria-label="Welfare areas of cross-border exchange">
+    <!-- axes -->
+    <line x1="40" y1="270" x2="540" y2="270" stroke="var(--border)" stroke-width="1.5"></line>
+    <line x1="222" y1="20" x2="222" y2="278" stroke="var(--border)" stroke-width="1.5"></line>
+    <text x="538" y="288" text-anchor="end" class="fill-muted-foreground" font-size="10">cross-border exchange (MW) →</text>
+    <text x="46" y="30" class="fill-muted-foreground" font-size="10">price</text>
+    <text x="226" y="288" class="fill-muted-foreground" font-size="10">0</text>
+    <text x="60" y="288" class="fill-muted-foreground" font-size="10">← counter flow</text>
+
+    <!-- dynamic welfare areas -->
+    <polygon data-we-imp fill="var(--chart-1)" opacity="0.30"></polygon>
+    <polygon data-we-exp fill="var(--chart-2)" opacity="0.30"></polygon>
+    <polygon data-we-rent fill="var(--chart-3)" opacity="0.38"></polygon>
+    <polygon data-we-loss fill="var(--chart-5)" opacity="0.34"></polygon>
+    <polygon data-we-beyond fill="var(--muted-foreground)" opacity="0.14"></polygon>
+
+    <!-- curves -->
+    <line data-we-cexp stroke="var(--chart-2)" stroke-width="2.5"></line>
+    <line data-we-cimp stroke="var(--chart-1)" stroke-width="2.5"></line>
+    <text data-we-lexp class="fill-foreground" font-size="10" font-weight="600">exporter's price</text>
+    <text data-we-limp class="fill-foreground" font-size="10" font-weight="600">importer's price</text>
+
+    <!-- capacity line -->
+    <line data-we-kline stroke="var(--foreground)" stroke-width="1.5" stroke-dasharray="5 3" opacity="0.6"></line>
+    <text data-we-ktext text-anchor="middle" class="fill-muted-foreground" font-size="10">cable capacity</text>
+
+    <!-- flow marker -->
+    <line data-we-fline stroke="var(--chart-5)" stroke-width="2"></line>
+    <text data-we-ftext text-anchor="middle" class="fill-foreground" font-size="11" font-weight="700"></text>
+  </svg>
+
+  <label class="text-muted-foreground mt-1 block text-xs">
+    Actual flow on the cable:
+    <span class="text-foreground ml-1 font-mono" data-we-flow-label></span>
+    <input type="range" min={-K} max={K} step="10" value={K} data-we-flow class="accent-primary mt-1 w-full" />
+  </label>
+
+  <div class="border-border mt-2 grid gap-2 rounded-md border p-3 font-mono text-xs sm:grid-cols-4">
+    <div><span class="text-muted-foreground block">prices</span><span data-we-prices></span></div>
+    <div><span class="text-muted-foreground block">congestion rent</span><span data-we-rent-v></span></div>
+    <div><span class="text-muted-foreground block">welfare captured</span><span data-we-gain></span></div>
+    <div><span class="text-muted-foreground block">lost vs full use</span><span data-we-lost style="color: var(--chart-5)"></span></div>
+  </div>
+  <p class="mt-2 min-h-[3.5rem] text-sm leading-relaxed" data-we-note></p>
+
+  <figcaption class="text-muted-foreground mt-2 flex flex-wrap gap-x-4 gap-y-1 border-t pt-3 text-xs">
+    <span class="flex items-center gap-1.5"><span class="inline-block size-2.5 rounded-[2px]" style="background:var(--chart-1);opacity:.5"></span> importer's gain</span>
+    <span class="flex items-center gap-1.5"><span class="inline-block size-2.5 rounded-[2px]" style="background:var(--chart-2);opacity:.5"></span> exporter's gain</span>
+    <span class="flex items-center gap-1.5"><span class="inline-block size-2.5 rounded-[2px]" style="background:var(--chart-3);opacity:.6"></span> congestion rent</span>
+    <span class="flex items-center gap-1.5"><span class="inline-block size-2.5 rounded-[2px]" style="background:var(--chart-5);opacity:.5"></span> welfare lost</span>
+    <span class="flex items-center gap-1.5"><span class="inline-block size-2.5 rounded-[2px]" style="background:var(--muted-foreground);opacity:.25"></span> out of reach (cable too small)</span>
+  </figcaption>
+</figure>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-we]').forEach((root) => {
+    const q = (s: string) => root.querySelector<HTMLElement>(s)!;
+    const flowEl = root.querySelector<HTMLInputElement>('[data-we-flow]')!;
+    const buttons = root.querySelectorAll<HTMLButtonElement>('[data-we-set]');
+
+    /* model */
+    const K = 300;
+    const pExp = (v: number) => 20 + 0.05 * v;
+    const pImp = (v: number) => 80 - 0.07 * v;
+    const QSTAR = 500;
+    const value = (F: number) => 60 * F - 0.06 * F * F; // integral of the gap, 0..F
+
+    /* svg mapping: q in [-320, 560] -> x in [40, 540]; p in [0, 104] -> y */
+    const X = (v: number) => 40 + ((v + 320) * 500) / 880;
+    const Y = (p: number) => 270 - p * 2.4;
+    const eur = (v: number) => `€${Math.round(Math.abs(v)).toLocaleString('en')}`;
+
+    /* static geometry */
+    const setLine = (sel: string, x1: number, y1: number, x2: number, y2: number) => {
+      const el = q(sel);
+      el.setAttribute('x1', String(x1)); el.setAttribute('y1', String(y1));
+      el.setAttribute('x2', String(x2)); el.setAttribute('y2', String(y2));
+    };
+    setLine('[data-we-cexp]', X(-320), Y(pExp(-320)), X(560), Y(pExp(560)));
+    setLine('[data-we-cimp]', X(-320), Y(pImp(-320)), X(560), Y(pImp(560)));
+    q('[data-we-lexp]').setAttribute('x', String(X(430)));
+    q('[data-we-lexp]').setAttribute('y', String(Y(pExp(430)) + 14));
+    q('[data-we-limp]').setAttribute('x', String(X(430)));
+    q('[data-we-limp]').setAttribute('y', String(Y(pImp(430)) - 8));
+    setLine('[data-we-kline]', X(K), 26, X(K), 278);
+    q('[data-we-ktext]').setAttribute('x', String(X(K)));
+    q('[data-we-ktext]').setAttribute('y', '20');
+    // grey "beyond the cable" area, K..q*
+    q('[data-we-beyond]').setAttribute(
+      'points',
+      `${X(K)},${Y(pImp(K))} ${X(QSTAR)},${Y(pImp(QSTAR))} ${X(K)},${Y(pExp(K))}`,
+    );
+
+    function render() {
+      const F = Number(flowEl.value);
+      const pe = pExp(F), pi = pImp(F);
+      const spread = pi - pe;
+
+      // marker
+      setLine('[data-we-fline]', X(F), Y(Math.max(pi, pe)) - 6, X(F), 272);
+      const ft = q('[data-we-ftext]');
+      ft.setAttribute('x', String(X(F)));
+      ft.setAttribute('y', String(Y(Math.max(pi, pe)) - 12));
+      ft.textContent = `flow: ${F} MW`;
+
+      // areas
+      const imp = q('[data-we-imp]'), exp = q('[data-we-exp]'), rent = q('[data-we-rent]'), loss = q('[data-we-loss]');
+      if (F > 0) {
+        imp.setAttribute('points', `${X(0)},${Y(pImp(0))} ${X(F)},${Y(pi)} ${X(0)},${Y(pi)}`);
+        exp.setAttribute('points', `${X(0)},${Y(pExp(0))} ${X(F)},${Y(pe)} ${X(0)},${Y(pe)}`);
+        rent.setAttribute('points', `${X(0)},${Y(pi)} ${X(F)},${Y(pi)} ${X(F)},${Y(pe)} ${X(0)},${Y(pe)}`);
+      } else {
+        imp.setAttribute('points', ''); exp.setAttribute('points', ''); rent.setAttribute('points', '');
+      }
+      // loss: area between the curves from F to K
+      const f0 = Math.min(F, K);
+      loss.setAttribute(
+        'points',
+        `${X(f0)},${Y(pImp(f0))} ${X(K)},${Y(pImp(K))} ${X(K)},${Y(pExp(K))} ${X(f0)},${Y(pExp(f0))}`,
+      );
+
+      // readouts
+      q('[data-we-flow-label]').textContent = F >= 0 ? `${F} MW` : `${-F} MW the wrong way`;
+      q('[data-we-prices]').textContent = `€${pe.toFixed(0)} / €${pi.toFixed(0)} (gap €${spread.toFixed(0)})`;
+      q('[data-we-rent-v]').textContent = F > 0 ? `${eur(spread * F)}/h` : '€0/h';
+      const gain = value(F);
+      q('[data-we-gain]').textContent = `${gain < 0 ? '−' : ''}${eur(gain)}/h`;
+      q('[data-we-lost]').textContent = `${eur(value(K) - gain)}/h`;
+
+      q('[data-we-note]').textContent =
+        F === K
+          ? 'Full use: every MW of the cable captures a price gap, split between the importer, the exporter and the congestion rent. Only the grey triangle is out of reach, because the cable is too small. This is what price coupling produces by construction.'
+          : F > 0
+            ? `Underused: ${K - F} MW of profitable capacity sits idle while a €${spread.toFixed(0)} gap persists. The red area is welfare nobody collects. Hours like this were common under the first two Kontek implementations.`
+            : F === 0
+              ? 'No exchange at all: the entire tradable area is lost. This is the no-coupling baseline.'
+              : `Counter flow: ${-F} MW moves towards the cheaper zone, widening the gap instead of closing it. The loss now exceeds the whole tradable area: the trade itself destroys value on top of the forgone gains. The paper counts such hours as up to ${2 * K} MW of unused capacity.`;
+
+      buttons.forEach((b) => {
+        const active = Number(b.dataset.weSet) === F;
+        b.classList.toggle('bg-muted', active);
+        b.classList.toggle('text-muted-foreground', !active);
+      });
+    }
+
+    flowEl.addEventListener('input', render);
+    buttons.forEach((b) =>
+      b.addEventListener('click', () => {
+        flowEl.value = b.dataset.weSet!;
+        render();
+      }),
+    );
+    render();
+  });
+</script>

@@ -14,6 +14,7 @@ import Chart from '../../components/Chart.tsx';
 import Timeline from '../../components/Timeline.astro';
 import PriceBands from '../../components/PriceBands.astro';
 import LossTicker from '../../components/LossTicker.astro';
+import WelfareExplorer from '../../components/WelfareExplorer.astro';
 
 In the [[who-gets-the-rights-to-trade-across-borders|chapter 2 notes]],
 volume coupling got two paragraphs: the failed experiment whose problems
@@ -191,12 +192,28 @@ case. The dead band also stayed, and the caps were only partly harmonised
 (Nord Pool's floor moved from €0 to −€200, against EEX's −€3,000). But it
 worked far better, as the numbers show.
 
+## The measuring stick
+
+Before the scoreboard, the concept it rests on. The paper measures each
+design against the best possible use of the cable, using the picture below
+(its Figure 1, rebuilt as a model you can drag): every MW moved from the
+cheap zone to the expensive one captures the gap between their prices, until
+either the prices meet or the cable is full. Whatever the actual flow leaves
+uncaptured is the welfare loss of that hour.
+
+<WelfareExplorer />
+
+The three preset buttons are the paper's three panels. Full use is what
+price coupling produces by construction. The other two are what the data
+showed under the early Kontek designs, and the counter-flow case explains
+the paper's accounting: a wrong-way flow counts as up to twice the cable
+(1,100 MW on Kontek) of unused capacity, because it must first reverse
+before helping.
+
 ## The scoreboard
 
-The paper computes the welfare loss of each design from public hourly data:
-for every hour, the price spread multiplied by the unused capacity (with
-wrong-way flows counting as up to 1,100 MW unused, since the flow would have
-to reverse). Annualised, per unit of cable capacity:
+Applying that measuring stick to every hour of public data and annualising,
+per unit of cable capacity:
 
 <Chart
   client:only="react"
