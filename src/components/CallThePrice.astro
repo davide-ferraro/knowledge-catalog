@@ -1,0 +1,184 @@
+---
+/**
+ * Four real GB days (Elexon data via the September 2026 workshop deck).
+ * The reader sees what a forecaster could see: the NIV per half-hour, the
+ * market index, and the gate-closure snapshot. The cash-out prices stay
+ * hidden until they press reveal, and one famous half-hour is marked.
+ */
+---
+
+<figure class="not-prose border-border my-6 rounded-lg border p-4 sm:p-5" data-cp>
+  <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+    <p class="text-sm font-medium">Call the price, then reveal it</p>
+    <div class="border-border flex flex-wrap rounded-md border p-0.5 text-xs" role="group" data-cp-tabs></div>
+  </div>
+  <p class="text-muted-foreground text-sm leading-relaxed">
+    The solid line is the Net Imbalance Volume half-hour by half-hour (right
+    axis); the dashed line is the market index from the exchanges. One
+    settlement period is marked. Spike or negative, and roughly how big?
+    Decide, then reveal.
+  </p>
+
+  <svg viewBox="0 0 560 260" class="mt-2 w-full select-none" aria-label="One day of NIV and market index, with cash-out prices hidden until revealed" data-cp-svg></svg>
+
+  <div class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4" data-cp-gate></div>
+
+  <div class="mt-3 flex flex-wrap items-center gap-3">
+    <button type="button" data-cp-reveal class="border-border bg-muted hover:bg-muted/70 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors">Reveal the prices</button>
+    <span class="font-mono text-lg font-bold" data-cp-answer></span>
+  </div>
+  <p class="mt-2 min-h-[3.5rem] text-sm leading-relaxed" data-cp-story></p>
+
+  <figcaption class="text-muted-foreground mt-2 border-t pt-3 text-xs leading-relaxed">
+    Real settlement data. After the reveal, green bars are positive cash-out
+    prices, grey bars negative ones, and the outlined bar is the marked
+    period. The snapshot row is what NESO had published by gate closure.
+  </figcaption>
+</figure>
+
+<script>
+  import DATA from './gb-periods.json';
+
+  document.querySelectorAll<HTMLElement>('[data-cp]').forEach((root) => {
+    const q = (s: string) => root.querySelector<HTMLElement>(s)!;
+    const svg = root.querySelector<SVGSVGElement>('[data-cp-svg]')!;
+    const tabs = q('[data-cp-tabs]');
+    const NS = 'http://www.w3.org/2000/svg';
+
+    const DAYS = [
+      { key: 'spike', tab: '8 Jan 2025', title: 'Winter weekday, SP36 (17:30)', answer: '£2,900.00',
+        story: 'An Electricity Margin Notice the evening before. Demand was only 1 percent under-forecast, but the system was missing 3 GW of imports. The wind forecast was fine; what mattered was how thin the ladder of unflagged Offers had become. Eight consecutive half-hours settled at £2,900.' },
+      { key: 'negative', tab: '6 Apr 2026', title: 'Spring bank holiday, SP30 (14:30)', answer: '−£97.92',
+        story: 'A bank holiday with demand 1.5 GW under-forecast, and NESO’s own forecast already showed the system 2.4 GW long. The Bid ladder held 2.3 GW of wind at minus £80 or worse, so the sign was never in doubt; the question was the depth. It settled at minus £97.92.' },
+      { key: 'zero', tab: '24 Jan 2025', title: 'Night before Storm Éowyn, SP4 (01:30)', answer: '£0.00',
+        story: 'System long ahead of the storm. Half the Bid volume sat behind the Scottish boundary and was SO-flagged, so Classification removed it. The English stack priced the period and the marginal unflagged Bid was exactly zero. A constraint call, not a wind call.' },
+      { key: 'normal', tab: '4 Nov 2025', title: 'Quiet weekday, SP22 (10:30)', answer: '£50.78',
+        story: 'Wind and demand forecasts both on the money, NIV modestly long. Nothing exotic: battery Bids in the south set an ordinary price of £50.78. Most half-hours look like this one, which is exactly why the other three pay for the whole forecasting effort.' },
+    ];
+    const byKey: Record<string, any> = {};
+    (DATA.periods as any[]).forEach((p) => { byKey[p.key] = p; });
+
+    let cur = DAYS[0];
+    const revealed: Record<string, boolean> = {};
+
+    const gbp = (x: number, d = 0) => {
+      const s = Math.abs(x).toLocaleString('en-GB', { minimumFractionDigits: d, maximumFractionDigits: d });
+      return (x < 0 ? '−£' : '£') + s;
+    };
+    const gw = (x: number | null) => (x === null || x === undefined ? 'n/a' : (x / 1000).toFixed(1));
+
+    function el(t: string, a: Record<string, string | number>) {
+      const e = document.createElementNS(NS, t);
+      for (const k in a) e.setAttribute(k, String(a[k]));
+      svg.appendChild(e);
+      return e;
+    }
+
+    function draw() {
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
+      const p = byKey[cur.key];
+      const R = !!revealed[cur.key];
+      const W = 560, H = 260;
+      const pad = { l: 52, r: 46, t: 14, b: 22 };
+      const pw = W - pad.l - pad.r, ph = H - pad.t - pad.b;
+
+      /* day rows: [sp, price, niv, mid] */
+      const day = p.day as [number, number, number, number | null][];
+      const prices = day.map((d) => d[1]);
+      const mids = day.filter((d) => d[3] !== null).map((d) => d[3]!) as number[];
+      let lo: number, hi: number;
+      if (R) {
+        lo = Math.min(0, ...prices); hi = Math.max(0, ...prices);
+        const sp = hi - lo; lo -= sp * 0.06; hi += sp * 0.06;
+      } else {
+        lo = Math.min(0, ...mids) - 20; hi = Math.max(...mids) + 40;
+      }
+      const nmax = Math.max(...day.map((d) => Math.abs(d[2]))) * 1.1 || 1;
+      const X = (sp: number) => pad.l + ((sp - 1) / 48) * pw;
+      const bw = pw / 48;
+      const Y = (v: number) => pad.t + ((hi - v) / (hi - lo)) * ph;
+      const YN = (n: number) => pad.t + ph / 2 - (n / nmax) * (ph / 2);
+
+      for (let i = 0; i <= 4; i++) {
+        const v = lo + ((hi - lo) * i) / 4;
+        el('line', { x1: pad.l, x2: W - pad.r, y1: Y(v), y2: Y(v), stroke: 'var(--border)' });
+        const t = el('text', { x: pad.l - 6, y: Y(v) + 3, 'font-size': 9, 'text-anchor': 'end', class: 'fill-muted-foreground' });
+        t.textContent = gbp(v);
+      }
+      [-1, 0, 1].forEach((k) => {
+        const t = el('text', { x: W - pad.r + 6, y: YN((k * nmax) / 1.1) + 3, 'font-size': 9, class: 'fill-muted-foreground' });
+        t.textContent = (k > 0 ? '+' : '') + Math.round((k * nmax) / 1.1).toLocaleString('en-GB');
+      });
+      const nl = el('text', { x: W - pad.r + 6, y: pad.t - 3, 'font-size': 8, class: 'fill-muted-foreground' });
+      nl.textContent = 'NIV MWh';
+      el('line', { x1: pad.l, x2: W - pad.r, y1: Y(0), y2: Y(0), stroke: 'var(--muted-foreground)', opacity: 0.6 });
+
+      day.forEach((d) => {
+        const [sp, price] = d;
+        if (R) {
+          const r = el('rect', {
+            x: X(sp) + 0.5, y: Math.min(Y(0), Y(price)), width: bw - 1,
+            height: Math.max(Math.abs(Y(price) - Y(0)), 1.2),
+            fill: price < 0 ? 'var(--muted-foreground)' : 'var(--chart-2)', opacity: 0.85,
+          });
+          if (sp === p.sp) { r.setAttribute('stroke', 'var(--foreground)'); r.setAttribute('stroke-width', '1.5'); }
+        } else if (sp === p.sp) {
+          el('rect', { x: X(sp) + 0.5, y: pad.t, width: bw - 1, height: ph, fill: 'var(--chart-2)', opacity: 0.15 });
+          const t = el('text', { x: X(sp) + bw / 2, y: pad.t + 11, 'font-size': 10, 'font-weight': 700, 'text-anchor': 'middle', fill: 'var(--chart-2)' });
+          t.textContent = `SP${p.sp}?`;
+        }
+        if (sp % 6 === 1 || sp === 48) {
+          const t = el('text', { x: X(sp) + bw / 2, y: H - 6, 'font-size': 9, 'text-anchor': 'middle', class: 'fill-muted-foreground' });
+          t.textContent = `SP${sp}`;
+        }
+      });
+
+      let path = '';
+      day.forEach((d, i) => { path += (i ? 'L' : 'M') + (X(d[0]) + bw / 2) + ' ' + YN(d[2]) + ' '; });
+      el('path', { d: path, fill: 'none', stroke: 'var(--foreground)', 'stroke-width': 1.4, opacity: 0.85 });
+
+      let mp = '';
+      day.forEach((d) => { if (d[3] !== null) mp += (mp ? 'L' : 'M') + (X(d[0]) + bw / 2) + ' ' + Y(d[3]!) + ' '; });
+      el('path', { d: mp, fill: 'none', stroke: 'var(--muted-foreground)', 'stroke-width': 1.1, 'stroke-dasharray': '3 3' });
+
+      /* gate snapshot */
+      const g = p.gate;
+      const cells: [string, string][] = [
+        ['Wind GW, forecast → gate → actual', `${gw(g.windfor_day_ahead)} → ${gw(g.windfor_gate_closure)} → ${gw(g.wind_outturn)}`],
+        ['Demand GW, forecast → actual', `${gw(g.ndf_day_ahead ?? g.ndf_gate_closure)} → ${gw(g.indo)}`],
+        ['Loss-of-load probability, 1h out', g.lolp_1h === null ? 'n/a' : String(Math.round(g.lolp_1h * 1000) / 1000)],
+        ['Net imports, MW', (g.interconnector_net ?? 0).toLocaleString('en-GB')],
+      ];
+      q('[data-cp-gate]').innerHTML = cells
+        .map(([k, v]) => `<div class="border-border rounded-md border p-2"><p class="text-muted-foreground text-[10px] leading-tight">${k}</p><p class="mt-0.5 font-mono text-sm font-semibold">${v}</p></div>`)
+        .join('');
+
+      /* readouts */
+      const btn = root.querySelector<HTMLButtonElement>('[data-cp-reveal]')!;
+      btn.style.display = R ? 'none' : '';
+      q('[data-cp-answer]').textContent = R ? `${cur.title}: ${cur.answer}` : cur.title;
+      q('[data-cp-story]').textContent = R ? cur.story : 'The marked half-hour made the news. What would you have called from the snapshot above?';
+
+      tabs.querySelectorAll('button').forEach((b) => {
+        const active = b.dataset.key === cur.key;
+        b.classList.toggle('bg-muted', active);
+        b.classList.toggle('text-muted-foreground', !active);
+      });
+    }
+
+    for (const d of DAYS) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.dataset.key = d.key;
+      b.className = 'rounded px-2 py-1 font-medium transition-colors';
+      b.textContent = d.tab;
+      b.addEventListener('click', () => { cur = d; draw(); });
+      tabs.appendChild(b);
+    }
+    root.querySelector<HTMLButtonElement>('[data-cp-reveal]')!.addEventListener('click', () => {
+      revealed[cur.key] = true;
+      draw();
+    });
+    draw();
+  });
+</script>

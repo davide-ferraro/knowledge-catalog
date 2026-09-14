@@ -1,0 +1,439 @@
+---
+title: "How the GB price is made"
+date: 2026-09-14
+category: "energy-markets"
+tags: ["gb-market", "balancing-mechanism", "market-design"]
+icon: "gb"
+description: "The GB imbalance price, built from first principles: the trading day, the Balancing Mechanism stack, curtailment inside the price, four real half-hours, and how NESO dispatches now. With real Elexon data to play with."
+---
+
+import Callout from '../../components/Callout.astro';
+import Timeline from '../../components/Timeline.astro';
+import BalancingStack from '../../components/BalancingStack.astro';
+import CallThePrice from '../../components/CallThePrice.astro';
+import CfdPayoff from '../../components/CfdPayoff.astro';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+
+Two half-hours, eighteen months apart. On the evening of 8 January 2025 the
+GB imbalance price hit **£2,900 per megawatt-hour**. On a sunny bank holiday
+afternoon, 6 April 2026, it settled at **minus £97.92**: generators paid to
+produce. Both numbers came out of exactly the same calculation, and that
+calculation, called **cash-out**, is what this post builds from first
+principles. It is one number per half-hour, and every market party that was
+long or short against its contracted position settles at it.
+
+<Callout icon="🎓" title="Where this comes from">
+  These notes are my write-up of a workshop that Tom Reynolds of
+  <a href="https://flowvendor.energy">Flow Vendor</a> gave for us in
+  September 2026, reorganised for reading and stripped of the
+  company-specific parts. The interactive stacks and days below use the real
+  Elexon settlement data he prepared. Numbers without a link come from the
+  workshop's analysis of Elexon and NESO data; everything linked I verified
+  separately.
+</Callout>
+
+## 1. 📜 Thirty-five years of context, briefly
+
+GB invented electricity liberalisation and then chose a different design
+from the rest of Europe. The design in force today dates from 2001; what
+changed since is the state instruments layered on top of it.
+
+<Timeline
+  kinds={{
+    era: "Market design era",
+    policy: "Policy intervention",
+  }}
+  items={[
+    {
+      year: "1990",
+      kind: "era",
+      title: "Privatisation and the Pool",
+      detail:
+        "The state monopoly is broken up; England and Wales get a compulsory day-ahead auction with one clearing price.",
+    },
+    {
+      year: "2001",
+      kind: "era",
+      title: "NETA: the current design",
+      detail:
+        "The Pool is accused of being gameable. NETA flips the philosophy: no central auction, just bilateral trading plus a balancing mechanism at the end. BETTA extends it to Scotland in 2005.",
+    },
+    {
+      year: "2013",
+      kind: "policy",
+      title: "Electricity Market Reform",
+      detail:
+        "The energy-only market no longer finances low-carbon investment: Contracts for Difference and a Capacity Market are bolted on.",
+    },
+    {
+      year: "2021",
+      kind: "era",
+      title: "Brexit decoupling",
+      detail:
+        "GB leaves EU market coupling; interconnector capacity goes back to being sold separately from energy.",
+    },
+    {
+      year: "2024",
+      kind: "policy",
+      title: "NESO created",
+      detail:
+        "The government buys the system operator out of National Grid for £630m. Balancing is now done by a publicly owned body.",
+    },
+    {
+      year: "2025",
+      kind: "policy",
+      title: "REMA verdict: no zonal pricing",
+      detail:
+        "After three years of review, the government rejects splitting GB into price zones and keeps one national price.",
+    },
+  ]}
+  caption="Pool, then bilateral market, then ever more state instruments on top. The 2001 skeleton is still the market."
+/>
+
+## 2. ⏱️ The trading day: 48 half-hours, one hard stop
+
+First the physical setting: GB has well over 100 GW of nameplate capacity
+(gas 36.5 GW, solar 22.3, offshore wind 16.7, onshore wind 16.6,
+interconnectors 10.3, batteries 7.2, nuclear 5.9, plus bioenergy and hydro)
+against an average demand of only 30 to 38 GW depending on season. That gap
+is the whole story of any given day: which sliver of the fleet actually
+runs, and at what price.
+
+The day itself is a sequence with one hard stop:
+
+1. **Day-ahead auctions.** Three every day: EPEX SPOT clears hourly at
+   09:20 and half-hourly at 15:30, N2EX (Nord Pool) hourly at 09:50. GB
+   left EU coupling at the end of 2020, so the two exchanges clear apart
+   and can diverge. These auctions are voluntary venues, not the mechanism
+   the market must pass through, but they are institutionally load-bearing:
+   the hourly results of both are volume-weighted into the **Intermittent
+   Market Reference Price** that every wind and solar CfD settles against.
+   That is why wind sells day-ahead at the forecast, and why the forecast
+   *error* is what gets traded afterwards.
+2. **Intraday.** Two more auctions (17:30 on D-1 and 08:00 on the day,
+   coupled with the Irish market over the interconnectors), then continuous
+   trading in half-hour, hour, 2h and 4h blocks until close to real time.
+   Positions adjust as forecasts move.
+3. **Gate closure, one hour before delivery.** Every unit's physical plan
+   (the **FPN**, final physical notification) and every party's contract
+   positions freeze. Whatever is still wrong after this point becomes
+   imbalance.
+4. **Delivery.** NESO balances the system with **Bids and Offers** from BM
+   units, plus trades outside the mechanism. GB is **self-dispatch**:
+   nobody is told what to generate; every plant runs its own plan and NESO
+   buys deviations from it.
+5. **Cash-out.** An indicative imbalance price is published about 15
+   minutes after each half-hour. Single price for both directions since
+   2015: metered minus contracted volume, per party, and you settle the
+   gap at the system price whether you are long or short.
+
+Two GB peculiarities to hold onto before the next section. There are **no
+zonal prices**, even though the Scotland to England boundary is congested
+most windy days; the constraint shows up *inside* the balancing stack
+instead, which is section 4. And when the balancing stack cannot produce a
+price at all, cash-out falls back to Elexon's **Market Index Price**, a
+volume-weighted price of exchange trades in the window before gate closure
+(zeroed when volume is below a liquidity threshold).
+
+## 3. 🧮 The stack and the price
+
+Here is the machine. For each half-hour, take every balancing action NESO
+accepted and turn it into one number, following BSC Section T. Nine steps,
+compressed:
+
+1. **Collect the actions**: accepted Bids and Offers, balancing trades, and
+   their flags (system-operator flag, short-duration flag, reserve flag).
+2. **Price the reserve**: a scarcity floor of loss-of-load probability
+   times the value of lost load (£6,000/MWh) applies to reserve actions.
+3. **Rank into stacks** by cost to NESO.
+4. **Remove noise**: de minimis volumes and arbitrage (matched buy-sell
+   volume) drop out.
+5. **Classification**: SO-flagged actions dearer than the most expensive
+   unflagged action are stripped out; flagged actions *cheaper* than that
+   margin stay in.
+6. **NIV tagging**: the smaller stack nets off the expensive end of the
+   larger one, leaving only the net imbalance volume (**NIV**) to price.
+7. **Replacement price**: stripped volume that still counts takes the price
+   of the unflagged margin.
+8. **PAR tagging**: the dearest **1 MWh** of what survives sets the price.
+9. **Final adjusters and losses**, then one price.
+
+Almost everything strange about GB prices is one of these steps doing its
+job. Play with the real thing; the £2,900 and the minus £97.92 are both in
+here:
+
+<BalancingStack />
+
+Three lessons the stacks teach:
+
+- **The price is the marginal megawatt-hour, and the ladder is thin.** On
+  8 January 2025, Offers up to £5,500 were accepted earlier that evening
+  and NIV-tagged out of the settled period; the scarcity price peaked at
+  £859 in the neighbouring half-hour and never bound. GB spikes do not come
+  from an administered scarcity formula; they come from exhausted ladders
+  of unflagged Offers. In three of the four days in the next interactive,
+  the action *behind* the marginal one was £100 to £190 away.
+- **Batteries set ordinary prices; gas sets spikes.** Between 2023 and 2025
+  batteries went from setting the marginal Bid 0.8% of the time to 36%,
+  and the marginal Offer from 3% to 27%, displacing gas and pumped
+  storage. In the most expensive 5% of periods, though, batteries are
+  still under-represented: the tail still belongs to thermal plant.
+- **A start is a fixed charge spread over the run.** A gas unit prices an
+  Offer as total cost at output plus start-up cost divided across the MW
+  and the hours it expects to run, so a three-hour run prices very
+  differently from a twelve-hour one. Ramp rates and minimum on and off
+  times (Grid Code dynamic data) shape what must be traded around it.
+
+## 4. 🍃 Wind bids at minus its subsidy
+
+To understand the negative end of the stack you need one fact about GB
+renewables: **a curtailed wind farm loses its subsidy income**, so the
+price at which it is willing to be turned down is minus that subsidy.
+
+- Under the legacy **Renewables Obligation**, an offshore farm earning 2.0
+  certificates per MWh gives up roughly £139 for every curtailed MWh, so
+  it bids near **minus £139**. Onshore at 0.9 certificates, near minus
+  £62. This is why deeply negative Bid ladders exist at all.
+- Under a **Contract for Difference**, the floor is minus the difference
+  payment (strike minus reference price), because the top-up is paid on
+  metered volume only. The same contract seen from the revenue side:
+
+<CfdPayoff />
+
+This floor is about to move. The RO scheme starts expiring: around 5 GW of
+supported capacity leaves in 2027 and roughly 25 GW by 2037, taking the
+minus £139 bids with it. A live rule change (BSC modification **P462**)
+would instead compensate lost subsidy through settlement, so curtailed wind
+would bid near zero. Anyone modelling GB negative prices is modelling two
+regimes with a boundary in between.
+
+## 5. 🏴󠁧󠁢󠁳󠁣󠁴󠁿 Curtailment inside the price
+
+GB's one price zone means congestion is invisible in the wholesale price.
+It is not invisible in the balancing stack; it is most of it.
+
+When NESO curtails Scottish wind because the north-south boundary (**B6**)
+is full, those Bids are **SO-flagged**: taken for the network, not for
+energy. Classification then strips a flagged Bid only if it is more
+negative than the most expensive unflagged Bid; cheaper than that, it stays
+in. The workshop's numbers for September 2025: **80% of all sell-action
+volume was SO-flagged**, 74% of it wind, at an average of minus £40. On the
+windiest day of the month it was 99%.
+
+Two consequences worth internalising:
+
+- **The floor around minus £98 is a market outcome, not a rule.** It is
+  the most expensive unflagged Bid, typically an RO wind farm bidding
+  minus its subsidy somewhere *south* of the constraint, surviving
+  Classification. It breaks only when the system is so long that
+  interconnector export trades priced below it get reached.
+- **Geography decides which stack prices the period.** The same gigawatt
+  of wind forecast error means opposite things on opposite sides of B6:
+  north of it, the error lands in flagged Bids that leave the price; south
+  of it, it sets cash-out. On 24 January 2025, the night before Storm
+  Éowyn, half the Bid volume was flagged away and the *English* stack
+  priced the period at exactly £0. A national wind number has the sign
+  wrong on the days that matter.
+
+The bill for handling congestion this way: **£1.7bn of thermal constraint
+costs in 2024/25**, out of £2.7bn of total balancing costs, on 13.5 TWh of
+constraint volume, 81% more volume than the year before. On
+top of it, about £99m a year of "repetitive re-trading": storage sells,
+gets bid down behind the constraint, sells again. None of this is in the
+wholesale price; all of it ends up in network charges.
+
+<Callout icon="⚖️" title="The rules drawn around the stack">
+  Bidding behind a constraint is regulated. The <strong>Transmission
+  Constraint Licence Condition</strong> forbids obtaining an excessive
+  benefit from being constrained down: CfD wind that kept the avoided
+  repayment to the CfD counterparty in its Bids has paid for it
+  (Dorenell £5.53m, Beatrice £33.14m in redress, both concluded 2024). The
+  <strong>Inflexible Offers Licence Condition</strong> (since October 2023)
+  polices plant that de-syncs late and re-offers expensively. And REMIT
+  applies to everyone: deliberate imbalance positions are lawful for
+  non-physical traders, but inside information stays inside.
+</Callout>
+
+## 6. 📅 Four real half-hours
+
+Everything so far, as a game a forecaster cannot refuse. Four real days,
+one marked half-hour each. You see the NIV, the market index and NESO's
+published forecasts at gate closure; the settled prices stay hidden until
+you commit.
+
+<CallThePrice />
+
+And one more half-hour, told in the workshop as a war story: on 4 March
+2020 a day-shift trader ran a 300 MW speculative short into the evening
+peak, expecting cash-out well below the price already sold. Instead the
+scarcity price bound: loss-of-load probability had been 0.006 twelve hours
+out and reached 0.37 an hour out, and settlement period 37 settled at
+**£2,242.31**, the only price above £150 in the whole preceding winter.
+Roughly a £250,000 half-hour. The moral is not "never short the peak"; it
+is that the tail of this price is made of plant trips, loss-of-load
+probability and reserve pricing, which are system-state inputs, not weather
+inputs. On 8 January 2025 the same kicker reached £499 and did not bind:
+both behaviours belong in any honest model.
+
+## 7. 🎛️ How NESO dispatches now
+
+The control room is mid-upgrade, which is why models trained on old
+balancing data mislead.
+
+- **Open Balancing Platform** (December 2023): bulk dispatch of batteries
+  and small units. Battery balancing volumes rose 284% in 2024/25, and
+  battery "skip rates" (being passed over despite price) fell from 43% to
+  32% during 2025. The remaining skips are mostly constraint and
+  system-need driven, not price driven.
+- **National Dispatch Optimiser**: parallel running from January 2026,
+  business go-live June 2026, with optimisation inside constraints
+  following. Dispatch becomes an optimisation, not a merit-order walk.
+- **GC0166** (by late 2026): batteries stop being dispatched on a flat
+  30-minute assumption; dynamic parameters give NESO a standardised view
+  of state of charge for the first time.
+- On the horizon: Ofgem decisions on **balancing reform** (5 or 15-minute
+  settlement periods, aligning FPNs with traded positions) expected around
+  the end of 2027, and market-wide half-hourly settlement of all consumers
+  completing in May 2027. The REMA review already settled the biggest
+  question in 2025: no zonal prices, so everything in this post stays a
+  balancing-stack story.
+
+## 8. 🆚 The same market, seen from the Nordics
+
+<Table>
+  <TableCaption>Same physics, opposite design choices.</TableCaption>
+  <TableHeader>
+    <TableRow>
+      <TableHead></TableHead>
+      <TableHead>Great Britain</TableHead>
+      <TableHead>Nordics</TableHead>
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    <TableRow>
+      <TableCell>Price zones</TableCell>
+      <TableCell>One national zone</TableCell>
+      <TableCell>Twelve bidding zones</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>Day-ahead auction</TableCell>
+      <TableCell>Voluntary venue, produces the reference price</TableCell>
+      <TableCell>The market itself, inside EU-wide coupling</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>Congestion</TableCell>
+      <TableCell>Handled after the fact in the Balancing Mechanism, SO-flagged out of the price</TableCell>
+      <TableCell>Priced up-front: zones split where the grid is tight</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>Imbalance price</TableCell>
+      <TableCell>Single price since 2015, marginal MWh after the Section T pipeline</TableCell>
+      <TableCell>Single price since 2021, from mFRR balancing energy</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>Balance responsibility</TableCell>
+      <TableCell>Every BSC trading party carries its own imbalance, settled by Elexon</TableCell>
+      <TableCell>A distinct BRP role, settled centrally by eSett</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>Selling balancing energy</TableCell>
+      <TableCell>Any BM unit; independent aggregators via Virtual Lead Party</TableCell>
+      <TableCell>BSPs in the TSOs' mFRR and aFRR markets</TableCell>
+    </TableRow>
+  </TableBody>
+</Table>
+
+The practical difference for anyone who forecasts: in the Nordics you trade
+the *direction of balancing*, and weather is the input. In GB, NESO's own
+wind and demand forecasts are free, public, and already priced into the
+09:50 auction, because NESO's errors drive the very actions that set NIV. A
+forecast only earns money where it disagrees with NESO and NESO turns out
+to be wrong, and *where* the error sits (north or south of B6) can matter
+more than its size. The irony from the [[who-gets-the-rights-to-trade-across-borders|chapter 2 notes]]
+still applies: the Nordic design is exactly the market splitting GB
+rejected in the REMA review, running inside the coupled market GB left.
+
+## 9. 🔌 The borders, in one paragraph each
+
+GB's nine interconnectors (9.2 GW) each need their own allocation
+arrangement since Brexit. The default is **explicit auctions**, capacity
+sold separately from energy, with all the wrong-way-flow pathologies the
+[[who-gets-the-rights-to-trade-across-borders|chapter 2 notes]] documented.
+Two exceptions: North Sea Link to Norway runs an **implicit day-ahead
+auction** (N2EX and the Norwegian NO2 auction clear together, essentially
+the [[third-time-lucky-on-the-kontek-cable|first Kontek design]] done
+properly, continuing past 2026 under Nord Pool with other exchanges gaining
+access on the Norwegian side), and capacity to Ireland is allocated
+implicitly through the two coupled **intraday auctions**. The Brexit
+agreement's promised replacement, multi-region loose volume coupling,
+remains unimplemented.
+
+## 10. 📡 Why GB is a forecaster's market at all
+
+GB publishes what most markets keep opaque: per BM unit, you can read the
+declared plan for every half-hour, its Bids and Offers, what NESO accepted
+and with which flags, and the resulting system price calculation, all on
+Elexon's Insights platform, with NESO's own forecasts and constraint data
+alongside. Everything in this post is reconstructable from public data,
+which is also why the GB analytics ecosystem (Modo Energy, EnAppSys, LCP
+Delta and friends) is so crowded and so quantitative: everyone can measure
+everyone, so new forecasts get benchmarked, not believed.
+
+## 📚 Sources
+
+- Tom Reynolds, *How the GB price is made*, workshop for Rebase Energy,
+  10 September 2026. The stack and day data in the interactives, and all
+  unlinked statistics (SO-flagging shares, battery marginality, skip
+  rates, NIV persistence) are from its analysis of Elexon and NESO data.
+- Elexon, [Imbalance pricing guidance](https://www.elexon.co.uk/documents/training-guidance/bsc-guidance-notes/imbalance-pricing/)
+  (the Section T pipeline: flagging, Classification, NIV tagging,
+  Replacement Price, PAR = 1 MWh) and
+  [detailed system prices](https://bmrs.elexon.co.uk/detailed-system-prices).
+- Elexon, [History of the BSC](https://www.elexon.co.uk/knowledgebase/bsc-history/):
+  the Pool, NETA (2001) and BETTA (2005).
+- NESO, [What happened with margins on 8 January?](https://www.neso.energy/news/what-happened-margins-8-january)
+  and Elexon settlement data (the £2,900 evening; the margin notice went
+  out at 20:30 the night before).
+- Elexon, [Highest system price in 19 years](https://www.elexon.co.uk/bsc/article/elexon-insight-highest-system-price-in-19-years/)
+  (4 March 2020, £2,242.31 in settlement period 37, Reserve Scarcity
+  Price binding at £2,223.17).
+- Ofgem, [Dorenell TCLC decision](https://www.ofgem.gov.uk/decision/compliance-dorenell-windfarm-limited-tclc)
+  (£5.53m, 2024) and
+  [Beatrice redress](https://www.ofgem.gov.uk/press-release/ofgem-action-delivers-ps3314-million-back-energy-consumers)
+  (£33.14m, 2024).
+- Ofgem, [Introduction of SLC 20B, the Inflexible Offers Licence Condition](https://www.ofgem.gov.uk/publications/introduction-slc20b-inflexible-offers-licence-condition)
+  (in force 26 October 2023).
+- NESO, [First stages of the Open Balancing Platform go live](https://www.neso.energy/news/first-stages-open-balancing-platform-go-live)
+  (12 December 2023) and the
+  [Balancing Programme roadmap](https://www.neso.energy/what-we-do/systems-operations/balancing-programme)
+  (National Dispatch Optimiser timeline).
+- Elexon, [P462: removal of subsidies from Bid prices](https://www.elexon.co.uk/bsc/mod-proposal/p462/)
+  (the post-RO bidding regime, awaiting an Ofgem decision) and
+  [the November 2018 changes to the price calculation](https://elexon.co.uk/data/key-data-reports/system-prices-analysis-report/elexon-insights-november-2018-changes-system-price-calculation-sept-2018)
+  (PAR down to 1 MWh, Value of Lost Load to £6,000, single price since
+  P305 in November 2015).
+- NESO, [Annual Balancing Costs Report](https://www.neso.energy/document/362561/download)
+  and Modo Energy's
+  [constraints analysis](https://modoenergy.com/research/en/gb-great-britain-battery-energy-storage-curtailment-wind-constraint-scotland-costs)
+  (the 2024/25 constraint bill).
+- Low Carbon Contracts Company, [market reference prices](https://www.lowcarboncontracts.uk/our-schemes/contracts-for-difference/market-reference-prices/)
+  (the IMRP built from both day-ahead exchanges). Auction times from Modo
+  Energy's [GB wholesale markets explainer](https://modoenergy.com/research/en/wholesale-trading-markets-explainer-gb-n2ex-epex-dayahead-intraday).
+- Modo Energy, [Interconnectors in GB](https://modoenergy.com/research/march-24-interconnector-explainer-europe-capacity-allocation-battery-energy-storage-implicit-explicit)
+  and Statnett, [new NSL trading arrangements from 2026](https://www.statnett.no/en/for-stakeholders-in-the-power-industry/news-for-the-power-industry/agreement-on-new-trading-arrangements-on-the-nsl-interconnector-from-2026/).
+- Norton Rose Fulbright, [REMA: no to zonal pricing](https://www.nortonrosefulbright.com/en/knowledge/publications/4399413b/rema-summer-update-no-to-zonal-pricing-yes-to-reformed-national-pricing)
+  (July 2025) and the [MHHS Programme](https://www.mhhsprogramme.co.uk/)
+  (migration completing May 2027).
+- DESNZ, [DUKES](https://www.gov.uk/government/collections/digest-of-uk-energy-statistics-dukes)
+  and [Energy Trends](https://www.gov.uk/government/collections/energy-trends)
+  (installed capacity), NESO
+  [historic generation mix](https://www.neso.energy/data-portal/historic-generation-mix)
+  (seasonal shares).

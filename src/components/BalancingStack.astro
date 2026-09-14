@@ -1,0 +1,236 @@
+---
+/**
+ * The Balancing Mechanism stack, with real Elexon data for five half-hours
+ * (from the September 2026 GB workshop deck). Offers stack left of centre,
+ * Bids right; the reader drags the NIV and the marginal megawatt-hour sets
+ * the price. SO-flagged actions dearer than the unflagged margin are
+ * repriced to it (the Classification + Replacement Price steps, simplified).
+ * The simplification reproduces the actual price in four of the five
+ * periods; the fifth needed the scarcity kicker (noted in the readout).
+ */
+---
+
+<figure class="not-prose border-border my-6 rounded-lg border p-4 sm:p-5" data-bs>
+  <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+    <p class="text-sm font-medium">Five real half-hours. You set the NIV.</p>
+    <div class="border-border flex flex-wrap rounded-md border p-0.5 text-xs" role="group" data-bs-tabs></div>
+  </div>
+  <p class="text-muted-foreground text-sm leading-relaxed" data-bs-intro>
+    Every bar is a real accepted action in that half-hour, from Elexon data.
+    Offers (NESO buying energy) stack to the left, Bids (NESO selling) to the
+    right, cheapest first. Drag the Net Imbalance Volume and the bar it lands
+    on is the marginal megawatt-hour: the cash-out price.
+  </p>
+
+  <svg viewBox="0 0 560 300" class="mt-2 w-full select-none" aria-label="Accepted Bids and Offers stacked by price, with the NIV marker" data-bs-svg></svg>
+
+  <label class="text-muted-foreground mt-1 block text-xs">
+    Net Imbalance Volume (positive = system short, Offers price; negative = system long, Bids price):
+    <span class="text-foreground ml-1 font-mono" data-bs-niv-label></span>
+    <input type="range" data-bs-niv class="accent-primary mt-1 w-full" />
+  </label>
+
+  <div class="border-border mt-2 rounded-md border p-3">
+    <div class="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+      <span class="font-mono text-2xl font-bold" data-bs-price></span>
+      <span class="text-muted-foreground text-sm" data-bs-side></span>
+    </div>
+    <p class="mt-1 min-h-[2.5rem] text-sm leading-relaxed" data-bs-marg></p>
+    <p class="text-muted-foreground mt-1 font-mono text-xs" data-bs-actual></p>
+  </div>
+
+  <figcaption class="text-muted-foreground mt-2 flex flex-wrap gap-x-4 gap-y-1 border-t pt-3 text-xs">
+    <span class="flex items-center gap-1.5"><span class="inline-block size-2.5 rounded-[2px]" style="background:var(--chart-2);opacity:.8"></span> priced energy action</span>
+    <span class="flex items-center gap-1.5"><span class="inline-block size-2.5 rounded-[2px]" style="background:var(--muted-foreground);opacity:.55"></span> SO-flagged (network action)</span>
+    <span class="flex items-center gap-1.5"><span class="inline-block size-2.5 rounded-[2px]" style="background:var(--chart-3);opacity:.8"></span> reserve (STOR)</span>
+    <span class="flex items-center gap-1.5"><span class="border-foreground inline-block size-2.5 rounded-[2px] border-2"></span> marginal MWh</span>
+  </figcaption>
+</figure>
+
+<script>
+  import DATA from './gb-periods.json';
+
+  type Row = { p: number; v: number; so: boolean; stor: boolean; n: string };
+  type Ranked = { p: number; r: Row; rep: boolean };
+
+  document.querySelectorAll<HTMLElement>('[data-bs]').forEach((root) => {
+    const q = (s: string) => root.querySelector<HTMLElement>(s)!;
+    const svg = root.querySelector<SVGSVGElement>('[data-bs-svg]')!;
+    const nivEl = root.querySelector<HTMLInputElement>('[data-bs-niv]')!;
+    const tabs = q('[data-bs-tabs]');
+    const NS = 'http://www.w3.org/2000/svg';
+    const periods = DATA.periods as any[];
+    let cur = periods[0];
+
+    const gbp = (x: number, d = 2) => {
+      const s = Math.abs(x).toLocaleString('en-GB', { minimumFractionDigits: d, maximumFractionDigits: d });
+      return (x < 0 ? '−£' : '£') + s;
+    };
+
+    /* Classification + Replacement Price, simplified: an SO-flagged action
+       dearer than the dearest unflagged one takes the unflagged margin. */
+    function rank(rows: Row[], side: 'offer' | 'bid') {
+      const un = rows.filter((r) => !r.so).map((r) => r.p);
+      const dear = un.length ? (side === 'offer' ? Math.max(...un) : Math.min(...un)) : null;
+      const ranked: Ranked[] = rows.map((r) => {
+        let p = r.p, rep = false;
+        if (dear !== null && r.so && ((side === 'offer' && p > dear) || (side === 'bid' && p < dear))) {
+          p = dear; rep = true;
+        }
+        return { p, r, rep };
+      });
+      ranked.sort((a, b) => (side === 'bid' ? b.p - a.p : a.p - b.p));
+      const total = rows.reduce((s, r) => s + r.v, 0);
+      return { none: !un.length, rows: ranked, total };
+    }
+
+    function marginal(rows: Ranked[], vol: number) {
+      let cum = 0;
+      for (let i = 0; i < rows.length; i++) {
+        cum += rows[i].r.v;
+        if (cum >= vol) return i;
+      }
+      return rows.length - 1;
+    }
+
+    function el(t: string, a: Record<string, string | number>) {
+      const e = document.createElementNS(NS, t);
+      for (const k in a) e.setAttribute(k, String(a[k]));
+      svg.appendChild(e);
+      return e;
+    }
+
+    function draw(niv: number) {
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
+      const W = 560, H = 300;
+      const pad = { l: 52, r: 10, t: 16, b: 26 };
+      const pw = W - pad.l - pad.r, ph = H - pad.t - pad.b, x0 = pad.l + pw / 2;
+
+      const ro = rank(cur.offers, 'offer'), rb = rank(cur.bids, 'bid');
+      const side: 'offer' | 'bid' = niv > 0 ? 'offer' : 'bid';
+      const act = niv > 0 ? ro : rb;
+      const idx = act.none ? -1 : marginal(act.rows, Math.abs(niv));
+
+      const maxV = Math.max(ro.total, rb.total, Math.abs(niv)) * 1.04 || 1;
+      const X = (v: number) => (v / maxV) * (pw / 2);
+
+      const ps: number[] = [0];
+      for (const x of [...ro.rows, ...rb.rows]) { ps.push(x.p); ps.push(x.r.p); }
+      let lo = Math.min(...ps), hi = Math.max(...ps);
+      if (hi === lo) hi = lo + 1;
+      let step = 1000;
+      for (const s of [10, 25, 50, 100, 250, 500, 1000]) { if ((hi - lo) / s <= 8) { step = s; break; } }
+      lo = Math.floor(lo / step) * step; hi = Math.ceil(hi / step) * step;
+      if (hi === lo) hi += step;
+      const Y = (pr: number) => pad.t + ((hi - pr) / (hi - lo)) * ph;
+
+      for (let t = lo; t <= hi; t += step) {
+        el('line', { x1: pad.l, x2: W - pad.r, y1: Y(t), y2: Y(t), stroke: 'var(--border)' });
+        const lbl = el('text', { x: pad.l - 6, y: Y(t) + 3, 'font-size': 9, 'text-anchor': 'end', class: 'fill-muted-foreground' });
+        lbl.textContent = gbp(t, 0);
+      }
+      el('line', { x1: pad.l, x2: W - pad.r, y1: Y(0), y2: Y(0), stroke: 'var(--muted-foreground)', opacity: 0.6 });
+      el('line', { x1: x0, x2: x0, y1: pad.t, y2: H - pad.b, stroke: 'var(--border)', 'stroke-dasharray': '2 3' });
+
+      const bars = (res: ReturnType<typeof rank>, s: 'offer' | 'bid') => {
+        let cum = 0;
+        const active = s === side;
+        res.rows.forEach((x, i) => {
+          const w = Math.max(X(x.r.v), 0.6);
+          const xx = s === 'offer' ? x0 - X(cum) - w : x0 + X(cum);
+          cum += x.r.v;
+          if (x.rep) {
+            el('rect', { x: xx, y: Math.min(Y(0), Y(x.r.p)), width: w, height: Math.abs(Y(x.r.p) - Y(0)), fill: 'var(--muted-foreground)', opacity: 0.15 });
+          }
+          const fill = x.r.so ? 'var(--muted-foreground)' : x.r.stor ? 'var(--chart-3)' : 'var(--chart-2)';
+          const op = active ? (i <= idx ? 0.9 : 0.3) : 0.25;
+          const r = el('rect', { x: xx, y: Math.min(Y(0), Y(x.p)), width: w, height: Math.max(Math.abs(Y(x.p) - Y(0)), 1.5), fill, opacity: op });
+          if (active && i === idx) { r.setAttribute('stroke', 'var(--foreground)'); r.setAttribute('stroke-width', '1.5'); r.setAttribute('opacity', '1'); }
+        });
+      };
+      bars(ro, 'offer');
+      bars(rb, 'bid');
+
+      const xn = niv > 0 ? x0 - X(Math.min(niv, maxV)) : x0 + X(Math.min(-niv, maxV));
+      el('line', { x1: xn, x2: xn, y1: pad.t, y2: H - pad.b, stroke: 'var(--foreground)', 'stroke-width': 1.5, 'stroke-dasharray': '4 4' });
+      const anchorEnd = niv > 0 || xn > W - 110;
+      const nl = el('text', { x: xn + (anchorEnd ? -5 : 5), y: pad.t + 10, 'font-size': 10, 'font-weight': 700, 'text-anchor': anchorEnd ? 'end' : 'start', class: 'fill-foreground' });
+      nl.textContent = `NIV ${niv > 0 ? '+' : '−'}${Math.abs(Math.round(niv)).toLocaleString('en-GB')} MWh`;
+
+      const cl = el('text', { x: pad.l, y: H - 8, 'font-size': 9, class: 'fill-muted-foreground' });
+      cl.textContent = `← Offers, system short: ${Math.round(ro.total).toLocaleString('en-GB')} MWh accepted`;
+      const cr = el('text', { x: W - pad.r, y: H - 8, 'font-size': 9, 'text-anchor': 'end', class: 'fill-muted-foreground' });
+      cr.textContent = `${Math.round(rb.total).toLocaleString('en-GB')} MWh accepted, system long: Bids →`;
+
+      return { act, idx, side };
+    }
+
+    function render() {
+      let niv = Number(nivEl.value);
+      if (niv === 0) niv = 0.5;
+      const { act, idx, side } = draw(niv);
+
+      q('[data-bs-niv-label]').textContent = `${niv > 0 ? '+' : '−'}${Math.abs(Math.round(niv))} MWh`;
+      const priceEl = q('[data-bs-price]'), margEl = q('[data-bs-marg]');
+
+      if (act.none) {
+        priceEl.textContent = gbp(cur.mid, 2);
+        q('[data-bs-side]').textContent = 'defaulted to the market index';
+        margEl.textContent = 'Every accepted action on this side is SO-flagged, so nothing is left to price. The price falls back to the Market Index Price from the exchanges.';
+      } else {
+        const m = act.rows[idx];
+        priceEl.textContent = gbp(m.p, 2);
+        q('[data-bs-side]').textContent = niv > 0
+          ? `system short by ${Math.round(niv).toLocaleString('en-GB')} MWh, Offers set the price`
+          : `system long by ${Math.abs(Math.round(niv)).toLocaleString('en-GB')} MWh, Bids set the price`;
+        let t = `Marginal action: ${m.r.n || 'unnamed unit'}`;
+        if (m.rep) t += `, SO-flagged and repriced from ${gbp(m.r.p, 0)} to the unflagged margin`;
+        else if (m.r.so) t += ', SO-flagged but cheaper than the unflagged margin, so it keeps its price';
+        t += '.';
+        if (Math.abs(niv) > act.total) t += ' This NIV is beyond everything NESO accepted that half-hour; in reality NESO would have bought more actions.';
+        margEl.textContent = t;
+      }
+
+      let a = `Actual: ${gbp(cur.price, 2)} at NIV ${cur.niv > 0 ? '+' : '−'}${Math.abs(Math.round(cur.niv))} MWh. Market index ${gbp(cur.mid, 2)}. Scarcity price ${gbp(cur.rsvp, 0)}`;
+      a += cur.key === 'rsp'
+        ? ', binding: it repriced the reserve action to £2,223, and a £19 adjuster closed the gap to the settled £2,242.'
+        : cur.rsvp > 100 ? ', did not bind.' : '.';
+      q('[data-bs-actual]').textContent = a;
+    }
+
+    function setPeriod(p: any) {
+      cur = p;
+      const to = p.offers.reduce((s: number, r: Row) => s + r.v, 0);
+      const tb = p.bids.reduce((s: number, r: Row) => s + r.v, 0);
+      nivEl.min = String(-Math.ceil(Math.max(tb, 300) * 1.1));
+      nivEl.max = String(Math.ceil(Math.max(to, 300) * 1.1));
+      nivEl.step = '10';
+      nivEl.value = String(Math.round(p.niv));
+      tabs.querySelectorAll('button').forEach((b) => {
+        const active = b.dataset.key === p.key;
+        b.classList.toggle('bg-muted', active);
+        b.classList.toggle('text-muted-foreground', !active);
+      });
+      render();
+    }
+
+    const SHORT: Record<string, string> = {
+      spike: '8 Jan 25 spike',
+      rsp: '4 Mar 20 scarcity',
+      zero: '24 Jan 25 storm',
+      normal: '4 Nov 25 quiet',
+      negative: '6 Apr 26 negative',
+    };
+    for (const p of periods) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.dataset.key = p.key;
+      b.className = 'rounded px-2 py-1 font-medium transition-colors';
+      b.textContent = SHORT[p.key] ?? p.label;
+      b.addEventListener('click', () => setPeriod(p));
+      tabs.appendChild(b);
+    }
+    nivEl.addEventListener('input', render);
+    setPeriod(periods[0]);
+  });
+</script>

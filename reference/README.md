@@ -44,3 +44,17 @@ Published version: *Energy Economics* 33(3), 413-418.
   Download it from the Cadmus link above.
 
 Notes drawn from this source: `src/content/posts/third-time-lucky-on-the-kontek-cable.mdx`
+
+### `Rebase-Energy-Workshop-1-Deck-10Sep26.html` (local only, not committed)
+
+Tom Reynolds (Flow Vendor), *How the GB price is made*, workshop 1 slide
+deck for Rebase Energy, 10 September 2026.
+
+- Licence: **private material** prepared for Rebase; not openly licensed,
+  so per this repo's policy the file is git-ignored and lives only on the
+  local machine.
+- The embedded Elexon settlement data (five real half-hours and their day
+  series) is public data; an aggregated extract lives in
+  `src/components/gb-periods.json`.
+
+Notes drawn from this source: `src/content/posts/how-the-gb-price-is-made.mdx`

@@ -29,3 +29,6 @@ pnpm-debug.log*
 
 # Not openly licensed (EUI working paper: personal research use only); kept locally, not committed.
 reference/implicit-auctioning-on-the-kontek-cable-meeus-2010.pdf
+
+# Private workshop material (Flow Vendor deck for Rebase); kept locally, not committed.
+reference/Rebase-Energy-Workshop-1-Deck-10Sep26.html
