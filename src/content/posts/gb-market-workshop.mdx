@@ -116,9 +116,10 @@ The day itself is a sequence with one hard stop:
    the market must pass through, but they are institutionally load-bearing:
    the hourly results of both are volume-weighted into the **Intermittent
    Market Reference Price** that every wind and solar CfD settles against
-   (baseload CfDs settle against a seasonal forward price instead). That is
-   why wind sells day-ahead at the forecast, and why the forecast *error*
-   is what gets traded afterwards.
+   (baseload CfDs settle against a seasonal forward price instead; the
+   note after this list unpacks both). That is why wind sells day-ahead at
+   the forecast, and why the forecast *error* is what gets traded
+   afterwards.
 2. **Intraday.** Two more auctions (17:30 on D-1 and 08:00 on the day,
    coupled with the Irish market over the interconnectors), then continuous
    trading in half-hour, hour, 2h and 4h blocks until close to real time.
@@ -135,6 +136,36 @@ The day itself is a sequence with one hard stop:
    minutes after each half-hour. Single price for both directions since
    2015: metered minus contracted volume, per party, and you settle the
    gap at the system price whether you are long or short.
+
+<Callout icon="🧮" title="Volume-weighted, and who gets which reference price">
+  **Volume-weighted** means the price where more energy actually traded
+  counts for more. For a given hour, EPEX and N2EX each clear their own
+  auction, so there are two prices and two traded volumes. Say EPEX clears
+  at **£52/MWh** with **8,000 MWh** traded and N2EX clears at **£50/MWh**
+  with **2,000 MWh**. The reference price for that hour is not the simple
+  average of £51:
+
+  <p class="text-center font-mono">(£52 × 8,000 + £50 × 2,000) ÷ 10,000 = **£51.60/MWh**</p>
+
+  The busier exchange pulls the number towards its price. That is the
+  point: a reference built this way is hard to nudge by trading a small
+  volume on the thinner venue.
+
+  Which reference price a CfD settles against is written into the contract
+  by **technology class**; the generator does not choose. Weather-driven
+  technologies (offshore wind, onshore wind, solar, tidal, wave) are
+  classed as **intermittent** and get the hourly IMRP above, because a
+  plant that cannot pick when it runs should be measured against the price
+  in the actual hours it generated. Technologies that can run around the
+  clock (nuclear, so Hinkley Point C, biomass conversions, energy from
+  waste) are classed as **baseload** and get the **Baseload Market
+  Reference Price**: a volume-weighted average of season-ahead forward
+  trades reported by the London brokers, fixed once for each six-month
+  season. The logic is symmetric: a dispatchable plant is expected to sell
+  its output forward like any other baseload plant, so its CfD tops up the
+  forward price it could have locked in, not the day-ahead price on any
+  particular day.
+</Callout>
 
 Two GB peculiarities to hold onto before the next section. There are **no
 zonal prices**, even though the Scotland to England boundary is congested
@@ -484,7 +515,10 @@ everyone, so new forecasts get benchmarked, not believed.
   [constraints analysis](https://modoenergy.com/research/en/gb-great-britain-battery-energy-storage-curtailment-wind-constraint-scotland-costs)
   (the 2024/25 constraint bill).
 - Low Carbon Contracts Company, [market reference prices](https://www.lowcarboncontracts.uk/our-schemes/contracts-for-difference/market-reference-prices/)
-  (the IMRP built from both day-ahead exchanges). Auction times from Modo
+  (the hourly IMRP built from both day-ahead exchanges; the seasonal BMRP
+  from LEBA forward trades) and
+  [how the IMRP is calculated since 2021](https://www.lowcarboncontracts.uk/news/how-intermittent-market-reference-price-imrp-will-be-calculated-from-1-january-2021/).
+  Auction times from Modo
   Energy's [GB wholesale markets explainer](https://modoenergy.com/research/en/wholesale-trading-markets-explainer-gb-n2ex-epex-dayahead-intraday).
 - Modo Energy, [Interconnectors in GB](https://modoenergy.com/research/march-24-interconnector-explainer-europe-capacity-allocation-battery-energy-storage-implicit-explicit)
   and Statnett, [new NSL trading arrangements from 2026](https://www.statnett.no/en/for-stakeholders-in-the-power-industry/news-for-the-power-industry/agreement-on-new-trading-arrangements-on-the-nsl-interconnector-from-2026/).
