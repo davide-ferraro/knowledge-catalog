@@ -10,6 +10,7 @@ description: "Notes from a workshop on how the GB price is made: the trading day
 import Callout from '../../components/Callout.astro';
 import Timeline from '../../components/Timeline.astro';
 import BalancingStack from '../../components/BalancingStack.astro';
+import PricePipeline from '../../components/PricePipeline.astro';
 import CallThePrice from '../../components/CallThePrice.astro';
 import CfdPayoff from '../../components/CfdPayoff.astro';
 import {
@@ -223,30 +224,32 @@ off-peak price.
 
 ## 3. 🧮 The stack and the price
 
-Here is the machine. For each half-hour, take every balancing action NESO
-accepted and turn it into one number, following BSC Section T. Nine steps,
-compressed:
+Here is the machine. For each half-hour, Elexon takes every balancing
+action NESO accepted and turns the whole pile into one number, following
+the recipe in BSC Section T. Before the steps, be clear about the problem
+the recipe solves: **the raw pile is polluted**. It mixes true energy
+actions with things that say nothing about the energy balance. Turning a
+wind farm down behind a full cable is a network problem, not a shortage.
+Reserve that was booked in advance looks artificially cheap at its
+utilisation price. Tiny volumes are noise, and sometimes NESO ends up both
+buying and selling the same megawatt-hour. If all of that priced the
+half-hour, cash-out would be meaningless. So the recipe cleans the pile
+step by step, and only what survives sets the price.
 
-1. **Collect the actions**: accepted Bids and Offers, balancing trades, and
-   their flags (system-operator flag, short-duration flag, reserve flag).
-2. **Price the reserve**: a scarcity floor of loss-of-load probability
-   times the value of lost load (£6,000/MWh) applies to reserve actions.
-3. **Rank into stacks** by cost to NESO.
-4. **Remove noise**: de minimis volumes and arbitrage (matched buy-sell
-   volume) drop out.
-5. **Classification**: SO-flagged actions dearer than the most expensive
-   unflagged action are stripped out; flagged actions *cheaper* than that
-   margin stay in.
-6. **NIV tagging**: the smaller stack nets off the expensive end of the
-   larger one, leaving only the net imbalance volume (**NIV**) to price.
-7. **Replacement price**: stripped volume that still counts takes the price
-   of the unflagged margin.
-8. **PAR tagging**: the dearest **1 MWh** of what survives sets the price.
-9. **Final adjusters and losses**, then one price.
+The workshop walked this on a small made-up stack where every action stays
+visible: eight Offers, three Bids, system short. Step through it. Each
+step's bar chart shows everything the pipeline has done so far:
 
-Almost everything strange about GB prices is one of these steps doing its
-job. Play with the real thing; the £2,900 and the minus £97.92 are both in
-here:
+<PricePipeline />
+
+Two things to take from the walk. First, the price is not "what NESO
+paid": most of what NESO paid is flagged away, netted off, or tagged out,
+and one surviving megawatt-hour speaks for the whole half-hour. Second,
+every strange GB price is just one of these steps doing its job, and now
+you can name which one.
+
+The same recipe, run on five real half-hours; the £2,900 and the minus
+£97.92 are both in here:
 
 <BalancingStack />
 

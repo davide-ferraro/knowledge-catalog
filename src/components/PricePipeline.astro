@@ -1,0 +1,259 @@
+---
+/**
+ * The nine Section T steps, walked on a small made-up stack (from the
+ * workshop deck) where every action stays legible. Click a step and the
+ * stack redraws with everything the pipeline has done up to that point.
+ * The five real half-hours in BalancingStack run this same recipe.
+ */
+---
+
+<figure class="not-prose border-border my-6 rounded-lg border p-4 sm:p-5" data-pp>
+  <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+    <p class="text-sm font-medium">Nine steps from accepted actions to one price</p>
+    <div class="flex gap-1">
+      <button type="button" data-pp-prev class="border-border bg-muted hover:bg-muted/70 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors" aria-label="Previous step">&#8249; back</button>
+      <button type="button" data-pp-next class="border-border bg-muted hover:bg-muted/70 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors" aria-label="Next step">next &#8250;</button>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap gap-1 text-xs" role="group" data-pp-steps></div>
+
+  <svg viewBox="0 0 560 290" class="mt-2 w-full select-none" aria-label="A small example balancing stack transformed step by step into one price" data-pp-svg></svg>
+
+  <p class="text-sm font-semibold" data-pp-title></p>
+  <p class="text-muted-foreground min-h-[7rem] text-sm leading-relaxed sm:min-h-[5.5rem]" data-pp-desc></p>
+  <p class="font-mono text-lg font-bold" data-pp-price></p>
+
+  <figcaption class="text-muted-foreground mt-2 border-t pt-3 text-xs leading-relaxed">
+    A made-up teaching stack from the workshop, small enough to watch every
+    action: eight Offers, three Bids, one half-hour, system short. Green is
+    a priced energy action, grey an SO or CADL flagged one, amber the STOR
+    reserve action. A dashed outline means Classification stripped the
+    price; a faded bar has been netted out and cannot set the price. The
+    real half-hours in the next chart run exactly this recipe.
+  </figcaption>
+</figure>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-pp]').forEach((root) => {
+    const q = (s: string) => root.querySelector<HTMLElement>(s)!;
+    const svg = root.querySelector<SVGSVGElement>('[data-pp-svg]')!;
+    const stepsBox = q('[data-pp-steps]');
+    const NS = 'http://www.w3.org/2000/svg';
+
+    /* The example stack. Not a real period: sized so every bar is visible.
+       t = the order NESO took the actions in. */
+    type Row = { id: string; side: 'o' | 'b'; p: number; v: number; t: number; flag?: 'SO' | 'CADL' | 'STOR'; rsp?: number };
+    const EX: Row[] = [
+      { id: 'O1', side: 'o', p: 45, v: 50, t: 3 },
+      { id: 'O2', side: 'o', p: 60, v: 80, t: 1, flag: 'STOR', rsp: 120 },
+      { id: 'O3', side: 'o', p: 75, v: 120, t: 5 },
+      { id: 'O4', side: 'o', p: 90, v: 60, t: 2, flag: 'SO' },
+      { id: 'O5', side: 'o', p: 110, v: 8, t: 7, flag: 'CADL' },
+      { id: 'O6', side: 'o', p: 150, v: 30, t: 4 },
+      { id: 'O7', side: 'o', p: 400, v: 25, t: 6, flag: 'SO' },
+      { id: 'O8', side: 'o', p: 200, v: 0.05, t: 8 },
+      { id: 'B1', side: 'b', p: 50, v: 20, t: 2 },
+      { id: 'B2', side: 'b', p: 20, v: 5, t: 1 },
+      { id: 'B3', side: 'b', p: -60, v: 10, t: 3, flag: 'SO' },
+    ];
+
+    const STEPS: [string, string, string][] = [
+      ['Flag', 'Receive and flag',
+        'Elexon receives every accepted Bid and Offer and every balancing trade for the half-hour, in the order NESO took them. NESO’s flags arrive with the actions: SO for something done for the network rather than for energy, CADL for actions under ten minutes, STOR for reserve. Nothing is removed yet; this is the raw record of the half-hour.'],
+      ['Reserve', 'Price the reserve',
+        'A reserve (STOR) action is repriced to the greater of its utilisation price and the Reserve Scarcity Price, which is the loss-of-load probability times the value of lost load (£6,000/MWh). Here LoLP is 0.02, so £120 replaces O2’s £60 (the pale ghost is the old price). On 4 March 2020 this step alone put a £2,223 floor under the price.'],
+      ['Rank', 'Rank into stacks',
+        'Offers are ranked by cost to NESO, most expensive at the far left. Bids the same way, most expensive at the far right: a Bid at minus £60 means NESO pays £60 per MWh to turn something down. Arrival order stops mattering. From here on it is two merit-order stacks around one price axis.'],
+      ['Clean', 'De minimis and arbitrage',
+        'Anything under 0.1 MWh is dropped, so O8 at 0.05 MWh vanishes. Then arbitrage: where a Bid is priced above an Offer, the matched volume is removed from both, because those two parties should have traded with each other instead of through NESO. B1 at £50 sat above O1 at £45, so 20 MWh disappears from each.'],
+      ['Classify', 'Classification',
+        'A flagged action dearer than the most expensive unflagged action on its stack loses its price (dashed outline): O7 at £400 and B3 at minus £60 are stripped. A flagged action cheaper than that margin keeps its price, which is why O4 and O5 survive under the £150 unflagged margin. This one rule is why constraint costs mostly stay out of the price, and it is where the wind floor in section 5 comes from.'],
+      ['NIV tag', 'NIV tagging',
+        'Total Offers minus total Bids is the Net Imbalance Volume: 353 minus 15 gives plus 338 MWh, system short. The whole smaller stack nets off against the most expensive end of the larger one, and both fade out. Only what is left inside the dashed NIV line can set the price. Every earlier action NESO took beyond the net need is treated as already paid for.'],
+      ['Replace', 'Replacement price',
+        'O7 lost its price at step 5 but part of it is still inside the NIV, so it cannot just vanish. It takes the Replacement Price instead: the price of the most expensive 1 MWh of priced actions left in the stack, £150 here. Flagged volume still gets bought, but it can never price the half-hour above the unflagged energy margin.'],
+      ['PAR', 'PAR tagging',
+        'The price is the volume-weighted average of the most expensive 1 MWh left inside the NIV (outlined; O6 and the replacement-priced remainder of O7 tie at £150). PAR fell from 500 MWh to 50 in 2015 and to 1 MWh in 2018, so in practice the single marginal action sets the whole price. That is why one megawatt-hour can be worth a fortune to forecast.'],
+      ['Adjust', 'Adjusters, losses, final',
+        'A Buy Price Adjuster is added when the system is short, a Sell Price Adjuster when long: balancing costs that sit outside the stack. Usually zero; £19 on 4 March 2020. Transmission loss multipliers scale the volumes. Out comes one number, and every party settles its imbalance at it, long or short.'],
+    ];
+
+    type St = { id: string; side: 'o' | 'b'; p: number; op: number; v: number; t: number; flag?: string; cls: string; tagv: number; marg: boolean };
+
+    function stateAt(k: number) {
+      let rows: St[] = EX.map((r) => ({ ...r, op: r.p, cls: 'n', tagv: 0, marg: false }));
+      if (k >= 2) rows.forEach((r) => { if (r.flag === 'STOR' && r.rsp! > r.p) { r.p = r.rsp!; r.cls = 'rep'; } });
+      if (k >= 3) {
+        /* cheapest for NESO nearest the centre, dearest at the outer edge */
+        rows.sort((a, b) => (a.side !== b.side ? (a.side === 'o' ? -1 : 1) : a.side === 'o' ? a.p - b.p : b.p - a.p));
+      } else {
+        rows.sort((a, b) => (a.side !== b.side ? (a.side === 'o' ? -1 : 1) : a.t - b.t));
+      }
+      if (k >= 4) {
+        rows.forEach((r) => { if (r.v < 0.1) r.cls = 'gone'; });
+        const os = rows.filter((r) => r.side === 'o' && r.cls !== 'gone').sort((a, b) => a.p - b.p);
+        const bs = rows.filter((r) => r.side === 'b' && r.cls !== 'gone').sort((a, b) => b.p - a.p);
+        let i = 0, j = 0;
+        while (i < os.length && j < bs.length && bs[j].p > os[i].p) {
+          const x = Math.min(os[i].v, bs[j].v);
+          os[i].v -= x; bs[j].v -= x;
+          if (os[i].v <= 0.001) { os[i].cls = 'gone'; i++; }
+          if (bs[j].v <= 0.001) { bs[j].cls = 'gone'; j++; }
+        }
+      }
+      const live = (r: St) => r.cls !== 'gone';
+      if (k >= 5) {
+        (['o', 'b'] as const).forEach((s) => {
+          const un = rows.filter((r) => r.side === s && live(r) && r.flag !== 'SO' && r.flag !== 'CADL').map((r) => r.p);
+          const dear = s === 'o' ? Math.max(...un) : Math.min(...un);
+          rows.forEach((r) => {
+            if (r.side === s && live(r) && (r.flag === 'SO' || r.flag === 'CADL')) {
+              if ((s === 'o' && r.p > dear) || (s === 'b' && r.p < dear)) r.cls = 'unp';
+              else r.cls = 'kept';
+            }
+          });
+        });
+      }
+      let niv: number | null = null;
+      if (k >= 6) {
+        let to = 0, tb = 0;
+        rows.forEach((r) => { if (!live(r)) return; if (r.side === 'o') to += r.v; else tb += r.v; });
+        niv = to - tb;
+        const small = niv > 0 ? 'b' : 'o', big = niv > 0 ? 'o' : 'b';
+        let net = Math.min(to, tb);
+        rows.forEach((r) => { if (r.side === small && live(r)) r.cls = 'tag'; });
+        /* net off the most expensive end of the big stack (end of the array) */
+        const bigRows = rows.filter((r) => r.side === big && live(r));
+        for (let i = bigRows.length - 1; i >= 0 && net > 0.0001; i--) {
+          const x = Math.min(bigRows[i].v, net);
+          bigRows[i].tagv = x; net -= x;
+          if (x >= bigRows[i].v - 0.0001) bigRows[i].cls = 'tag';
+        }
+      }
+      if (k >= 7) {
+        const pr = rows.filter((r) => r.side === 'o' && live(r) && r.cls !== 'tag' && r.cls !== 'unp');
+        const dear = Math.max(...pr.map((r) => r.p));
+        rows.forEach((r) => { if (r.cls === 'unp' && r.side === 'o') { r.p = dear; r.cls = 'rp'; } });
+      }
+      let price: number | null = null;
+      if (k >= 8) {
+        const rem = rows.filter((r) => r.side === 'o' && live(r) && r.cls !== 'tag' && r.v - r.tagv > 0.0001);
+        price = Math.max(...rem.map((r) => r.p));
+        rem.forEach((r) => { if (r.p === price) r.marg = true; });
+      }
+      return { rows, niv, price };
+    }
+
+    function el(t: string, a: Record<string, string | number>) {
+      const e = document.createElementNS(NS, t);
+      for (const k in a) e.setAttribute(k, String(a[k]));
+      svg.appendChild(e);
+      return e;
+    }
+
+    let cur = 1;
+
+    function draw() {
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
+      const k = cur;
+      const st = stateAt(k);
+      const W = 560, H = 290;
+      const pad = { l: 46, r: 12, t: 20, b: 28 };
+      const pw = W - pad.l - pad.r, ph = H - pad.t - pad.b;
+      const x0 = pad.l + pw / 2;
+      let to = 0, tb = 0;
+      EX.forEach((r) => { if (r.side === 'o') to += r.v; else tb += r.v; });
+      const maxV = Math.max(to, tb) * 1.06;
+      const X = (v: number) => (v / maxV) * (pw / 2);
+      const lo = -110, hi = 460;
+      const Y = (p: number) => pad.t + ((hi - p) / (hi - lo)) * ph;
+
+      for (let p = -100; p <= 400; p += 100) {
+        el('line', { x1: pad.l, x2: W - pad.r, y1: Y(p), y2: Y(p), stroke: 'var(--border)' });
+        const t = el('text', { x: pad.l - 6, y: Y(p) + 3, 'font-size': 9, 'text-anchor': 'end', class: 'fill-muted-foreground' });
+        t.textContent = '£' + p;
+      }
+      el('line', { x1: pad.l, x2: W - pad.r, y1: Y(0), y2: Y(0), stroke: 'var(--muted-foreground)', opacity: 0.6 });
+      el('line', { x1: x0, x2: x0, y1: pad.t, y2: H - pad.b, stroke: 'var(--border)', 'stroke-dasharray': '2 3' });
+      const ll = el('text', { x: pad.l, y: H - 8, 'font-size': 9, class: 'fill-muted-foreground' });
+      ll.textContent = k >= 3 ? '← Offers, dearest for NESO at the far left' : '← Offers, in the order NESO took them';
+      const lr = el('text', { x: W - pad.r, y: H - 8, 'font-size': 9, 'text-anchor': 'end', class: 'fill-muted-foreground' });
+      lr.textContent = k >= 3 ? 'Bids, dearest at the far right →' : 'Bids →';
+
+      let co = 0, cb = 0;
+      st.rows.forEach((r) => {
+        if (r.cls === 'gone') return;
+        const w = Math.max(X(r.v), 1.4);
+        let x: number;
+        if (r.side === 'o') { x = x0 - X(co) - w; co += r.v; } else { x = x0 + X(cb); cb += r.v; }
+        let fill = 'var(--chart-2)', op = 0.85;
+        if (r.flag && k >= 1) fill = r.flag === 'STOR' ? 'var(--chart-3)' : 'var(--muted-foreground)';
+        if (r.flag === 'STOR' && k >= 2) fill = 'var(--chart-3)';
+        if (r.cls === 'rp') { fill = 'var(--muted-foreground)'; op = 0.9; }
+        if (r.cls === 'tag') op = 0.18;
+        const yTop = Math.min(Y(0), Y(r.p));
+        const hh = Math.max(Math.abs(Y(r.p) - Y(0)), 1.5);
+        if (r.op !== r.p && (r.cls === 'rep' || r.cls === 'rp')) {
+          el('rect', { x, y: Math.min(Y(0), Y(r.op)), width: w, height: Math.abs(Y(r.op) - Y(0)), fill: 'var(--muted-foreground)', opacity: 0.15 });
+        }
+        const rect = el('rect', {
+          x, y: yTop, width: w, height: hh, fill: r.cls === 'unp' ? 'none' : fill, opacity: r.cls === 'unp' ? 1 : op,
+          stroke: r.cls === 'unp' ? 'var(--muted-foreground)' : 'none', 'stroke-width': 1.5,
+          'stroke-dasharray': r.cls === 'unp' ? '4 3' : '0',
+        });
+        if (r.tagv > 0 && r.cls !== 'tag') {
+          /* the netted-off slice sits at the outer (expensive) end of the bar */
+          const tw = X(r.tagv);
+          const liveW = w - tw;
+          rect.setAttribute('width', String(Math.max(liveW, 1)));
+          if (r.side === 'o') rect.setAttribute('x', String(x + tw));
+          el('rect', { x: r.side === 'o' ? x : x + liveW, y: yTop, width: tw, height: hh, fill, opacity: 0.18 });
+        }
+        if (r.marg && k >= 8) { rect.setAttribute('stroke', 'var(--foreground)'); rect.setAttribute('stroke-width', '2'); rect.setAttribute('stroke-dasharray', '0'); }
+        if (r.flag && k >= 1 && r.cls !== 'tag') {
+          const t = el('text', { x: x + w / 2, y: Y(Math.max(r.p, r.op)) - 5, 'font-size': 8, 'text-anchor': 'middle', 'font-weight': 600, fill: r.flag === 'STOR' ? 'var(--chart-3)' : 'var(--muted-foreground)' });
+          t.textContent = r.flag;
+        }
+        if (w > 16) {
+          const t = el('text', { x: x + w / 2, y: Y(0) + (r.p >= 0 ? 11 : -4), 'font-size': 9, 'text-anchor': 'middle', class: 'fill-muted-foreground' });
+          t.textContent = r.id;
+        }
+      });
+
+      if (st.niv !== null) {
+        const xn = st.niv > 0 ? x0 - X(st.niv) : x0 + X(-st.niv);
+        el('line', { x1: xn, x2: xn, y1: pad.t, y2: H - pad.b, stroke: 'var(--foreground)', 'stroke-width': 1.5, 'stroke-dasharray': '4 4' });
+        const flip = xn > W - 140;
+        const t = el('text', { x: xn + (flip ? -6 : 6), y: pad.t + 10, 'font-size': 10, 'font-weight': 600, 'text-anchor': flip ? 'end' : 'start', class: 'fill-foreground' });
+        t.textContent = `NIV ${st.niv > 0 ? '+' : ''}${Math.round(st.niv)} MWh, system short`;
+      }
+
+      const s = STEPS[k - 1];
+      q('[data-pp-title]').textContent = `Step ${k} of 9 · ${s[1]}`;
+      q('[data-pp-desc]').textContent = s[2];
+      q('[data-pp-price]').textContent =
+        st.price === null ? '' : `Price after this step: £${st.price.toFixed(2)}` + (k >= 9 ? ' (Buy Price Adjuster £0.00 here, so unchanged)' : '');
+
+      stepsBox.querySelectorAll('button').forEach((b) => {
+        const active = Number(b.dataset.k) === k;
+        b.classList.toggle('bg-muted', active);
+        b.classList.toggle('font-semibold', active);
+        b.classList.toggle('text-muted-foreground', !active);
+      });
+    }
+
+    STEPS.forEach((s, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.dataset.k = String(i + 1);
+      b.className = 'border-border rounded-md border px-2 py-1 transition-colors';
+      b.textContent = `${i + 1} ${s[0]}`;
+      b.addEventListener('click', () => { cur = i + 1; draw(); });
+      stepsBox.appendChild(b);
+    });
+    q('[data-pp-prev]').addEventListener('click', () => { cur = Math.max(1, cur - 1); draw(); });
+    q('[data-pp-next]').addEventListener('click', () => { cur = Math.min(9, cur + 1); draw(); });
+    draw();
+  });
+</script>
